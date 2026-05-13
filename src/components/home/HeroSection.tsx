@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ChevronRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, ChevronRight, CircleCheck as CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SSO_URL } from '@/lib/constants';
 
@@ -20,7 +20,7 @@ const SLIDES = [
     product: 'ERP Suite',
     tag: 'Business Operations',
     img: '/images/illustrations/product-erp.svg',
-    color: '#6c47ff',
+    color: '#0EA5E9',
     href: 'https://erp.codevertexitsolutions.com',
     highlights: ['Finance, HR & Procurement unified', 'Real-time multi-tenant sync'],
   },
@@ -56,7 +56,7 @@ const SLIDES = [
     product: 'Books',
     tag: 'Finance & Projects',
     img: '/images/illustrations/product-books.svg',
-    color: '#a855f7',
+    color: '#EC4899',
     href: 'https://books.codevertexitsolutions.com',
     highlights: ['Invoicing with M-Pesa & Paystack', 'Project tracking & team collab'],
   },
@@ -65,7 +65,7 @@ const SLIDES = [
     product: 'Vera AI',
     tag: 'AI Business Assistant',
     img: '/images/illustrations/product-vera.svg',
-    color: '#6c47ff',
+    color: '#0EA5E9',
     href: '/contact',
     highlights: ['24/7 business intelligence', 'Claude-powered, integrated across suite'],
   },

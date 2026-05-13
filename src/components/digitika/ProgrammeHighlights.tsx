@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { CheckCircle, Clock, Award } from 'lucide-react';
+import { CircleCheck as CheckCircle, Clock, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const TRACKS = [
@@ -8,7 +8,7 @@ const TRACKS = [
     id: 'software',
     title: 'Software Engineering',
     badge: 'Most Popular',
-    badgeColor: '#6c47ff',
+    badgeColor: '#10B981',
     duration: '4 months',
     price: 'KES 30,000',
     cover: '/images/illustrations/course-software.svg',
@@ -41,7 +41,7 @@ const TRACKS = [
     id: 'ai',
     title: 'AI & Data Analytics',
     badge: 'Future-Ready',
-    badgeColor: '#a855f7',
+    badgeColor: '#F59E0B',
     duration: '8 weeks',
     price: 'KES 20,000',
     cover: '/images/illustrations/course-ai.svg',

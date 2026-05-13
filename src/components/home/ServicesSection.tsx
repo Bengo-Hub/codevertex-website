@@ -53,7 +53,7 @@ export function ServicesSection() {
                   className="flex flex-col h-full min-h-75"
                 >
                   {/* Illustration panel */}
-                  <div className="relative w-full h-40 overflow-hidden bg-muted dark:bg-[#080b12] shrink-0">
+                  <div className="relative w-full h-40 overflow-hidden bg-muted dark:bg-card shrink-0">
                     <Image
                       src={pillar.img}
                       alt={pillar.name}

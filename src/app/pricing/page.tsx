@@ -30,10 +30,10 @@ export default function PricingPage() {
       <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Pricing</p>
-          <h1 className="text-5xl sm:text-6xl font-black text-background tracking-tight leading-[1.05] mb-4">
+          <h1 className="text-5xl sm:text-6xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] mb-4">
             Simple, transparent pricing
           </h1>
-          <p className="text-background/70 text-lg max-w-xl mx-auto">Start free. Scale as you grow. No hidden fees.</p>
+          <p className="text-white/70 dark:text-muted-foreground text-lg max-w-xl mx-auto">Start free. Scale as you grow. No hidden fees.</p>
         </div>
       </section>
 

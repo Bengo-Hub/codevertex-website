@@ -21,10 +21,10 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">About us</p>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-background tracking-tight leading-[1.05] max-w-4xl mb-6">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] max-w-4xl mb-6">
                 Architecting Africa&apos;s Digital Renaissance
               </h1>
-              <p className="text-background/70 text-lg max-w-2xl leading-relaxed">
+              <p className="text-white/70 dark:text-muted-foreground text-lg max-w-2xl leading-relaxed">
                 Established in 2020. Headquartered in Kisumu, Kenya. Purpose-driven. Pan-African in ambition.
               </p>
             </div>
@@ -35,9 +35,9 @@ export default function AboutPage() {
                 { val: '120+', label: 'Students certified' },
                 { val: '5+', label: 'Years of impact' },
               ].map(s => (
-                <div key={s.val} className="flex items-center gap-4 px-5 py-3 rounded-xl bg-background/5 border border-background/10">
+                <div key={s.val} className="flex items-center gap-4 px-5 py-3 rounded-xl bg-white/5 dark:bg-foreground/5 border border-white/10 dark:border-foreground/10">
                   <span className="text-2xl font-black text-primary">{s.val}</span>
-                  <span className="text-background/70 text-sm font-medium">{s.label}</span>
+                  <span className="text-white/70 dark:text-muted-foreground text-sm font-medium">{s.label}</span>
                 </div>
               ))}
             </div>
@@ -90,12 +90,12 @@ export default function AboutPage() {
 
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-8">
-          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Ready to partner with us?</h2>
+          <h2 className="text-3xl sm:text-4xl font-black text-white dark:text-primary-foreground tracking-tight">Ready to partner with us?</h2>
           <div className="flex gap-3 shrink-0">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90" asChild>
+            <Button size="lg" className="bg-white text-primary hover:bg-white/90 dark:bg-primary-foreground dark:text-primary dark:hover:bg-primary-foreground/90" asChild>
               <Link href="/contact">Get in touch <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10" asChild>
+            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 dark:border-primary-foreground/30 dark:text-primary-foreground dark:hover:bg-primary-foreground/10" asChild>
               <Link href="/careers">Join our team</Link>
             </Button>
           </div>

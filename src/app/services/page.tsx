@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, CheckCircle, ExternalLink } from 'lucide-react';
+import { ArrowRight, CircleCheck as CheckCircle, ExternalLink } from 'lucide-react';
 import { POWER_SUITE, SERVICE_PILLARS, STATUS_STYLES } from '@/config/services';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -23,10 +23,10 @@ export default function ServicesPage() {
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Full Stack · AI · Cloud · Training</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-background tracking-tight leading-[1.05] mb-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] mb-6">
               Everything your<br />business needs.
             </h1>
-            <p className="text-background/70 text-lg max-w-2xl leading-relaxed mb-8">
+            <p className="text-white/70 dark:text-muted-foreground text-lg max-w-2xl leading-relaxed mb-8">
               Integrated SaaS products connected by one SSO identity, plus the agency services — software development, AI analytics, cloud infrastructure, hardware integrations, and talent development — that power Africa's most ambitious businesses.
             </p>
             <div className="flex gap-3 flex-wrap">
@@ -35,7 +35,7 @@ export default function ServicesPage() {
                   Access portal <ExternalLink className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" className="border-background/20 text-background bg-transparent hover:bg-background/10 hover:border-background/40" asChild>
+              <Button variant="outline" className="border-white/20 dark:border-foreground/20 text-white dark:text-foreground bg-transparent hover:bg-white/10 dark:hover:bg-foreground/10 hover:border-white/30 dark:hover:border-foreground/30" asChild>
                 <Link href="/contact">Book a demo</Link>
               </Button>
             </div>
@@ -81,7 +81,7 @@ export default function ServicesPage() {
                   )}
                 >
                   {/* Illustration - full width, dark background */}
-                  <div className="relative w-full bg-muted/50 dark:bg-[#080b12] overflow-hidden" style={{ height: 160 }}>
+                  <div className="relative w-full bg-muted/50 dark:bg-card overflow-hidden" style={{ height: 160 }}>
                     <Image
                       src={product.img}
                       alt={product.name}
@@ -143,7 +143,7 @@ export default function ServicesPage() {
                   <div className={cn('grid grid-cols-1 lg:grid-cols-2', isReversed && 'lg:flex lg:flex-row-reverse')}>
 
                     {/* Illustration — fills entire left/right half */}
-                    <div className="relative bg-muted/50 dark:bg-[#080b12] overflow-hidden" style={{ minHeight: 260 }}>
+                    <div className="relative bg-muted/50 dark:bg-card overflow-hidden" style={{ minHeight: 260 }}>
                       <Image
                         src={pillar.img}
                         alt={pillar.name}

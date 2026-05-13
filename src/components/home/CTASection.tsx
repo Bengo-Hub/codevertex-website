@@ -16,11 +16,11 @@ export function CTASection() {
             {/* Left: text + CTAs */}
             <div className="p-10 sm:p-14 flex flex-col justify-center">
               <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Get Started</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-background tracking-tight leading-tight mb-5">
+              <h2 className="text-4xl sm:text-5xl font-black text-white dark:text-foreground tracking-tight leading-tight mb-5">
                 Ready to build your<br />
                 <span className="text-primary">digital infrastructure?</span>
               </h2>
-              <p className="text-background/65 text-base font-medium max-w-md mb-8 leading-relaxed">
+              <p className="text-white/65 dark:text-muted-foreground text-base font-medium max-w-md mb-8 leading-relaxed">
                 Join hundreds of businesses across Africa transforming their operations with the Codevertex ecosystem.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -32,7 +32,7 @@ export function CTASection() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-background/20 text-background bg-transparent hover:bg-background/10 hover:border-background/40"
+                  className="border-white/20 dark:border-foreground/20 text-white dark:text-foreground bg-transparent hover:bg-white/10 dark:hover:bg-foreground/10 hover:border-white/30 dark:hover:border-foreground/30"
                   asChild
                 >
                   <a href="tel:+254743793901">
@@ -40,7 +40,7 @@ export function CTASection() {
                   </a>
                 </Button>
               </div>
-              <p className="text-background/40 text-xs mt-5 font-medium">
+              <p className="text-white/40 dark:text-muted-foreground text-xs mt-5 font-medium">
                 +254 743 793 901 · Pioneer House, Oginga Street, Kisumu
               </p>
             </div>

@@ -36,10 +36,10 @@ const GALLERY = [
 ];
 
 const DISCIPLINES = [
-  { name: 'Software Engineering', color: '#6c47ff', courses: 8, icon: '⌨️' },
-  { name: 'ICDL Certification', color: '#38bdf8', courses: 4, icon: '🖥️' },
-  { name: 'Cisco Networking', color: '#f59e0b', courses: 4, icon: '🌐' },
-  { name: 'AI & Machine Learning', color: '#a855f7', courses: 4, icon: '🤖' },
+  { name: 'Software Engineering', color: '#10B981', courses: 8, icon: '⌨️' },
+  { name: 'ICDL Certification', color: '#EC4899', courses: 4, icon: '🖥️' },
+  { name: 'Cisco Networking', color: '#0EA5E9', courses: 4, icon: '🌐' },
+  { name: 'AI & Machine Learning', color: '#F59E0B', courses: 4, icon: '🤖' },
   { name: 'Data Analytics', color: '#4ade80', courses: 4, icon: '📊' },
 ];
 

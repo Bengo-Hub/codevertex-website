@@ -117,7 +117,7 @@ export function Navbar() {
               height={44}
               className={cn(
                 'h-9 w-auto object-contain group-hover:opacity-90 transition-opacity',
-                scrolled ? 'dark:invert' : 'invert'
+                scrolled ? '' : 'invert dark:invert'
               )}
               priority
             />
@@ -139,8 +139,8 @@ export function Navbar() {
                         ? 'text-primary bg-primary/8'
                         : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                       : isActive
-                        ? 'text-white bg-white/10'
-                        : 'text-white/70 hover:text-white hover:bg-white/8'
+                        ? 'text-white dark:text-foreground bg-white/10 dark:bg-foreground/10'
+                        : 'text-white/70 dark:text-foreground/70 hover:text-white dark:hover:text-foreground hover:bg-white/8 dark:hover:bg-foreground/8'
                   )}
                 >
                   {link.label}

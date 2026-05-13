@@ -67,7 +67,7 @@ const POSTS = [
 
 const CAT_COLORS: Record<string, string> = {
   Product: 'bg-primary/10 text-primary border-primary/20',
-  Insights: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
+  Insights: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
   Company: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
   Technical: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   'Case Study': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
@@ -84,15 +84,15 @@ export default function BlogPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Blog</p>
-              <h1 className="text-5xl sm:text-6xl font-black text-background tracking-tight leading-[1.05] mb-4">
+              <h1 className="text-5xl sm:text-6xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] mb-4">
                 Insights &amp; Stories
               </h1>
-              <p className="text-background/70 text-lg max-w-xl leading-relaxed">
+              <p className="text-white/70 dark:text-muted-foreground text-lg max-w-xl leading-relaxed">
                 Technology, business, and the future of African digital infrastructure — from the team building it.
               </p>
             </div>
             {/* Featured post preview */}
-            <div className="hidden lg:block relative rounded-2xl overflow-hidden h-48 border border-background/10">
+            <div className="hidden lg:block relative rounded-2xl overflow-hidden h-48 border border-white/10 dark:border-foreground/10">
               <Image
                 src={POSTS[0].cover}
                 alt={POSTS[0].title}
