@@ -1,20 +1,18 @@
 'use client';
 
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 
-function LoginInner() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
-  const triggered = useRef(false);
+
+  const returnTo = searchParams.get('returnTo') ?? '/';
 
   useEffect(() => {
-    if (triggered.current) return;
-    triggered.current = true;
-    const returnTo = searchParams.get('returnTo') || '/';
     login(returnTo);
-  }, [searchParams, login]);
+  }, [login, returnTo]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -29,7 +27,7 @@ function LoginInner() {
 export default function LoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen" />}>
-      <LoginInner />
+      <LoginContent />
     </Suspense>
   );
 }

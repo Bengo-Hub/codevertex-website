@@ -1,4 +1,5 @@
 'use client';
+
 import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -18,13 +19,11 @@ function Spinner() {
 function CallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const handled = useRef(false);
-  const handleCallback = useAuthStore((s) => s.handleCallback);
+  const { handleCallback, status, user } = useAuthStore();
+  const hasStarted = useRef(false);
 
+  // Effect 1: exchange the code for tokens (runs once)
   useEffect(() => {
-    if (handled.current) return;
-    handled.current = true;
-
     const code = searchParams.get('code');
     const state = searchParams.get('state');
     const error = searchParams.get('error');
@@ -34,36 +33,37 @@ function CallbackInner() {
       return;
     }
 
+    if (hasStarted.current) return;
+    hasStarted.current = true;
+
     const storedState = consumeState();
     if (storedState && storedState !== state) {
+      // Stale or replayed callback — drop it, let the user re-authenticate
       router.replace('/');
       return;
     }
 
     const callbackUrl = `${window.location.origin}/auth/callback`;
-    handleCallback(code, callbackUrl).then(async () => {
-      // Establish the server-side session cookie the middleware uses for /admin routing
-      const { useAuthStore: store } = await import('@/lib/store/auth-store');
-      const token = store.getState().accessToken;
-      if (token) {
-        await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken: token }),
-        }).catch(() => { /* non-fatal — user will be re-prompted */ });
-      }
+    handleCallback(code, callbackUrl);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      const returnTo = sessionStorage.getItem('sso_return_to') || '/';
-      sessionStorage.removeItem('sso_return_to');
-      router.replace(returnTo);
-    });
-  }, [searchParams, router, handleCallback]);
+  // Effect 2: navigate once auth is confirmed (same pattern as cafe-website)
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const returnTo = sessionStorage.getItem('sso_return_to');
+    sessionStorage.removeItem('sso_return_to');
+    sessionStorage.removeItem('sso_nav_started');
+
+    // Navigate to the return destination, or the role-appropriate default
+    const isValidReturn = returnTo && returnTo.startsWith('/') && returnTo !== '/auth/login';
+    router.replace(isValidReturn ? returnTo : '/');
+  }, [status, user, router]);
 
   return <Spinner />;
 }
 
-// useSearchParams() must be inside a <Suspense> boundary in Next.js 15+.
-// Without it the page throws during static rendering and breaks the build.
 export default function AuthCallbackPage() {
   return (
     <Suspense fallback={<Spinner />}>
