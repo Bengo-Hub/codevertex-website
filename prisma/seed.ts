@@ -1,8 +1,9 @@
 /**
  * Codevertex Website — Prisma Seed
  *
- * Seeds:
- *  - All Digitika Academy courses (mirrors src/config/courses.ts)
+ * Seeds / upserts:
+ *  - All Digitika Academy courses (IDs match src/config/courses.ts)
+ *  - Sample cohorts linked to courses
  *  - Starter blog posts
  *
  * Run:  pnpm prisma db seed
@@ -16,14 +17,14 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 // ---------------------------------------------------------------------------
-// Courses
+// Course seed type
 // ---------------------------------------------------------------------------
 
 interface CourseSeed {
   id: string;
   categoryId: string;
   name: string;
-  shortName?: string;
+  shortName?: string | null;
   slug: string;
   duration: string;
   mode: string;
@@ -43,391 +44,520 @@ interface CourseSeed {
   sortOrder: number;
 }
 
+// ---------------------------------------------------------------------------
+// ICDL custom installment note helper (for description enrichment)
+// ---------------------------------------------------------------------------
+// Level 1 (20 000): Full | 10k+10k | 10k+5k+5k
+// Level 2 (22 000): Full | 11k+11k | 10k+7k+5k
+// Level 3 (26 000): Full | 13k+13k | 10k+10k+6k
+// Level 4&5 (28 000): Full | 14k+14k | 10k+10k+8k
+
+// ---------------------------------------------------------------------------
+// Courses — IDs MUST match src/config/courses.ts
+// ---------------------------------------------------------------------------
+
 const COURSES: CourseSeed[] = [
   // ── SOFTWARE ENGINEERING ──────────────────────────────────────────────────
   {
     id: 'code-starter',
     categoryId: 'software',
     name: 'Code-Starter — Introduction to Software Engineering',
-    shortName: 'Code-Starter Bootcamp',
+    shortName: 'Code-Starter',
     slug: 'code-starter',
     duration: '10 weeks',
-    mode: 'Hybrid (In-person Kisumu + Zoom)',
+    mode: 'Hybrid (Kisumu + Online)',
     price: 30000,
     currency: 'KES',
     level: 'beginner',
     featured: true,
     sortOrder: 1,
     coverImage: '/images/Code-starter-2.png',
+    audience: 'Adults (complete beginners welcome)',
     description:
-      'Go from absolute beginner to confident junior developer in 10 weeks. Learn to code in 2 languages, build real projects, and earn 2 ICDL certifications.',
+      "The ultimate beginner-to-employable bootcamp. 10 weeks, 2 ICDL certifications, 3+ GitHub projects, and a career roadmap — in a hybrid Kisumu + Zoom format.",
     longDescription:
-      "Go from absolute beginner to confident junior developer in 10 weeks. You'll learn to code in 2 languages (Python and JavaScript), build real projects you can show employers, earn 2 ICDL certifications, and join a community of East African tech professionals. Delivered in a hybrid format — evening sessions in our Kisumu hub plus Zoom for flexibility. No prior experience required.",
+      "Code-Starter is Digitika's flagship programme — a 10-week intensive bootcamp that takes complete beginners to job-ready developers. You'll cover web development, Python, JavaScript, and AI tools while earning 2 ICDL certifications along the way. Sessions are hybrid: in-person at our Kisumu hub with live Zoom access for remote learners.",
     outcomes: [
-      'Code in Python and JavaScript',
-      'Build and deploy 3+ real web projects',
-      'Earn 2 ICDL certifications',
-      'Use Git, GitHub, and developer tools professionally',
-      'Apply AI tools to accelerate your workflow',
+      'HTML, CSS & responsive design',
+      'Python fundamentals & automation',
+      'JavaScript & DOM manipulation',
+      'Git, GitHub & collaboration',
+      'AI-assisted development workflow',
+      '2 ICDL certifications',
+      '3+ GitHub portfolio projects',
+      'Career roadmap session',
     ],
     prerequisites: ['Basic computer literacy', 'Access to a laptop'],
     careerPaths: ['Junior Developer', 'Freelance Web Developer', 'ICT Support', 'Tech Entrepreneur'],
     includes: [
-      '10 weeks of expert-led instruction',
-      '2 ICDL exam vouchers',
-      'Project portfolio (3 real projects)',
-      'Career mentorship session',
+      '10 weeks of instructor-led sessions',
+      '2 ICDL certification exams',
+      '3+ real GitHub projects',
+      'Hybrid: in-person + Zoom access',
+      'Career roadmap session',
       'Alumni network access',
+      'GitHub portfolio review',
       'Certificate of completion',
     ],
+    stack: 'HTML, CSS, Tailwind, Python, JavaScript, Git, GitHub, VS Code, AI tools',
   },
   {
     id: 'fullstack',
     categoryId: 'software',
     name: 'Full-Stack Web Development',
+    shortName: 'Full-Stack Dev',
     slug: 'fullstack',
-    duration: '16 weeks',
-    mode: 'Online & In-person',
+    duration: '12 weeks',
+    mode: 'In-person / Online',
     price: 45000,
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 2,
     coverImage: '/images/coding.png',
+    audience: 'Adults',
     description:
-      'Master modern full-stack web development with React, Node.js, and PostgreSQL. Build production-ready applications from database to deployment.',
+      'Build modern web applications from frontend to backend with real-world projects and production-ready code.',
+    longDescription:
+      "A comprehensive 12-week programme covering everything from React frontends to Node.js backends and PostgreSQL databases. You'll ship 4+ production-quality projects and leave with a portfolio that gets you hired.",
     outcomes: [
-      'Build full-stack React + Node.js applications',
-      'Design and query relational databases',
-      'Deploy to cloud platforms (Vercel, Railway)',
-      'Implement authentication and REST APIs',
-      'Apply agile development practices',
+      'React frontends',
+      'Node.js backends',
+      'PostgreSQL databases',
+      'REST & GraphQL APIs',
+      'Authentication & security',
+      'Cloud deployment',
+      'Testing fundamentals',
     ],
-    prerequisites: ['Basic HTML/CSS knowledge', 'Familiarity with JavaScript'],
-    careerPaths: ['Full-Stack Developer', 'Backend Engineer', 'Freelance Developer'],
-    includes: ['16 weeks instruction', '5 capstone projects', 'Code review sessions', 'Alumni certificate'],
-    stack: 'React, Node.js, Express, PostgreSQL, Prisma, Tailwind CSS',
+    prerequisites: ['Basic HTML/CSS knowledge', 'Some programming experience recommended', 'Laptop required'],
+    careerPaths: ['Full-Stack Developer', 'Frontend Engineer', 'Backend Developer', 'Software Engineer'],
+    includes: ['12 weeks instruction', '4 capstone projects', 'Code review sessions', 'Alumni certificate'],
+    stack: 'HTML, CSS, JavaScript, React, Node.js, Express, PostgreSQL, Git, Docker',
   },
   {
     id: 'mobile-dev',
     categoryId: 'software',
     name: 'Mobile App Development',
+    shortName: 'Mobile Dev',
     slug: 'mobile-dev',
-    duration: '14 weeks',
-    mode: 'Online & In-person',
+    duration: '10 weeks',
+    mode: 'Online / Hybrid',
     price: 38000,
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 3,
     coverImage: '/images/coding.png',
-    description:
-      'Build cross-platform mobile apps for iOS and Android using React Native. Ship your first app to the Play Store by the end of the programme.',
+    audience: 'Adults',
+    description: 'Cross-platform mobile app development for Android and iOS with React Native & Flutter.',
+    longDescription:
+      'Build real mobile apps for both Android and iOS using React Native and Flutter. Covers UI design, state management, push notifications, camera integration, and deploying to the App Store and Google Play.',
     outcomes: [
-      'Build cross-platform iOS & Android apps',
-      'Publish to Google Play Store',
-      'Integrate device APIs (camera, GPS, notifications)',
-      'Connect to REST APIs and real-time backends',
+      'React Native apps',
+      'Flutter basics',
+      'Push notifications',
+      'App Store deployment',
+      'Firebase integration',
+      'Mobile UI/UX',
     ],
-    prerequisites: ['JavaScript fundamentals', 'Basic React knowledge preferred'],
-    careerPaths: ['Mobile Developer', 'React Native Engineer', 'App Entrepreneur'],
-    includes: ['14 weeks instruction', '3 mobile projects', 'Play Store deployment guide', 'Alumni certificate'],
-    stack: 'React Native, Expo, TypeScript, Firebase',
+    prerequisites: ['JavaScript fundamentals', 'Basic programming experience'],
+    careerPaths: ['Mobile Developer', 'React Native Developer', 'Flutter Developer'],
+    includes: ['10 weeks instruction', '3 mobile projects', 'Play Store deployment guide', 'Alumni certificate'],
+    stack: 'React Native, Flutter, Dart, Firebase, REST APIs, Expo',
   },
   {
-    id: 'devops-cloud',
+    id: 'devops',
     categoryId: 'software',
-    name: 'DevOps & Cloud Engineering',
+    name: 'Cloud Engineering & DevOps',
+    shortName: 'Cloud & DevOps',
     slug: 'devops-cloud',
-    duration: '12 weeks',
+    duration: '10 weeks',
     mode: 'Online',
     price: 42000,
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 4,
     coverImage: '/images/coding.png',
-    description:
-      'Master CI/CD pipelines, container orchestration with Kubernetes, and cloud infrastructure on AWS and GCP.',
+    audience: 'Adults',
+    description: 'Modern DevOps practices: CI/CD, containerisation, Kubernetes, and cloud-native architecture.',
+    longDescription:
+      'Learn the tools and practices that power modern software delivery — Docker, Kubernetes, CI/CD pipelines, infrastructure as code, and cloud platforms.',
     outcomes: [
-      'Containerise applications with Docker & Kubernetes',
-      'Build CI/CD pipelines with GitHub Actions',
-      'Provision cloud infrastructure with Terraform',
-      'Monitor systems with Prometheus and Grafana',
+      'Docker & Kubernetes',
+      'CI/CD pipelines',
+      'AWS / GCP basics',
+      'Infrastructure as Code',
+      'Monitoring & logging',
+      'GitOps workflows',
     ],
-    prerequisites: ['Linux command line basics', 'Basic programming knowledge'],
-    careerPaths: ['DevOps Engineer', 'SRE', 'Cloud Architect', 'Platform Engineer'],
-    includes: ['12 weeks instruction', 'Cloud lab environments', 'Terraform templates', 'Alumni certificate'],
-    stack: 'Docker, Kubernetes, GitHub Actions, AWS, GCP, Terraform, Prometheus',
+    prerequisites: ['Linux command line basics', 'Some programming experience'],
+    careerPaths: ['DevOps Engineer', 'Cloud Engineer', 'Site Reliability Engineer', 'Platform Engineer'],
+    includes: ['10 weeks instruction', 'Cloud lab environments', 'Terraform templates', 'Alumni certificate'],
+    stack: 'Docker, Kubernetes, GitHub Actions, AWS, GCP, Terraform, Nginx',
   },
   {
-    id: 'cybersecurity',
+    id: 'cybersec',
     categoryId: 'software',
     name: 'Cybersecurity Fundamentals',
+    shortName: 'Cybersecurity',
     slug: 'cybersecurity',
-    duration: '10 weeks',
-    mode: 'Online & In-person',
+    duration: '6 weeks',
+    mode: 'In-person / Online',
     price: 28000,
     currency: 'KES',
     level: 'beginner',
     sortOrder: 5,
     coverImage: '/images/IT Support Course.png',
+    audience: 'Adults',
     description:
-      'Learn to protect systems and networks from cyber threats. Covers ethical hacking, network security, and industry-standard defence frameworks.',
+      'Foundations of information security, ethical hacking, and compliance for the modern digital landscape.',
+    longDescription:
+      'Understand how attackers think and how to defend against them. Covers network security, vulnerability assessment, penetration testing basics, and security compliance frameworks.',
     outcomes: [
-      'Identify and mitigate common vulnerabilities',
-      'Perform basic ethical hacking and pen testing',
-      'Implement network security controls',
-      'Apply OWASP and NIST frameworks',
+      'Network security',
+      'Ethical hacking basics',
+      'Vulnerability assessment',
+      'Security compliance',
+      'Incident response',
+      'OWASP Top 10',
     ],
-    prerequisites: ['Basic networking knowledge', 'Computer literacy'],
-    careerPaths: ['Security Analyst', 'Penetration Tester', 'IT Security Officer'],
-    includes: ['10 weeks instruction', 'Kali Linux lab environment', 'Capture-the-Flag challenges', 'Certificate'],
-    stack: 'Kali Linux, Wireshark, Metasploit, Burp Suite, Nmap',
+    prerequisites: ['Basic networking concepts', 'Linux basics helpful but not required'],
+    careerPaths: ['Security Analyst', 'Ethical Hacker', 'IT Security Officer', 'Penetration Tester'],
+    includes: ['6 weeks instruction', 'Kali Linux lab environment', 'Capture-the-Flag challenges', 'Certificate'],
+    stack: 'Kali Linux, Wireshark, Metasploit, OWASP tools, Nmap',
   },
   {
-    id: 'scratch-python',
+    id: 'kids-scratch',
     categoryId: 'software',
-    name: 'Scratch & Python for Kids (Ages 8–12)',
+    name: 'Coding for Kids — Scratch & Python',
+    shortName: 'Kids Coding',
     slug: 'scratch-python',
     duration: '8 weeks',
-    mode: 'In-person Kisumu',
+    mode: 'In-person / Online',
     price: 8000,
     currency: 'KES',
     level: 'beginner',
-    audience: 'Ages 8–12',
+    audience: 'Kids (Age 8–13)',
     sortOrder: 6,
     coverImage: '/images/python-programming.png',
-    description:
-      'Young learners aged 8–12 build their first games and animations using Scratch, then graduate to Python basics in a fun, structured programme.',
+    description: 'Fun, project-based coding for kids aged 8–13. Build games, animations, and interactive stories.',
+    longDescription:
+      "Kids learn to think like programmers through visual Scratch projects and introductory Python. Every lesson is game-based and project-driven — kids build something new each week.",
     outcomes: [
-      'Create animations and simple games in Scratch',
-      'Write basic Python programs',
-      'Develop computational thinking',
-      'Build confidence with technology',
+      'Scratch programming',
+      'Python basics',
+      'Logical thinking',
+      'Mini game creation',
+      'Creative problem-solving',
     ],
-    prerequisites: ['Basic reading ability', 'Parental consent'],
-    careerPaths: ['Future developer foundation', 'STEM pathway preparation'],
+    prerequisites: ['Basic computer operation', 'Parental consent form required'],
+    careerPaths: ['Foundation for future tech career', 'STEM enrichment'],
     includes: ['8 weeks instruction', 'Parent progress reports', 'Digital certificate', 'Coding portfolio'],
+    stack: 'Scratch, Python (Turtle, basics)',
   },
   {
-    id: 'web-design-teens',
+    id: 'teens-web',
     categoryId: 'software',
-    name: 'Web Design for Teens (Ages 13–17)',
+    name: 'Web Design for Teens',
+    shortName: 'Teen Web Design',
     slug: 'web-design-teens',
     duration: '8 weeks',
-    mode: 'In-person Kisumu',
+    mode: 'In-person / Online',
     price: 12000,
     currency: 'KES',
     level: 'beginner',
-    audience: 'Ages 13–17',
+    audience: 'Teens (Age 13–17)',
     sortOrder: 7,
     coverImage: '/images/Code-starter-2.png',
-    description:
-      'Teens aged 13–17 learn HTML, CSS, and basic JavaScript to design and publish their own websites. Includes a final project and graduation showcase.',
-    outcomes: [
-      'Design responsive websites with HTML & CSS',
-      'Apply basic JavaScript interactions',
-      'Deploy a live website to the internet',
-      'Present a tech project with confidence',
-    ],
-    prerequisites: ['Basic computer use', 'Parental consent'],
-    careerPaths: ['Web Designer', 'Junior Developer pathway', 'Digital Entrepreneur'],
+    description: 'Teens aged 13–17 build their own websites and web apps using real industry tools.',
+    longDescription:
+      'A practical introduction to web development for teenagers. Students design and build real websites using industry-standard tools, and graduate with a live website they built themselves.',
+    outcomes: ['HTML & CSS', 'JavaScript basics', 'Responsive design', 'Deploy a live site', 'Portfolio project'],
+    prerequisites: ['Basic computer skills', 'Parental consent form required'],
+    careerPaths: ['Pathway to adult software engineering programmes', 'Portfolio for tech applications'],
     includes: ['8 weeks instruction', 'Live portfolio website', 'Graduation showcase', 'Certificate'],
-    stack: 'HTML5, CSS3, JavaScript, GitHub Pages',
+    stack: 'HTML5, CSS3, JavaScript, VS Code, GitHub Pages',
   },
   {
-    id: 'game-dev',
+    id: 'kids-games',
     categoryId: 'software',
-    name: 'Game Development with Unity',
+    name: 'Game Development for Kids',
+    shortName: 'Game Dev Kids',
     slug: 'game-dev',
-    duration: '10 weeks',
-    mode: 'Online & In-person',
+    duration: '6 weeks',
+    mode: 'In-person',
     price: 10000,
     currency: 'KES',
     level: 'beginner',
-    audience: 'Ages 13+',
+    audience: 'Kids (Age 10–16)',
     sortOrder: 8,
     coverImage: '/images/coding.png',
-    description:
-      'Build 2D and 3D games with Unity and C#. Participants leave with a published mini-game and the skills to pursue a career in game development.',
+    description: 'Create fun 2D games using Pygame and Unity basics in a hands-on studio environment.',
+    longDescription:
+      "Kids aged 10–16 learn game design fundamentals, physics, and programming through building their own 2D games. Sessions are fast-paced and creative — students playtest each other's games each week.",
     outcomes: [
-      'Build 2D and 3D games in Unity',
-      'Program game logic with C#',
-      'Apply physics, animations, and audio',
-      'Publish a game to itch.io or Google Play',
+      'Game mechanics',
+      'Pygame basics',
+      'Unity 2D intro',
+      'Creative problem-solving',
+      'Game design principles',
     ],
-    prerequisites: ['Basic computer skills'],
-    careerPaths: ['Game Developer', 'Interactive Media Designer', 'VR/AR Developer'],
-    includes: ['10 weeks instruction', 'Unity Pro student license', 'Published game portfolio', 'Certificate'],
-    stack: 'Unity, C#, Blender (basics)',
+    prerequisites: ['Some computer familiarity', 'Parental consent form required'],
+    careerPaths: ['Foundation for game development career', 'STEM pathway'],
+    includes: ['6 weeks instruction', 'Unity Pro student license', 'Published game portfolio', 'Certificate'],
+    stack: 'Python (Pygame), Unity (C# basics)',
   },
 
   // ── ICDL ─────────────────────────────────────────────────────────────────
+  // Pricing: Level 1=20k | Level 2=22k | Level 3=26k | Level 4&5=28k | Citizen=6.5k
+  // Installments (up to 3 allowed for all ICDL courses):
+  //   Full | 2-plan | 3-plan (10k+5k+5k split for L1 as reference)
   {
-    id: 'icdl-core',
+    id: 'icdl-l1',
     categoryId: 'icdl',
-    name: 'ICDL Core Certification',
-    slug: 'icdl-core',
-    duration: '6 weeks',
-    mode: 'In-person Kisumu + Online',
-    price: 12000,
+    name: 'ICDL Level 1 — Computer & Online Essentials',
+    shortName: 'ICDL Level 1',
+    slug: 'icdl-l1',
+    duration: '4 weeks',
+    mode: 'In-person / Online',
+    price: 20000,
     currency: 'KES',
     level: 'beginner',
     sortOrder: 1,
     coverImage: '/images/ICDL-core-course.png',
     description:
-      'Earn the globally recognised ICDL Core qualification covering computer essentials, Word, Excel, PowerPoint, and internet skills.',
+      'Computer fundamentals, file management, internet safety, email and digital communication basics. Globally recognised and required for Kenyan public service roles.',
+    longDescription:
+      'The entry-level ICDL qualification covering how computers work, file and folder management, safe internet use, professional email etiquette, and basic digital communication. Internationally recognised and required for Kenyan public service roles.',
     outcomes: [
-      'Operate a computer with confidence',
-      'Create documents, spreadsheets, and presentations',
-      'Navigate the internet safely',
-      'Pass the official ICDL Core exam',
+      'Computer fundamentals',
+      'File and folder management',
+      'Internet & web browsing',
+      'Email professionalism',
+      'Online safety basics',
+      'Digital communication',
     ],
-    prerequisites: ['Basic computer literacy'],
-    careerPaths: ['Office Professional', 'Admin Assistant', 'Any role requiring digital literacy'],
-    includes: ['6 weeks instruction', '1 official ICDL exam voucher', 'Exam practice software', 'ICDL certificate'],
+    prerequisites: ['Basic ability to use a computer or smartphone'],
+    careerPaths: ['Office Administrator', 'Data Entry Clerk', 'Customer Service Agent'],
+    includes: [
+      '4 weeks instruction',
+      'Official ICDL exam voucher',
+      'Exam practice software',
+      'ICDL Level 1 certificate',
+    ],
   },
   {
-    id: 'icdl-advanced',
+    id: 'icdl-l2',
     categoryId: 'icdl',
-    name: 'ICDL Advanced Certification',
-    slug: 'icdl-advanced',
-    duration: '8 weeks',
-    mode: 'In-person Kisumu + Online',
-    price: 18000,
+    name: 'ICDL Level 2 — Document Production & Presentations',
+    shortName: 'ICDL Level 2',
+    slug: 'icdl-l2',
+    duration: '4 weeks',
+    mode: 'In-person / Online',
+    price: 22000,
     currency: 'KES',
-    level: 'intermediate',
+    level: 'beginner',
     sortOrder: 2,
     coverImage: '/images/ICDL-core-course.png',
-    description:
-      'Advance your digital skills with ICDL Advanced modules covering database management, advanced spreadsheets, and document production.',
+    description: 'Word processing, professional document formatting, and creating compelling presentations.',
+    longDescription:
+      'Build professional document production skills using Microsoft Word and PowerPoint. Learn to create formatted reports, business letters, branded templates, and engaging slideshows used in professional environments.',
     outcomes: [
-      'Build and query databases with Access',
-      'Use advanced Excel formulas and macros',
-      'Produce professional documents with advanced Word features',
-      'Pass the ICDL Advanced exam',
+      'Word processing (MS Word)',
+      'Document formatting & styles',
+      'Headers, footers & tables',
+      'PowerPoint presentations',
+      'Visual design basics',
+      'Mail merge',
     ],
-    prerequisites: ['ICDL Core certification or equivalent'],
-    careerPaths: ['Data Entry Specialist', 'Business Analyst', 'Office Manager'],
-    includes: ['8 weeks instruction', '1 ICDL Advanced exam voucher', 'Exam materials', 'Certificate'],
+    prerequisites: ['ICDL Level 1 or basic computer skills'],
+    careerPaths: ['Administrative Assistant', 'Secretary', 'Office Manager', 'HR Assistant'],
+    includes: [
+      '4 weeks instruction',
+      'Official ICDL exam voucher',
+      'Exam materials',
+      'ICDL Level 2 certificate',
+    ],
   },
   {
-    id: 'icdl-professional',
+    id: 'icdl-l3',
     categoryId: 'icdl',
-    name: 'ICDL Professional Certification',
-    slug: 'icdl-professional',
-    duration: '10 weeks',
-    mode: 'In-person Kisumu + Online',
-    price: 24000,
+    name: 'ICDL Level 3 — Spreadsheets & Data Management',
+    shortName: 'ICDL Level 3',
+    slug: 'icdl-l3',
+    duration: '5 weeks',
+    mode: 'In-person / Online',
+    price: 26000,
     currency: 'KES',
-    level: 'advanced',
+    level: 'intermediate',
     sortOrder: 3,
     coverImage: '/images/ICDL-core-course.png',
-    description:
-      'The highest tier of ICDL qualification. Covers IT security, project management, and data science fundamentals for senior professionals.',
+    description: 'Excel spreadsheets, formulas, data analysis, charts, and database fundamentals.',
+    longDescription:
+      'Master Microsoft Excel and database fundamentals. Learn to build spreadsheet models with formulas and functions, create charts and pivot tables, and understand how databases store and retrieve information — skills valued across all industries.',
     outcomes: [
-      'Apply IT security best practices',
-      'Manage projects with digital tools',
-      'Analyse data at a professional level',
-      'Achieve the ICDL Professional qualification',
+      'Excel formulas & functions',
+      'Data sorting & filtering',
+      'Charts & pivot tables',
+      'Database concepts',
+      'Data validation',
+      'Spreadsheet modelling',
     ],
-    prerequisites: ['ICDL Advanced or significant professional experience'],
-    careerPaths: ['IT Manager', 'Project Manager', 'Senior Business Analyst'],
-    includes: ['10 weeks instruction', '2 ICDL Professional exam vouchers', 'Project toolkit', 'Certificate'],
+    prerequisites: ['ICDL Level 2 or equivalent document skills'],
+    careerPaths: ['Finance Assistant', 'Data Entry Analyst', 'Accounts Clerk', 'Operations Coordinator'],
+    includes: [
+      '5 weeks instruction',
+      'Official ICDL exam voucher',
+      'Exam materials',
+      'ICDL Level 3 certificate',
+    ],
   },
   {
-    id: 'icdl-digital-citizen',
+    id: 'icdl-l45',
+    categoryId: 'icdl',
+    name: 'ICDL Levels 4 & 5 — Advanced Professional Skills',
+    shortName: 'ICDL Levels 4 & 5',
+    slug: 'icdl-l45',
+    duration: '8 weeks',
+    mode: 'Hybrid',
+    price: 28000,
+    currency: 'KES',
+    level: 'advanced',
+    sortOrder: 4,
+    coverImage: '/images/ICDL-core-course.png',
+    description:
+      'Advanced Excel, database design, IT security, project planning and computational thinking.',
+    longDescription:
+      'The advanced tier of ICDL covering complex spreadsheet modelling, relational database design, IT security for business, digital project planning, and computational thinking — the skills that differentiate IT professionals and managers.',
+    outcomes: [
+      'Advanced Excel & DAX',
+      'Database design & SQL basics',
+      'IT security & compliance',
+      'Project planning tools',
+      'Computational thinking',
+      'Digital project management',
+    ],
+    prerequisites: ['ICDL Level 3 or strong general computer skills'],
+    careerPaths: ['IT Officer', 'Project Manager', 'Systems Analyst', 'Finance Manager', 'Technical Administrator'],
+    includes: [
+      '8 weeks instruction',
+      '2 ICDL exam vouchers',
+      'Project toolkit',
+      'ICDL Levels 4 & 5 certificate',
+    ],
+  },
+  {
+    id: 'icdl-citizen',
     categoryId: 'icdl',
     name: 'ICDL Digital Citizen',
+    shortName: 'Digital Citizen',
     slug: 'icdl-digital-citizen',
-    duration: '3 weeks',
+    duration: '4 weeks',
     mode: 'Online',
     price: 6500,
     currency: 'KES',
     level: 'beginner',
-    sortOrder: 4,
+    sortOrder: 5,
     coverImage: '/images/ICDL-core-course.png',
     description:
-      'A short, accessible programme for anyone who wants to use the internet safely and effectively — ideal for small business owners and community learners.',
+      'Foundational digital literacy for navigating the modern digital economy safely and confidently.',
+    longDescription:
+      'Designed for individuals new to digital technology, this course covers safe internet use, social media literacy, online communication, e-commerce, mobile banking, and protecting personal data online.',
     outcomes: [
-      'Use email and social media safely',
-      'Recognise and avoid online scams',
-      'Conduct transactions safely online',
-      'Protect personal data and privacy',
+      'Online safety',
+      'Social media literacy',
+      'Online communication',
+      'Digital well-being',
+      'E-commerce basics',
+      'Mobile money safety',
     ],
-    prerequisites: ['Access to a smartphone or computer'],
-    careerPaths: ['Digital literacy foundation for any career'],
-    includes: ['3 weeks online content', 'ICDL Digital Citizen certificate', 'Online exam'],
+    prerequisites: ['Basic smartphone or tablet usage'],
+    careerPaths: ['Essential skills for all working adults', 'Foundation for further digital qualifications'],
+    includes: ['4 weeks online content', 'ICDL Digital Citizen certificate', 'Online exam'],
   },
 
   // ── CCNA ─────────────────────────────────────────────────────────────────
   {
     id: 'ccna-1',
     categoryId: 'ccna',
-    name: 'CCNA v7 — Part 1: Introduction to Networks',
+    name: 'CCNA v7 Part 1 — Introduction to Networks',
+    shortName: 'CCNA Part 1',
     slug: 'ccna-1',
     duration: '8 weeks',
-    mode: 'In-person Kisumu + Online',
+    mode: 'In-person / Online',
     price: 22000,
     currency: 'KES',
     level: 'beginner',
     sortOrder: 1,
     coverImage: '/images/Cisco.png',
     description:
-      'Build a solid foundation in networking fundamentals with the official Cisco CCNA v7 curriculum. Covers OSI model, TCP/IP, Ethernet, and basic switch/router configuration.',
+      'OSI model, TCP/IP, IPv4/IPv6 addressing, Ethernet fundamentals, and Cisco IOS basics.',
+    longDescription:
+      "The first module of the Cisco CCNA curriculum. Build a solid foundation in how networks work — from the physical layer to application protocols — and practice configuring Cisco routers and switches in simulated labs.",
     outcomes: [
-      'Understand the OSI and TCP/IP models',
-      'Configure basic Cisco switches and routers',
-      'Implement VLANs and STP',
-      'Troubleshoot common network issues',
+      'OSI & TCP/IP models',
+      'IPv4/IPv6 addressing',
+      'Ethernet & LAN basics',
+      'Cisco IOS CLI',
+      'Subnetting',
+      'Basic router configuration',
     ],
-    prerequisites: ['Basic IT knowledge'],
-    careerPaths: ['Network Technician', 'IT Support', 'Junior Network Engineer'],
-    includes: ['8 weeks instruction', 'Cisco Packet Tracer labs', 'CCNA Part 1 exam voucher', 'Certificate'],
+    prerequisites: ['Basic computer skills', 'Interest in networking'],
+    careerPaths: ['Network Technician', 'IT Support', 'Network Engineer (with Parts 2 & 3)'],
+    includes: ['8 weeks instruction', 'Cisco Packet Tracer labs', 'CCNA Part 1 exam prep', 'Certificate'],
     stack: 'Cisco Packet Tracer, IOS CLI',
   },
   {
     id: 'ccna-2',
     categoryId: 'ccna',
-    name: 'CCNA v7 — Part 2: Switching, Routing & Wireless',
+    name: 'CCNA v7 Part 2 — Switching, Routing & Wireless',
+    shortName: 'CCNA Part 2',
     slug: 'ccna-2',
     duration: '8 weeks',
-    mode: 'In-person Kisumu + Online',
+    mode: 'In-person / Online',
     price: 22000,
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 2,
     coverImage: '/images/Cisco.png',
     description:
-      'Deepen your networking knowledge with advanced routing protocols (OSPF, EIGRP), wireless LAN configuration, and inter-VLAN routing.',
+      'VLANs, inter-VLAN routing, STP, EtherChannel, OSPF, DHCP, NAT, and wireless LANs.',
+    longDescription:
+      'Dive deeper into enterprise networking — configure VLANs for network segmentation, implement OSPF routing, set up DHCP and NAT, and design wireless LAN solutions. Heavy focus on practical Packet Tracer labs.',
     outcomes: [
-      'Configure OSPF and static routing',
-      'Set up wireless LANs and WLC',
-      'Implement inter-VLAN routing',
-      'Understand network security fundamentals',
+      'VLANs & trunking',
+      'OSPF routing',
+      'Wireless LAN setup',
+      'NAT & DHCP',
+      'STP & EtherChannel',
+      'Inter-VLAN routing',
     ],
     prerequisites: ['CCNA Part 1 or equivalent knowledge'],
-    careerPaths: ['Network Engineer', 'Systems Administrator', 'NOC Technician'],
-    includes: ['8 weeks instruction', 'Advanced Packet Tracer labs', 'CCNA Part 2 exam voucher', 'Certificate'],
-    stack: 'Cisco Packet Tracer, IOS CLI, WLC',
+    careerPaths: ['Network Engineer', 'Systems Administrator', 'IT Infrastructure Specialist'],
+    includes: ['8 weeks instruction', 'Advanced Packet Tracer labs', 'CCNA Part 2 exam prep', 'Certificate'],
+    stack: 'Cisco Packet Tracer, IOS CLI',
   },
   {
     id: 'ccna-3',
     categoryId: 'ccna',
-    name: 'CCNA v7 — Part 3: Enterprise Networking, Security & Automation',
+    name: 'CCNA v7 Part 3 — Enterprise Networking, Security & Automation',
+    shortName: 'CCNA Part 3',
     slug: 'ccna-3',
     duration: '8 weeks',
-    mode: 'In-person Kisumu + Online',
+    mode: 'In-person / Online',
     price: 22000,
     currency: 'KES',
     level: 'advanced',
     sortOrder: 3,
     coverImage: '/images/Cisco.png',
     description:
-      'Complete the CCNA curriculum with WAN technologies, network security, QoS, and network automation with Python and REST APIs.',
+      'WAN technologies, network security, QoS, and network automation with Python and REST APIs.',
+    longDescription:
+      'Complete the CCNA curriculum with WAN technologies, network security, QoS, and network automation with Python and REST APIs. Prepares you for the Cisco CCNA 200-301 exam.',
     outcomes: [
-      'Configure WAN and VPN technologies',
-      'Apply QoS policies',
-      'Automate networks with Python',
-      'Prepare for the Cisco CCNA exam',
+      'WAN & VPN technologies',
+      'QoS policies',
+      'Network automation with Python',
+      'REST API integration',
+      'CCNA 200-301 exam preparation',
     ],
     prerequisites: ['CCNA Parts 1 and 2 or equivalent'],
     careerPaths: ['Network Engineer', 'Network Automation Engineer', 'CCNA-certified Professional'],
@@ -435,9 +565,10 @@ const COURSES: CourseSeed[] = [
     stack: 'Cisco Packet Tracer, Python, REST APIs',
   },
   {
-    id: 'ccna-exam-prep',
+    id: 'ccna-cert',
     categoryId: 'ccna',
     name: 'CCNA Exam Prep Bootcamp',
+    shortName: 'CCNA Exam Prep',
     slug: 'ccna-exam-prep',
     duration: '4 weeks',
     mode: 'Online Intensive',
@@ -457,6 +588,7 @@ const COURSES: CourseSeed[] = [
     prerequisites: ['Completed CCNA Parts 1–3 or equivalent experience'],
     careerPaths: ['CCNA-certified Network Engineer', 'Network Administrator'],
     includes: ['4 weeks intensive prep', '10+ practice exams', 'Lab simulation bank', 'Study guide PDF'],
+    stack: 'Cisco Packet Tracer, Python, REST APIs',
   },
 
   // ── AI ────────────────────────────────────────────────────────────────────
@@ -464,6 +596,7 @@ const COURSES: CourseSeed[] = [
     id: 'ai-fundamentals',
     categoryId: 'ai',
     name: 'AI Fundamentals',
+    shortName: 'AI Fundamentals',
     slug: 'ai-fundamentals',
     duration: '6 weeks',
     mode: 'Online & In-person',
@@ -473,7 +606,9 @@ const COURSES: CourseSeed[] = [
     sortOrder: 1,
     coverImage: '/images/python-programming.png',
     description:
-      'No-code introduction to artificial intelligence. Understand how AI and machine learning work, and use AI tools to improve your productivity and career.',
+      'No-code introduction to artificial intelligence. Understand how AI and ML work, and use AI tools to improve your productivity and career.',
+    longDescription:
+      'A practical, no-code introduction to AI for professionals who want to stay ahead of the curve. You\'ll learn how large language models work, master prompt engineering, and apply AI tools to real business tasks.',
     outcomes: [
       'Explain how AI and ML models work',
       'Use ChatGPT, Claude, and Gemini effectively',
@@ -488,6 +623,7 @@ const COURSES: CourseSeed[] = [
     id: 'ml-python',
     categoryId: 'ai',
     name: 'Machine Learning with Python',
+    shortName: 'ML with Python',
     slug: 'ml-python',
     duration: '12 weeks',
     mode: 'Online & In-person',
@@ -498,9 +634,12 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/python-programming.png',
     description:
       'Build and deploy machine learning models with Python, scikit-learn, and TensorFlow. From data preprocessing to model evaluation and deployment.',
+    longDescription:
+      'Hands-on ML engineering from scratch. You\'ll build supervised and unsupervised models, process real datasets, and deploy models via REST APIs. Includes 4 portfolio projects.',
     outcomes: [
-      'Build supervised and unsupervised ML models',
-      'Process and visualise datasets with pandas and matplotlib',
+      'Supervised and unsupervised ML models',
+      'Data processing with pandas and matplotlib',
+      'Model evaluation and tuning',
       'Deploy models via Flask REST APIs',
       'Apply ML to real business problems',
     ],
@@ -513,6 +652,7 @@ const COURSES: CourseSeed[] = [
     id: 'genai-llm',
     categoryId: 'ai',
     name: 'Generative AI & Large Language Models',
+    shortName: 'GenAI & LLMs',
     slug: 'genai-llm',
     duration: '10 weeks',
     mode: 'Online',
@@ -523,6 +663,8 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/coding.png',
     description:
       'Deep-dive into LLMs, RAG pipelines, fine-tuning, and building production AI applications with the Anthropic and OpenAI APIs.',
+    longDescription:
+      'For developers who want to build production AI products. Covers LLM architecture, RAG pipelines with vector databases, fine-tuning, and deploying AI agents with tool use.',
     outcomes: [
       'Build RAG pipelines with vector databases',
       'Fine-tune and evaluate LLMs',
@@ -535,9 +677,10 @@ const COURSES: CourseSeed[] = [
     stack: 'Python, LangChain, Anthropic API, OpenAI API, Pinecone, pgvector',
   },
   {
-    id: 'ai-for-business',
+    id: 'ai-business',
     categoryId: 'ai',
     name: 'AI for Business & Leaders',
+    shortName: 'AI for Business',
     slug: 'ai-for-business',
     duration: '3 weeks',
     mode: 'Online (Weekend sessions)',
@@ -548,6 +691,8 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/Codevertex-Digital-Marketing.jpg',
     description:
       "Designed for executives and managers who want to understand AI's impact on their industry and lead digital transformation initiatives confidently.",
+    longDescription:
+      'A non-technical deep-dive for decision-makers. Learn how to evaluate AI vendors, identify automation opportunities, and build a basic AI implementation roadmap — without writing a single line of code.',
     outcomes: [
       'Identify AI opportunities in your organisation',
       'Evaluate AI vendors and solutions',
@@ -564,6 +709,7 @@ const COURSES: CourseSeed[] = [
     id: 'data-python',
     categoryId: 'data',
     name: 'Data Analytics with Python',
+    shortName: 'Data Analytics',
     slug: 'data-python',
     duration: '10 weeks',
     mode: 'Online & In-person',
@@ -574,6 +720,8 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/python-programming.png',
     description:
       'Master data wrangling, visualisation, and statistical analysis with Python, pandas, and matplotlib. Build a data portfolio employers will love.',
+    longDescription:
+      'The complete data analytics pipeline — from raw data to actionable insights. You\'ll work with real datasets, build dashboards, and present analysis findings in 4 hands-on portfolio projects.',
     outcomes: [
       'Clean and analyse datasets with pandas',
       'Create compelling visualisations',
@@ -586,9 +734,10 @@ const COURSES: CourseSeed[] = [
     stack: 'Python, pandas, NumPy, matplotlib, seaborn, Jupyter',
   },
   {
-    id: 'data-powerbi',
+    id: 'power-bi',
     categoryId: 'data',
     name: 'Business Intelligence with Power BI',
+    shortName: 'Power BI',
     slug: 'data-powerbi',
     duration: '6 weeks',
     mode: 'Online & In-person',
@@ -599,6 +748,8 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/Codevertex-Digital-Marketing.jpg',
     description:
       'Build interactive dashboards and reports with Microsoft Power BI. Connect to live data sources and automate executive reporting.',
+    longDescription:
+      'Master Power BI from data connection to published report. You\'ll write DAX formulas, build interactive dashboards, and publish reports to Power BI Service for executive audiences.',
     outcomes: [
       'Create interactive Power BI dashboards',
       'Write DAX formulas for calculated metrics',
@@ -611,9 +762,10 @@ const COURSES: CourseSeed[] = [
     stack: 'Power BI Desktop, DAX, Power Query, SQL',
   },
   {
-    id: 'data-sql',
+    id: 'sql-db',
     categoryId: 'data',
     name: 'SQL & Database Analytics',
+    shortName: 'SQL & Databases',
     slug: 'data-sql',
     duration: '6 weeks',
     mode: 'Online',
@@ -624,6 +776,8 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/python-programming.png',
     description:
       'Learn to query, join, and aggregate data from relational databases using SQL. Essential for every data analyst and backend developer.',
+    longDescription:
+      'SQL is the universal language of data. This course takes you from basic SELECT queries to advanced window functions, CTEs, and query optimisation — with a PostgreSQL practice environment throughout.',
     outcomes: [
       'Write complex SQL queries with JOINs and subqueries',
       'Design normalised database schemas',
@@ -636,9 +790,10 @@ const COURSES: CourseSeed[] = [
     stack: 'PostgreSQL, pgAdmin, DBeaver',
   },
   {
-    id: 'data-advanced',
+    id: 'advanced-analytics',
     categoryId: 'data',
     name: 'Advanced Data Analytics & Storytelling',
+    shortName: 'Advanced Analytics',
     slug: 'data-advanced',
     duration: '8 weeks',
     mode: 'Online',
@@ -649,6 +804,8 @@ const COURSES: CourseSeed[] = [
     coverImage: '/images/python-programming.png',
     description:
       'Combine statistical modelling, A/B testing, and data storytelling to turn raw data into decisions. Ideal for analysts ready to step up to senior roles.',
+    longDescription:
+      'For analysts who already know the basics and want to operate at a senior level. Covers A/B testing, predictive modelling, narrative data storytelling, and automated reporting pipelines.',
     outcomes: [
       'Apply A/B testing and hypothesis testing',
       'Build predictive models from business data',
@@ -659,6 +816,182 @@ const COURSES: CourseSeed[] = [
     careerPaths: ['Senior Data Analyst', 'Data Science Lead', 'Analytics Manager'],
     includes: ['8 weeks instruction', '2 real-world capstone projects', 'Peer review sessions', 'Certificate'],
     stack: 'Python, R, Tableau/Superset, SQL, Jupyter',
+  },
+];
+
+// ---------------------------------------------------------------------------
+// IDs that were changed in the seed (old → new mapping).
+// These old records will be deleted before upserting the new ones.
+// ---------------------------------------------------------------------------
+const DEPRECATED_COURSE_IDS = [
+  // ICDL old IDs
+  'icdl-core',
+  'icdl-advanced',
+  'icdl-professional',
+  'icdl-digital-citizen',
+  // Software old IDs
+  'scratch-python',
+  'web-design-teens',
+  'game-dev',
+  'devops-cloud',
+  'cybersecurity',
+  // CCNA old ID
+  'ccna-exam-prep',
+  // AI old ID
+  'ai-for-business',
+  // Data old IDs
+  'data-powerbi',
+  'data-sql',
+  'data-advanced',
+];
+
+// ---------------------------------------------------------------------------
+// Sample cohorts (linked to course IDs above)
+// ---------------------------------------------------------------------------
+
+interface CohortSeed {
+  courseId: string;
+  name: string;
+  startDate: Date;
+  endDate?: Date;
+  maxSlots: number;
+  status: string;
+}
+
+function addWeeks(date: Date, weeks: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + weeks * 7);
+  return d;
+}
+
+function parseDate(s: string): Date {
+  return new Date(s);
+}
+
+const COHORTS: CohortSeed[] = [
+  // Code-Starter cohorts
+  {
+    courseId: 'code-starter',
+    name: 'Code-Starter — May 2026',
+    startDate: parseDate('2026-05-19'),
+    endDate: addWeeks(parseDate('2026-05-19'), 10),
+    maxSlots: 20,
+    status: 'open',
+  },
+  {
+    courseId: 'code-starter',
+    name: 'Code-Starter — August 2026',
+    startDate: parseDate('2026-08-04'),
+    endDate: addWeeks(parseDate('2026-08-04'), 10),
+    maxSlots: 20,
+    status: 'open',
+  },
+  // ICDL Level 1
+  {
+    courseId: 'icdl-l1',
+    name: 'ICDL L1 — June 2026',
+    startDate: parseDate('2026-06-02'),
+    endDate: addWeeks(parseDate('2026-06-02'), 4),
+    maxSlots: 25,
+    status: 'open',
+  },
+  {
+    courseId: 'icdl-l1',
+    name: 'ICDL L1 — July 2026',
+    startDate: parseDate('2026-07-07'),
+    endDate: addWeeks(parseDate('2026-07-07'), 4),
+    maxSlots: 25,
+    status: 'open',
+  },
+  // ICDL Level 2
+  {
+    courseId: 'icdl-l2',
+    name: 'ICDL L2 — June 2026',
+    startDate: parseDate('2026-06-02'),
+    endDate: addWeeks(parseDate('2026-06-02'), 4),
+    maxSlots: 25,
+    status: 'open',
+  },
+  // ICDL Level 3
+  {
+    courseId: 'icdl-l3',
+    name: 'ICDL L3 — July 2026',
+    startDate: parseDate('2026-07-07'),
+    endDate: addWeeks(parseDate('2026-07-07'), 5),
+    maxSlots: 20,
+    status: 'open',
+  },
+  // ICDL Level 4&5
+  {
+    courseId: 'icdl-l45',
+    name: 'ICDL L4&5 — August 2026',
+    startDate: parseDate('2026-08-04'),
+    endDate: addWeeks(parseDate('2026-08-04'), 8),
+    maxSlots: 20,
+    status: 'open',
+  },
+  // Full-Stack
+  {
+    courseId: 'fullstack',
+    name: 'Full-Stack — June 2026',
+    startDate: parseDate('2026-06-09'),
+    endDate: addWeeks(parseDate('2026-06-09'), 12),
+    maxSlots: 15,
+    status: 'open',
+  },
+  // CCNA Part 1
+  {
+    courseId: 'ccna-1',
+    name: 'CCNA Part 1 — May 2026',
+    startDate: parseDate('2026-05-26'),
+    endDate: addWeeks(parseDate('2026-05-26'), 8),
+    maxSlots: 20,
+    status: 'open',
+  },
+  // CCNA Part 2
+  {
+    courseId: 'ccna-2',
+    name: 'CCNA Part 2 — July 2026',
+    startDate: parseDate('2026-07-20'),
+    endDate: addWeeks(parseDate('2026-07-20'), 8),
+    maxSlots: 20,
+    status: 'open',
+  },
+  // AI Fundamentals
+  {
+    courseId: 'ai-fundamentals',
+    name: 'AI Fundamentals — June 2026',
+    startDate: parseDate('2026-06-16'),
+    endDate: addWeeks(parseDate('2026-06-16'), 6),
+    maxSlots: 30,
+    status: 'open',
+  },
+  // Data Analytics with Python
+  {
+    courseId: 'data-python',
+    name: 'Data Analytics — July 2026',
+    startDate: parseDate('2026-07-14'),
+    endDate: addWeeks(parseDate('2026-07-14'), 10),
+    maxSlots: 20,
+    status: 'open',
+  },
+  // Kids Coding
+  {
+    courseId: 'kids-scratch',
+    name: 'Kids Coding — August 2026',
+    startDate: parseDate('2026-08-03'),
+    endDate: addWeeks(parseDate('2026-08-03'), 8),
+    maxSlots: 15,
+    status: 'open',
+  },
+  // Cybersecurity
+  {
+    courseId: 'cybersec',
+    name: 'Cybersecurity — June 2026',
+    startDate: parseDate('2026-06-23'),
+    endDate: addWeeks(parseDate('2026-06-23'), 6),
+    maxSlots: 20,
+    status: 'open',
   },
 ];
 
@@ -690,7 +1023,7 @@ const BLOG_POSTS: BlogSeed[] = [
 
 Kisumu is Kenya's third-largest city, home to a vibrant university ecosystem with Maseno University, KCA University, and Great Lakes University of Kisumu. Yet historically, tech education here has lagged behind Nairobi. We saw an opportunity.
 
-When we launched Digitika Academy in 2021, we started small — a single Code-Starter cohort of 12 students in a rented room at Pioneer House. Today, we've trained over 120 certified developers and certified 200+ corporate staff across ICDL and CCNA programmes.
+When we launched Digitika Academy, we started small — a single Code-Starter cohort of 12 students in a rented room at Pioneer House. Today, we've trained over 120 certified developers and certified 200+ corporate staff across ICDL and CCNA programmes.
 
 ## What Works
 
@@ -701,8 +1034,6 @@ ICDL certification has proven equally powerful. Many employers in East Africa no
 ## What's Next
 
 We're expanding our AI programme to meet surging demand from businesses navigating the generative AI transition. Our "AI for Business" weekend cohort sold out in 72 hours in its first run. We're adding a second cohort monthly.
-
-The digital skills gap is real — but so is the ambition of East African learners. Our job is to meet that ambition with world-class instruction.
 
 *— The Codevertex Team*`,
     author: 'Codevertex Editorial',
@@ -715,29 +1046,20 @@ The digital skills gap is real — but so is the ambition of East African learne
     slug: 'why-east-african-businesses-need-ai-now',
     title: 'Why East African Businesses Can No Longer Afford to Ignore AI',
     excerpt:
-      'The AI transition is here — and businesses that adopt early will have an insurmountable advantage. Here is what you need to know.',
-    content: `Artificial intelligence is no longer a Silicon Valley curiosity. It is reshaping logistics in Mombasa, customer service in Nairobi, and agriculture across the region. Businesses that adopt AI now will be years ahead of those who wait.
+      'The AI transition is here — and businesses that adopt early will have an insurmountable advantage.',
+    content: `Artificial intelligence is no longer a Silicon Valley curiosity. It is reshaping logistics in Mombasa, customer service in Nairobi, and agriculture across the region.
 
 ## The Reality Check
 
 A Codevertex client — a regional logistics company — was spending KES 2.4M monthly on manual route planning and customer communication. After integrating our AI-powered platform, that cost dropped to KES 380,000. The difference? Automated route optimisation and an AI chat assistant handling 68% of customer queries without human intervention.
 
-This isn't exceptional. It's what happens when any business applies the right AI tools to their real operational challenges.
-
 ## Three High-ROI AI Applications for East African Businesses
 
-**1. Customer Support Automation**
-AI chatbots trained on your knowledge base can handle repeat questions 24/7 — in Swahili, English, or both. No new hires required.
+**1. Customer Support Automation** — AI chatbots trained on your knowledge base can handle repeat questions 24/7 — in Swahili, English, or both.
 
-**2. Predictive Inventory Management**
-Machine learning models analysing your historical sales data can predict stockouts 2–3 weeks in advance, reducing both waste and lost sales.
+**2. Predictive Inventory Management** — ML models analysing your historical sales data can predict stockouts 2–3 weeks in advance.
 
-**3. Financial Reconciliation**
-AI-powered bookkeeping tools can match M-Pesa receipts to invoices automatically — a task that takes a finance team hours every week.
-
-## Getting Started
-
-The barrier to AI adoption isn't technical sophistication — it's awareness and access to the right partners. Codevertex builds the AI systems and trains the teams to run them.
+**3. Financial Reconciliation** — AI-powered bookkeeping tools can match M-Pesa receipts to invoices automatically.
 
 Ready to explore what AI can do for your business? [Contact our team](/contact) for a free discovery call.`,
     author: 'Codevertex Editorial',
@@ -751,9 +1073,7 @@ Ready to explore what AI can do for your business? [Contact our team](/contact) 
     title: 'Power Suite: The Integrated Platform Built for African Enterprises',
     excerpt:
       'One login, one support team, one integrated platform — why fragmented software stacks are costing businesses more than they think.',
-    content: `The average mid-sized East African business uses 11 separate software tools — many of which don't talk to each other. Finance uses a local accounting tool. The warehouse runs on Excel. Customer service lives in WhatsApp groups. HR is a tangle of spreadsheets.
-
-The cost isn't just the subscription fees. It's the hours wasted reconciling data across systems, the errors from manual data entry, and the decisions made on incomplete information.
+    content: `The average mid-sized East African business uses 11 separate software tools — many of which don't talk to each other.
 
 ## What We Built
 
@@ -765,15 +1085,10 @@ Codevertex Power Suite is a fully integrated collection of enterprise products t
 - **Inventory** — real-time stock and procurement management
 - **MarketFlow CRM** — AI-powered marketing automation and lead management
 - **Notifications** — SMS, email, and push notification delivery
-- **Analytics** — Apache Superset BI dashboards on your live data
-
-Every product uses the same SSO identity. A user with admin access to Ordering automatically has the right access to Books. One login, one support team.
 
 ## Built for African Realities
 
 M-Pesa integration isn't a plugin — it's native. Offline-first POS means a slow connection doesn't stop a sale. Swahili support is built in, not bolted on.
-
-We've deployed Power Suite for logistics companies, restaurants, universities, and government-affiliated training organisations. The question we always ask: "Does this work when the internet goes down or the power cuts out?" If the answer isn't yes, we keep building.
 
 *Want to see Power Suite in action? [Book a demo](/contact) with our team.*`,
     author: 'Codevertex Editorial',
@@ -791,7 +1106,13 @@ We've deployed Power Suite for logistics companies, restaurants, universities, a
 async function main() {
   console.log('🌱 Seeding Codevertex website database...');
 
-  // Upsert courses
+  // ── Courses ──────────────────────────────────────────────────────────────
+  console.log('\n🗑️  Removing deprecated course IDs...');
+  const deleted = await prisma.course.deleteMany({
+    where: { id: { in: DEPRECATED_COURSE_IDS } },
+  });
+  console.log(`  ✓ Removed ${deleted.count} deprecated course(s)`);
+
   console.log(`\n📚 Seeding ${COURSES.length} courses...`);
   for (const course of COURSES) {
     const data = { ...course, featured: course.featured ?? false };
@@ -803,7 +1124,31 @@ async function main() {
     console.log(`  ✓ ${course.name}`);
   }
 
-  // Upsert blog posts
+  // ── Cohorts ───────────────────────────────────────────────────────────────
+  // Find existing cohorts by name to avoid duplicates on re-runs.
+  console.log(`\n📅 Seeding ${COHORTS.length} cohorts...`);
+  for (const cohort of COHORTS) {
+    const existing = await prisma.cohort.findFirst({
+      where: { name: cohort.name, courseId: cohort.courseId },
+    });
+    if (!existing) {
+      await prisma.cohort.create({ data: cohort });
+      console.log(`  ✓ Created: ${cohort.name}`);
+    } else {
+      await prisma.cohort.update({
+        where: { id: existing.id },
+        data: {
+          startDate: cohort.startDate,
+          endDate: cohort.endDate,
+          maxSlots: cohort.maxSlots,
+          status: cohort.status,
+        },
+      });
+      console.log(`  ↺ Updated: ${cohort.name}`);
+    }
+  }
+
+  // ── Blog posts ────────────────────────────────────────────────────────────
   console.log(`\n📝 Seeding ${BLOG_POSTS.length} blog posts...`);
   for (const post of BLOG_POSTS) {
     await prisma.blogPost.upsert({

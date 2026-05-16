@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 
 const patchSchema = z.object({
   name: z.string().optional(),
-  shortName: z.string().optional(),
+  shortName: z.string().nullish(),  // DB field is nullable
   price: z.number().optional(),
   description: z.string().optional(),
   longDescription: z.string().optional(),
