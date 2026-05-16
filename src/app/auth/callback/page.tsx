@@ -41,7 +41,18 @@ function CallbackInner() {
     }
 
     const callbackUrl = `${window.location.origin}/auth/callback`;
-    handleCallback(code, callbackUrl).then(() => {
+    handleCallback(code, callbackUrl).then(async () => {
+      // Establish the server-side session cookie the middleware uses for /admin routing
+      const { useAuthStore: store } = await import('@/lib/store/auth-store');
+      const token = store.getState().accessToken;
+      if (token) {
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: token }),
+        }).catch(() => { /* non-fatal — user will be re-prompted */ });
+      }
+
       const returnTo = sessionStorage.getItem('sso_return_to') || '/';
       sessionStorage.removeItem('sso_return_to');
       router.replace(returnTo);

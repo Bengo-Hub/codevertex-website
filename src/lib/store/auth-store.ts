@@ -94,12 +94,6 @@ export const useAuthStore = create<AuthState>()(
             ...raw,
           };
 
-          // Set cookie so middleware can verify auth on /admin routes
-          if (typeof document !== 'undefined') {
-            const maxAge = tokens.expires_in || 3600;
-            document.cookie = `access_token=${tokens.access_token}; path=/; SameSite=Lax; max-age=${maxAge}`;
-          }
-
           set({ user, status: 'authenticated' });
         } catch {
           set({ status: 'error', session: null, accessToken: null });
@@ -107,10 +101,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        // Clear the auth cookie set for middleware
-        if (typeof document !== 'undefined') {
-          document.cookie = 'access_token=; path=/; max-age=0';
-        }
+        // Clear server-side session cookie used by middleware
+        await fetch('/api/auth/session', { method: 'DELETE' }).catch(() => { /* no-op */ });
         set({ status: 'idle', user: null, session: null, accessToken: null });
         try { localStorage.removeItem('cv-auth'); } catch { /* no-op */ }
         try { sessionStorage.clear(); } catch { /* no-op */ }

@@ -1,67 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const SSO_URL = process.env.NEXT_PUBLIC_SSO_URL ?? 'https://accounts.codevertexitsolutions.com';
-
-function getAccessToken(req: NextRequest): string | null {
-  return (
-    req.cookies.get('access_token')?.value ??
-    req.cookies.get('auth_token')?.value ??
-    null
-  );
+interface CvSession {
+  userId: string;
+  role: string;
+  exp: number;
 }
 
-function parseJwtPayload(token: string): Record<string, unknown> | null {
+function getCvSession(req: NextRequest): CvSession | null {
+  const raw = req.cookies.get('cv_session')?.value;
+  if (!raw) return null;
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
-    return JSON.parse(payload);
+    return JSON.parse(Buffer.from(raw, 'base64').toString('utf8')) as CvSession;
   } catch {
     return null;
   }
 }
 
-function isTokenExpired(payload: Record<string, unknown>): boolean {
-  const exp = payload.exp as number | undefined;
-  if (!exp) return false;
-  return Date.now() / 1000 > exp;
-}
-
-function hasAdminRole(payload: Record<string, unknown>): boolean {
-  const role = payload.role as string | undefined;
-  const roles = payload.roles as string[] | undefined;
-  return role === 'admin' || (Array.isArray(roles) && roles.includes('admin'));
-}
-
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Only guard /admin routes
   if (!pathname.startsWith('/admin')) {
     return NextResponse.next();
   }
 
-  const token = getAccessToken(req);
+  const session = getCvSession(req);
 
-  if (!token) {
+  // No session cookie — send to login page which triggers SSO
+  if (!session) {
     const loginUrl = new URL('/auth/login', req.url);
     loginUrl.searchParams.set('returnTo', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const payload = parseJwtPayload(token);
-
-  if (!payload || isTokenExpired(payload)) {
+  // Session expired
+  if (session.exp < Math.floor(Date.now() / 1000)) {
     const loginUrl = new URL('/auth/login', req.url);
     loginUrl.searchParams.set('returnTo', pathname);
     loginUrl.searchParams.set('reason', 'session_expired');
     const res = NextResponse.redirect(loginUrl);
-    res.cookies.delete('access_token');
-    res.cookies.delete('auth_token');
+    res.cookies.delete('cv_session');
     return res;
   }
 
-  if (!hasAdminRole(payload)) {
+  // Authenticated but not admin
+  if (session.role !== 'admin') {
     return NextResponse.redirect(new URL('/admin/unauthorized', req.url));
   }
 
