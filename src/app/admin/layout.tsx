@@ -5,10 +5,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
-function hasAdminRole(user: { role?: string; roles?: string[] } | null | undefined): boolean {
+const ADMIN_ROLES = new Set(['admin', 'superuser', 'platform_admin', 'superadmin']);
+
+function hasAdminRole(user: { role?: string; roles?: string[]; is_platform_owner?: boolean } | null | undefined): boolean {
   if (!user) return false;
+  if (user.is_platform_owner) return true;
   const roles = user.roles ?? (user.role ? [user.role] : []);
-  return roles.includes('admin') || user.role === 'admin';
+  return roles.some((r) => ADMIN_ROLES.has(r));
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -25,18 +28,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    if (!hasAdminRole(user)) {
+    if (!hasAdminRole(user) && pathname !== '/admin/unauthorized') {
       router.replace('/admin/unauthorized');
     }
   }, [status, user, router, pathname]);
 
-  // Render nothing while auth state is resolving or redirecting
-  if (status === 'loading' || !user || !hasAdminRole(user)) {
+  // Show spinner while resolving; let /admin/unauthorized render without a sidebar
+  const isUnauthorizedPage = pathname === '/admin/unauthorized';
+  if (status === 'loading' || (!user && !isUnauthorizedPage)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
     );
+  }
+  if (user && !hasAdminRole(user) && !isUnauthorizedPage) {
+    return null; // redirecting via useEffect
   }
 
   return (
