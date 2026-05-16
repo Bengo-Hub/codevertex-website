@@ -35,7 +35,7 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col h-screen sticky top-0">
+    <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col overflow-y-auto">
       {/* Brand — actual logo image */}
       <div className="px-5 py-4 border-b border-border">
         <Link href="/admin" className="block">

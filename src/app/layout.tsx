@@ -3,8 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { SiteShell } from '@/components/layout/SiteShell';
 import { ChatBot } from '@/components/chat/ChatBot';
 
 const geistSans = Geist({
@@ -64,12 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-screen bg-background antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          {/* ChatBot is a Client Component — safe outside main */}
+          <SiteShell>{children}</SiteShell>
           <ChatBot />
           <Toaster richColors position="top-right" />
         </ThemeProvider>
