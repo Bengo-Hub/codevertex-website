@@ -8,7 +8,7 @@ import { Menu, X, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { cn } from '@/lib/utils';
-import { NAV_LINKS, SSO_URL } from '@/lib/constants';
+import { NAV_LINKS } from '@/lib/constants';
 import { useAuth } from '@/hooks/use-auth';
 
 function UserMenu() {
@@ -60,9 +60,7 @@ function UserMenu() {
               {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
             </div>
             <Link
-              href={SSO_URL}
-              target="_blank"
-              rel="noreferrer"
+              href="/admin"
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
             >
@@ -210,9 +208,7 @@ export function Navbar() {
                   ? (
                     <>
                       <Link
-                        href={SSO_URL}
-                        target="_blank"
-                        rel="noreferrer"
+                        href="/admin"
                         className="mt-2 flex h-11 items-center justify-center rounded-full bg-secondary text-foreground text-sm font-bold"
                       >
                         Dashboard
