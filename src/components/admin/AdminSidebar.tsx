@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -12,10 +13,7 @@ import {
   CreditCard,
   Library,
   ChevronRight,
-  Settings,
-  LogOut,
 } from 'lucide-react';
-import { useAuthStore } from '@/lib/store/auth-store';
 
 const NAV = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, exact: true },
@@ -30,7 +28,6 @@ const NAV = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
@@ -39,16 +36,17 @@ export function AdminSidebar() {
 
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col h-screen sticky top-0">
-      {/* Brand */}
-      <div className="px-5 py-5 border-b border-border">
-        <Link href="/admin" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground text-xs font-black">CV</span>
-          </div>
-          <div>
-            <p className="text-xs font-black text-foreground leading-none">Codevertex</p>
-            <p className="text-[10px] text-muted-foreground font-medium">Admin Panel</p>
-          </div>
+      {/* Brand — actual logo image */}
+      <div className="px-5 py-4 border-b border-border">
+        <Link href="/admin" className="block">
+          <Image
+            src="/images/logo.png"
+            alt="Codevertex"
+            width={140}
+            height={38}
+            priority
+            className="h-9 w-auto object-contain"
+          />
         </Link>
       </div>
 
@@ -60,7 +58,7 @@ export function AdminSidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all group ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 active
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -73,27 +71,6 @@ export function AdminSidebar() {
           );
         })}
       </nav>
-
-      {/* User footer */}
-      <div className="px-3 py-4 border-t border-border space-y-0.5">
-        <Link href="/" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all">
-          <Settings className="h-4 w-4" />
-          View Site
-        </Link>
-        <button
-          onClick={() => logout()}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
-        >
-          <LogOut className="h-4 w-4" />
-          Sign Out
-        </button>
-        {user && (
-          <div className="px-3 pt-2 pb-1">
-            <p className="text-xs font-semibold text-foreground truncate">{user.fullName ?? user.name ?? user.email}</p>
-            <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
-          </div>
-        )}
-      </div>
     </aside>
   );
 }

@@ -6,6 +6,7 @@ import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Enrollment {
   id: string;
@@ -57,11 +58,13 @@ export function EnrollmentsPage() {
   useEffect(() => { load(); }, [load]);
 
   async function updateStatus(id: string, newStatus: string) {
-    await fetch(`/api/admin/enrollments/${id}`, {
+    const res = await fetch(`/api/admin/enrollments/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentStatus: newStatus }),
     });
+    if (res.ok) toast.success(`Payment status set to ${newStatus}`);
+    else toast.error('Failed to update status');
     load();
   }
 

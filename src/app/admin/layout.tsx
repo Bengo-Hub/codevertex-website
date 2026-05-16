@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AdminTopNav } from '@/components/admin/AdminTopNav';
+import { AdminFooter } from '@/components/admin/AdminFooter';
 
 const ADMIN_ROLES = new Set(['admin', 'superuser', 'platform_admin', 'superadmin']);
 
@@ -33,7 +35,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [status, user, router, pathname]);
 
-  // Show spinner while resolving; let /admin/unauthorized render without a sidebar
   const isUnauthorizedPage = pathname === '/admin/unauthorized';
   if (status === 'loading' || (!user && !isUnauthorizedPage)) {
     return (
@@ -43,16 +44,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
   if (user && !hasAdminRole(user) && !isUnauthorizedPage) {
-    return null; // redirecting via useEffect
+    return null;
   }
 
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-w-0">
+        {!isUnauthorizedPage && <AdminTopNav />}
         <main className="flex-1 p-6 lg:p-8 overflow-auto">
           {children}
         </main>
+        {!isUnauthorizedPage && <AdminFooter />}
       </div>
     </div>
   );

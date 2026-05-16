@@ -6,6 +6,7 @@ import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface InstallmentItem {
   id: string;
@@ -56,11 +57,15 @@ export function InstallmentsPage() {
 
   async function sendReminder(installmentId: string) {
     setSending(installmentId);
-    await fetch('/api/admin/installments?action=send-reminder', {
+    const id = toast.loading('Sending reminder…');
+    const res = await fetch('/api/admin/installments?action=send-reminder', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ installmentId }),
     });
+    toast.dismiss(id);
+    if (res.ok) toast.success('Reminder sent');
+    else toast.error('Failed to send reminder');
     setSending(null);
     load();
   }

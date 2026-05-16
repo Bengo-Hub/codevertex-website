@@ -5,6 +5,7 @@ import { Search } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
+import { toast } from 'sonner';
 
 interface Lead {
   id: string;
@@ -41,11 +42,13 @@ export function LeadsPage() {
   useEffect(() => { load(); }, [load]);
 
   async function updateStatus(id: string, newStatus: string) {
-    await fetch(`/api/admin/leads/${id}`, {
+    const res = await fetch(`/api/admin/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
     });
+    if (res.ok) toast.success(`Lead marked as ${newStatus}`);
+    else toast.error('Failed to update status');
     load();
   }
 
