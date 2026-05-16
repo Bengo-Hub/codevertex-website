@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, CheckCircle2 } from 'lucide-react';
+import { X, CheckCircle2, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type Course, type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
+import { addDays, addWeeks, format } from 'date-fns';
+import { type Course, type CourseCategory, type InstallmentPlan, TREASURY_PAY_URL } from '@/config/courses';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
-import { toast } from 'sonner';
 
 const schema = z.object({
   fullName: z.string().min(2, 'Required'),
@@ -20,43 +20,122 @@ const schema = z.object({
 });
 type FormData = z.infer<typeof schema>;
 
-interface Props { course: Course; category: CourseCategory; onClose: () => void; }
+interface Props {
+  course: Course;
+  category: CourseCategory;
+  onClose: () => void;
+}
+
+// Derive due dates from plan payment labels (e.g. "Week 6" → 6 weeks from now)
+function computeDueDates(plan: InstallmentPlan): Date[] {
+  const today = new Date();
+  return plan.payments.map((_, i) => {
+    if (i === 0) return today;
+    // Try to parse "Week N" from the label
+    const label = plan.payments[i].label;
+    const weekMatch = label.match(/week\s+(\d+)/i);
+    if (weekMatch) {
+      return addWeeks(today, parseInt(weekMatch[1], 10) - 1);
+    }
+    // Fallback: 4 weeks apart
+    return addDays(today, 28 * i);
+  });
+}
 
 export function EnrollmentModal({ course, category, onClose }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
-  const { register, handleSubmit, formState: { errors }, getValues } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
 
-  const onSubmit = async (data: FormData) => {
-    setStep(2);
-  };
+  const plans: InstallmentPlan[] = course.installmentPlans ?? [
+    { label: 'Upfront', payments: [{ amount: course.price, label: 'Full payment' }], totalAmount: course.price },
+  ];
+  const selectedPlan = plans[selectedPlanIdx];
+  const firstPayment = selectedPlan.payments[0].amount;
+  const isInstallment = selectedPlan.payments.length > 1;
+
+  const { register, handleSubmit, formState: { errors }, getValues } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = () => setStep(2);
 
   const handlePay = async () => {
     const data = getValues();
     setSubmitting(true);
     try {
-      // Save enrollment to DB
-      await fetch('/api/enrollments', {
+      const dueDates = computeDueDates(selectedPlan);
+      const installments = selectedPlan.payments.map((p, i) => ({
+        installmentNo: i + 1,
+        amount: p.amount,
+        label: p.label,
+        dueDate: dueDates[i].toISOString().split('T')[0],
+      }));
+
+      const planKey = selectedPlan.label.toLowerCase().replace(/\s+/g, '-');
+
+      const res = await fetch('/api/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, courseId: course.id, courseName: course.name, category: category.name, amount: course.price, currency: course.currency }),
+        body: JSON.stringify({
+          ...data,
+          courseId: course.id,
+          courseName: course.name,
+          category: category.name,
+          totalAmount: course.price,
+          currency: course.currency,
+          paymentPlan: planKey,
+          firstPaymentAmount: firstPayment,
+          installments,
+        }),
       });
-    } catch { /* non-blocking */ }
 
-    const params = new URLSearchParams({
-      amount: String(course.price),
-      tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
-      reference_id: `digitika-${course.id}-${Date.now()}`,
-      reference_type: 'digitika_enrollment',
-      currency: course.currency,
-      description: `Digitika — ${course.name}`,
-      redirect_url: typeof window !== 'undefined' ? `${window.location.origin}/digitika/success` : '',
-      button_text: 'View My Enrollment',
-      gateways: 'paystack,mpesa',
-    });
-    window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
-    setSubmitting(false);
-    setStep(3);
+      const result = await res.json();
+      const invoiceRef = result.invoiceRef ?? `DGT-${course.id}-${Date.now()}`;
+
+      // Build treasury redirect URL. When the enrollment API pre-created a treasury intent
+      // (and returned initiate_url), we pass it so the treasury-ui pay page skips auto-creation
+      // and uses our intent directly — this ensures Paystack redirects to /digitika/success, not
+      // to the treasury-ui's own success page wrapper.
+      const params = new URLSearchParams({
+        amount: String(firstPayment),
+        tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
+        reference_id: invoiceRef,
+        reference_type: 'digitika_enrollment',
+        currency: course.currency,
+        description: isInstallment
+          ? `Digitika — ${course.name} (Installment 1 of ${selectedPlan.payments.length})`
+          : `Digitika — ${course.name}`,
+        redirect_url: `${window.location.origin}/digitika/success`,
+        button_text: 'View My Enrollment',
+        gateways: 'paystack,mpesa',
+        email: data.email,
+      });
+
+      if (result.initiateUrl) {
+        params.set('initiate_url', result.initiateUrl);
+      }
+
+      window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
+      setStep(3);
+    } catch {
+      // non-blocking — proceed to step 3 so user can still pay
+      const params = new URLSearchParams({
+        amount: String(firstPayment),
+        tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
+        reference_id: `DGT-${course.id}-${Date.now()}`,
+        reference_type: 'digitika_enrollment',
+        currency: course.currency,
+        description: `Digitika — ${course.name}`,
+        redirect_url: `${window.location.origin}/digitika/success`,
+        button_text: 'View My Enrollment',
+        gateways: 'paystack,mpesa',
+      });
+      window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
+      setStep(3);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputCls = (err?: { message?: string }) =>
@@ -65,7 +144,7 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={e => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <AnimatePresence>
         <motion.div
@@ -90,7 +169,7 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
             </div>
             {/* Step indicator */}
             <div className="flex items-center gap-2 mt-4">
-              {(['Personal Info', 'Review', 'Payment'] as const).map((label, i) => (
+              {(['Personal Info', 'Payment Plan', 'Confirm'] as const).map((label, i) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step > i + 1 ? 'bg-primary text-primary-foreground' : step === i + 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                     {i + 1}
@@ -103,6 +182,7 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
           </div>
 
           <div className="px-6 py-6">
+            {/* STEP 1: Personal Info */}
             {step === 1 && (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -149,37 +229,76 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
                     </select>
                   </div>
                 </div>
-                <Button type="submit" className="w-full mt-2">Continue to Review →</Button>
+                <Button type="submit" className="w-full mt-2">Continue →</Button>
               </form>
             )}
 
+            {/* STEP 2: Payment Plan Selection */}
             {step === 2 && (
-              <div>
-                <div className="rounded-xl bg-secondary border border-border p-5 mb-5 space-y-3">
-                  <h3 className="font-bold text-foreground mb-4">Enrollment Summary</h3>
-                  {[['Course', course.name], ['Duration', course.duration], ['Mode', course.mode], ['Name', getValues('fullName')], ['Email', getValues('email')], ['Phone', getValues('phone')]].map(([k, v]) => (
-                    <div key={k} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{k}</span>
-                      <span className="font-semibold text-foreground text-right max-w-[60%]">{v}</span>
-                    </div>
+              <div className="space-y-5">
+                <div>
+                  <h3 className="font-bold text-foreground mb-1">Choose Your Payment Plan</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Select how you'd like to pay for {course.name}. All plans cover the full course.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {plans.map((plan, idx) => (
+                    <button
+                      key={plan.label}
+                      type="button"
+                      onClick={() => setSelectedPlanIdx(idx)}
+                      className={`w-full text-left rounded-xl border-2 p-4 transition-all ${selectedPlanIdx === idx ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-secondary'}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full border-2 shrink-0 ${selectedPlanIdx === idx ? 'border-primary bg-primary' : 'border-muted-foreground'}`} />
+                          <span className="font-semibold text-sm text-foreground">{plan.label}</span>
+                          {plan.badge && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
+                              {plan.badge}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-sm font-bold text-primary">
+                          {formatCurrency(plan.payments[0].amount, course.currency)} now
+                        </span>
+                      </div>
+                      <div className="pl-6 space-y-1">
+                        {plan.payments.map((p, pi) => (
+                          <div key={pi} className="flex justify-between text-xs text-muted-foreground">
+                            <span>{p.label}</span>
+                            <span className="font-medium">{formatCurrency(p.amount, course.currency)}</span>
+                          </div>
+                        ))}
+                        {plan.payments.length > 1 && (
+                          <div className="flex justify-between text-xs font-semibold text-foreground border-t border-border/50 pt-1 mt-1">
+                            <span>Total</span>
+                            <span>{formatCurrency(plan.totalAmount, course.currency)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
                   ))}
-                  <div className="border-t border-border pt-3 flex justify-between">
-                    <span className="font-bold text-foreground">Total</span>
-                    <span className="text-2xl font-black text-primary">{formatCurrency(course.price, course.currency)}</span>
-                  </div>
                 </div>
-                <div className="rounded-lg bg-emerald-500/8 border border-emerald-500/20 p-3 mb-5 text-xs text-emerald-700 dark:text-emerald-400">
-                  ✓ Clicking "Proceed to Payment" opens the secure Codevertex Treasury gateway (Paystack & M-Pesa). Enrollment is confirmed upon successful payment.
+
+                <div className="rounded-lg bg-emerald-500/8 border border-emerald-500/20 p-3 text-xs text-emerald-700 dark:text-emerald-400">
+                  <CreditCard className="inline h-3.5 w-3.5 mr-1.5" />
+                  You will pay <strong>{formatCurrency(firstPayment, course.currency)}</strong> today via Paystack or M-Pesa.
+                  {isInstallment && ` Remaining ${formatCurrency(course.price - firstPayment, course.currency)} will be billed in ${selectedPlan.payments.length - 1} future installment(s).`}
                 </div>
+
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1">← Back</Button>
-                  <Button onClick={handlePay} disabled={submitting} className="flex-2">
-                    {submitting ? 'Redirecting…' : 'Proceed to Payment →'}
+                  <Button onClick={handlePay} disabled={submitting} className="flex-1">
+                    {submitting ? 'Redirecting…' : `Pay ${formatCurrency(firstPayment, course.currency)} →`}
                   </Button>
                 </div>
               </div>
             )}
 
+            {/* STEP 3: Done */}
             {step === 3 && (
               <div className="text-center py-8">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
@@ -187,8 +306,9 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
                 </div>
                 <h3 className="text-xl font-black text-foreground mb-3">Payment Window Opened!</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  Complete your payment in the Treasury gateway tab. Your enrollment will be confirmed automatically.
-                  Check your email for a receipt and course details.
+                  Complete your payment of <strong>{formatCurrency(firstPayment, course.currency)}</strong> in the Treasury gateway tab.
+                  {isInstallment && ` You'll receive reminders for the ${selectedPlan.payments.length - 1} remaining installment(s).`}
+                  {' '}Check your email for a receipt and enrollment details.
                 </p>
                 <p className="text-xs text-muted-foreground mb-6">
                   Questions? WhatsApp us at{' '}

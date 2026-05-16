@@ -128,6 +128,56 @@ export const GRADUATE_TESTIMONIALS: Testimonial[] = [
   },
 ];
 
+// --- Installment plan factory ---
+// Generates upfront + 2-installment + 3-installment options for a given course price.
+// weekLabels: [midpointLabel, finalLabel] — defaults to 'Midway' and 'Final week'.
+function makeInstallmentPlans(
+  price: number,
+  weekLabels: [string, string] = ['Midway', 'Final week']
+): InstallmentPlan[] {
+  // 2 installments: 60% / 40% rounded to nearest 500
+  const p2_1 = Math.round((price * 0.6) / 500) * 500;
+  const p2_2 = price - p2_1;
+
+  // 3 installments: 40% / 33% / 27% rounded to nearest 500
+  const p3_1 = Math.round((price * 0.4) / 500) * 500;
+  const p3_2 = Math.round((price * 0.33) / 500) * 500;
+  const p3_3 = price - p3_1 - p3_2;
+
+  const plans: InstallmentPlan[] = [
+    {
+      label: 'Upfront',
+      payments: [{ amount: price, label: 'Full payment' }],
+      totalAmount: price,
+    },
+    {
+      label: '2 Installments',
+      payments: [
+        { amount: p2_1, label: 'At enrollment' },
+        { amount: p2_2, label: weekLabels[0] },
+      ],
+      totalAmount: price,
+      badge: 'Popular',
+    },
+  ];
+
+  // Only offer 3-installment plan when third installment is meaningful (≥ 1,000 KES)
+  if (p3_3 >= 1000) {
+    plans.push({
+      label: '3 Installments',
+      payments: [
+        { amount: p3_1, label: 'At enrollment' },
+        { amount: p3_2, label: weekLabels[0] },
+        { amount: p3_3, label: weekLabels[1] },
+      ],
+      totalAmount: price,
+    });
+  }
+
+  return plans;
+}
+
+// --- Code-Starter curriculum ---
 const CODE_STARTER_CURRICULUM: WeeklyModule[] = [
   { week: 1, title: 'Developer Setup & Git Mastery', topics: ['Dev environment setup', 'Git init, commit, push, pull', 'GitHub account & first repo', 'Command line basics'] },
   { week: 2, title: 'Web Foundations — HTML & CSS', topics: ['HTML5 semantics', 'CSS box model & layouts', 'Flexbox & responsive design', 'Build: personal profile page'] },
@@ -141,6 +191,7 @@ const CODE_STARTER_CURRICULUM: WeeklyModule[] = [
   { week: 10, title: 'ICDL Exams & Graduation', topics: ['ICDL Core Module exam', 'ICDL Advanced revision', 'Portfolio presentations', 'Alumni network onboarding & career roadmap'] },
 ];
 
+// Code-Starter uses hand-crafted installments with specific week labels
 const CODE_STARTER_INSTALLMENTS: InstallmentPlan[] = [
   {
     label: 'Upfront',
@@ -178,45 +229,30 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
       {
         id: 'code-starter',
         name: 'Code-Starter — Introduction to Software Engineering',
-        shortName: 'Code-Starter Bootcamp',
+        shortName: 'Code-Starter',
         duration: '10 weeks',
-        mode: 'Hybrid (In-person Kisumu + Zoom)',
+        mode: 'Hybrid (Kisumu + Online)',
         price: 30000,
         currency: 'KES',
         featured: true,
         cohortSize: 20,
-        startDate: 'June 2, 2026',
         location: 'Pioneer House, 2nd Floor, Room 204A, Kisumu',
-        description: 'Go from absolute beginner to confident junior developer in 10 weeks. Learn to code in 2 languages, build real projects, and earn 2 ICDL certifications.',
-        longDescription: 'Go from absolute beginner to confident junior developer in 10 weeks. You\'ll learn to code in 2 languages (Python and JavaScript), build real projects you can show employers, earn 2 ICDL certifications, and join a community of East African tech professionals. Delivered in a hybrid format — evening sessions in our Kisumu hub plus Zoom for flexibility. No prior experience required.',
-        outcomes: [
-          'Code in Python and JavaScript',
-          'Build and deploy 3+ real web projects',
-          'Work like a professional developer (Git, Linux, AI tools)',
-          'Earn 2 ICDL certifications',
-          'Build a public GitHub portfolio',
-          'Access Codevertex alumni network',
-          'Receive a personalised career roadmap',
-          'Linux command line confidence',
-          'AI prompt engineering for developers',
-          'Capstone project presented to industry panel',
-        ],
-        stack: 'Python, JavaScript, HTML5, CSS3, Bootstrap, Tailwind, Git, GitHub, Linux CLI, VS Code, ChatGPT/Claude API',
-        audience: 'Adults (All levels welcome)',
+        description: 'The ultimate beginner-to-employable software engineering bootcamp. 10 weeks, 2 ICDL certifications, 3+ GitHub projects, and a career roadmap.',
+        longDescription: 'Code-Starter is Digitika\'s flagship programme — a 10-week intensive bootcamp that takes complete beginners to job-ready developers. You\'ll cover web development, Python, JavaScript, and AI tools while earning 2 ICDL certifications along the way. Sessions are hybrid: in-person at our Kisumu hub with live Zoom access for remote learners.',
+        outcomes: ['HTML, CSS & responsive design', 'Python fundamentals & automation', 'JavaScript & DOM manipulation', 'Git, GitHub & collaboration', 'AI-assisted development workflow', '2 ICDL certifications', '3+ GitHub portfolio projects', 'Career roadmap session'],
+        stack: 'HTML, CSS, Tailwind, Python, JavaScript, Git, GitHub, VS Code, AI tools',
+        audience: 'Adults (complete beginners welcome)',
         curriculum: CODE_STARTER_CURRICULUM,
         installmentPlans: CODE_STARTER_INSTALLMENTS,
         testimonials: GRADUATE_TESTIMONIALS,
         alumniCompanies: ALUMNI_COMPANIES,
-        brochure: '/brochures/Code-Starter-Intoduction-to-Software-Engineering.pdf',
-        prerequisites: ['Basic computer skills (typing, browsing)', 'Own laptop or access to one', 'Commitment to 15–20 hours/week'],
-        careerPaths: ['Junior Web Developer', 'Frontend Developer', 'Python Developer', 'Freelance Developer', 'IT Support Specialist'],
         includes: [
-          '2 ICDL certification exam fees included',
-          '30+ hours live instruction (evening sessions + Saturday labs)',
-          'Lifetime access to course recordings',
-          'Mentorship from working developers',
-          'Alumni WhatsApp community',
+          '10 weeks of instructor-led sessions',
+          '2 ICDL certification exams',
+          '3+ real GitHub projects',
+          'Hybrid: in-person + Zoom access',
           'Career roadmap session',
+          'Alumni network access',
           'GitHub portfolio review',
           'Certificate of completion',
         ],
@@ -236,6 +272,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         audience: 'Adults',
         prerequisites: ['Basic HTML/CSS knowledge', 'Some programming experience recommended', 'Laptop required'],
         careerPaths: ['Full-Stack Developer', 'Frontend Engineer', 'Backend Developer', 'Software Engineer'],
+        installmentPlans: makeInstallmentPlans(45000, ['Week 6', 'Week 10']),
       },
       {
         id: 'mobile-dev',
@@ -252,6 +289,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         audience: 'Adults',
         prerequisites: ['JavaScript fundamentals', 'Basic programming experience'],
         careerPaths: ['Mobile Developer', 'React Native Developer', 'Flutter Developer'],
+        installmentPlans: makeInstallmentPlans(38000, ['Week 5', 'Week 8']),
       },
       {
         id: 'devops',
@@ -268,6 +306,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         audience: 'Adults',
         prerequisites: ['Linux command line basics', 'Some programming experience'],
         careerPaths: ['DevOps Engineer', 'Cloud Engineer', 'Site Reliability Engineer', 'Platform Engineer'],
+        installmentPlans: makeInstallmentPlans(42000, ['Week 5', 'Week 8']),
       },
       {
         id: 'cybersec',
@@ -285,6 +324,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         brochure: '/brochures/IT-SUPPORT-BROCHURE.pdf',
         prerequisites: ['Basic networking concepts', 'Linux basics helpful but not required'],
         careerPaths: ['Security Analyst', 'Ethical Hacker', 'IT Security Officer', 'Penetration Tester'],
+        installmentPlans: makeInstallmentPlans(28000, ['Week 3', 'Week 5']),
       },
       {
         id: 'kids-scratch',
@@ -301,6 +341,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         audience: 'Kids (Age 8–13)',
         prerequisites: ['Basic computer operation', 'Parental consent form required'],
         careerPaths: ['Foundation for future tech career', 'STEM enrichment'],
+        installmentPlans: makeInstallmentPlans(8000, ['Week 4', 'Week 7']),
       },
       {
         id: 'teens-web',
@@ -317,6 +358,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         audience: 'Teens (Age 13–17)',
         prerequisites: ['Basic computer skills', 'Parental consent form required'],
         careerPaths: ['Pathway to adult software engineering programmes', 'Portfolio for tech applications'],
+        installmentPlans: makeInstallmentPlans(12000, ['Week 4', 'Week 7']),
       },
       {
         id: 'kids-games',
@@ -333,6 +375,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         audience: 'Kids (Age 10–16)',
         prerequisites: ['Some computer familiarity', 'Parental consent form required'],
         careerPaths: ['Foundation for game development career', 'STEM pathway'],
+        installmentPlans: makeInstallmentPlans(10000, ['Week 3', 'Week 5']),
       },
     ],
   },
@@ -357,6 +400,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         brochure: '/brochures/Codevertex_Digitika_Program_Cert_Samples.pdf',
         careerPaths: ['Office Administrator', 'Data Entry Clerk', 'Customer Service Agent'],
         prerequisites: ['Basic ability to use a computer or smartphone'],
+        installmentPlans: makeInstallmentPlans(20000, ['Week 2', 'Week 3']),
       },
       {
         id: 'icdl-l2',
@@ -371,6 +415,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         outcomes: ['Word processing (MS Word)', 'Document formatting & styles', 'Headers, footers & tables', 'PowerPoint presentations', 'Visual design basics', 'Mail merge'],
         careerPaths: ['Administrative Assistant', 'Secretary', 'Office Manager', 'HR Assistant'],
         prerequisites: ['ICDL Level 1 or basic computer skills'],
+        installmentPlans: makeInstallmentPlans(22000, ['Week 2', 'Week 3']),
       },
       {
         id: 'icdl-l3',
@@ -385,6 +430,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         outcomes: ['Excel formulas & functions', 'Data sorting & filtering', 'Charts & pivot tables', 'Database concepts', 'Data validation', 'Spreadsheet modelling'],
         careerPaths: ['Finance Assistant', 'Data Entry Analyst', 'Accounts Clerk', 'Operations Coordinator'],
         prerequisites: ['ICDL Level 2 or equivalent document skills'],
+        installmentPlans: makeInstallmentPlans(26000, ['Week 3', 'Week 4']),
       },
       {
         id: 'icdl-l45',
@@ -399,6 +445,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         outcomes: ['Advanced Excel & DAX', 'Database design & SQL basics', 'IT security & compliance', 'Project planning tools', 'Computational thinking', 'Digital project management'],
         careerPaths: ['IT Officer', 'Project Manager', 'Systems Analyst', 'Finance Manager', 'Technical Administrator'],
         prerequisites: ['ICDL Level 3 or strong general computer skills'],
+        installmentPlans: makeInstallmentPlans(28000, ['Week 4', 'Week 6']),
       },
       {
         id: 'icdl-citizen',
@@ -413,6 +460,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         outcomes: ['Online safety', 'Social media literacy', 'Online communication', 'Digital well-being', 'E-commerce basics', 'Mobile money safety'],
         careerPaths: ['Essential skills for all working adults', 'Foundation for further digital qualifications'],
         prerequisites: ['Basic smartphone or tablet usage'],
+        installmentPlans: makeInstallmentPlans(6500, ['Week 2', 'Week 3']),
       },
     ],
   },
@@ -437,6 +485,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Cisco Packet Tracer, IOS CLI',
         careerPaths: ['Network Technician', 'IT Support', 'Network Engineer (with Parts 2 & 3)'],
         prerequisites: ['Basic computer skills', 'Interest in networking'],
+        installmentPlans: makeInstallmentPlans(22000, ['Week 4', 'Week 6']),
       },
       {
         id: 'ccna-2',
@@ -452,6 +501,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Cisco Packet Tracer, IOS CLI',
         careerPaths: ['Network Engineer', 'Systems Administrator', 'IT Infrastructure Specialist'],
         prerequisites: ['CCNA Part 1 or equivalent knowledge'],
+        installmentPlans: makeInstallmentPlans(22000, ['Week 4', 'Week 6']),
       },
       {
         id: 'ccna-3',
@@ -467,6 +517,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Cisco Packet Tracer, Python, Ansible basics',
         careerPaths: ['CCNA-Certified Network Engineer', 'Network Security Specialist', 'Network Automation Engineer'],
         prerequisites: ['CCNA Parts 1 & 2 or equivalent'],
+        installmentPlans: makeInstallmentPlans(22000, ['Week 4', 'Week 6']),
       },
       {
         id: 'ccna-cert',
@@ -481,6 +532,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         outcomes: ['Full exam simulation', 'Lab practicals', 'CCNA 200-301 readiness', 'Study strategy sessions', 'Personalised feedback'],
         careerPaths: ['CCNA Certified Engineer', 'Network Administrator'],
         prerequisites: ['Completion of CCNA Parts 1–3 or equivalent'],
+        installmentPlans: makeInstallmentPlans(15000, ['Week 2', 'Week 3']),
       },
     ],
   },
@@ -505,6 +557,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Python, ChatGPT API, Claude API, LangChain basics',
         careerPaths: ['AI Prompt Engineer', 'AI Product Manager', 'AI-augmented professional in any field'],
         prerequisites: ['No coding experience required', 'Basic computer skills'],
+        installmentPlans: makeInstallmentPlans(14000, ['Week 2', 'Week 3']),
       },
       {
         id: 'ml-python',
@@ -520,6 +573,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Python, Scikit-learn, TensorFlow, Pandas, NumPy, Jupyter',
         careerPaths: ['ML Engineer', 'Data Scientist', 'AI Developer'],
         prerequisites: ['Python basics', 'Basic statistics recommended'],
+        installmentPlans: makeInstallmentPlans(32000, ['Week 5', 'Week 8']),
       },
       {
         id: 'genai-llm',
@@ -535,6 +589,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Python, OpenAI API, Hugging Face, LangChain, Pinecone, FastAPI, Docker',
         careerPaths: ['AI/LLM Engineer', 'AI Startup Founder', 'Senior AI Developer'],
         prerequisites: ['Python intermediate', 'Basic ML knowledge', 'REST API experience'],
+        installmentPlans: makeInstallmentPlans(38000, ['Week 4', 'Week 6']),
       },
       {
         id: 'ai-business',
@@ -550,6 +605,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Make, Zapier, ChatGPT, Microsoft Copilot, Google AI tools',
         careerPaths: ['AI-ready executive', 'Digital transformation leader'],
         prerequisites: ['No technical background required', 'Business or management experience'],
+        installmentPlans: makeInstallmentPlans(9000, ['Week 1', 'Week 2']),
       },
     ],
   },
@@ -574,6 +630,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Python, Pandas, NumPy, Matplotlib, Seaborn, Plotly, Jupyter',
         careerPaths: ['Data Analyst', 'Business Analyst', 'Research Analyst'],
         prerequisites: ['Basic Python knowledge', 'Basic statistics helpful'],
+        installmentPlans: makeInstallmentPlans(28000, ['Week 4', 'Week 6']),
       },
       {
         id: 'power-bi',
@@ -589,6 +646,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Microsoft Power BI, DAX, Power Query, SQL, Excel',
         careerPaths: ['BI Analyst', 'Reporting Analyst', 'Finance Analyst'],
         prerequisites: ['Basic Excel skills', 'Basic understanding of databases helpful'],
+        installmentPlans: makeInstallmentPlans(16000, ['Week 2', 'Week 3']),
       },
       {
         id: 'sql-db',
@@ -604,6 +662,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'PostgreSQL, MySQL, SQLite, DBeaver, pgAdmin',
         careerPaths: ['Database Administrator', 'Data Analyst', 'Backend Developer'],
         prerequisites: ['Basic computer skills', 'No prior database experience needed'],
+        installmentPlans: makeInstallmentPlans(12000, ['Week 2', 'Week 3']),
       },
       {
         id: 'advanced-analytics',
@@ -619,6 +678,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
         stack: 'Python, R, Scipy, Statsmodels, Tableau, Metabase',
         careerPaths: ['Senior Data Analyst', 'Data Scientist', 'Quantitative Analyst'],
         prerequisites: ['Data Analytics with Python or equivalent', 'Basic statistics'],
+        installmentPlans: makeInstallmentPlans(22000, ['Week 3', 'Week 5']),
       },
     ],
   },
@@ -631,6 +691,15 @@ export function findCourse(courseId: string): { course: Course; category: Course
     if (course) return { course, category };
   }
   return null;
+}
+
+// --- Helper: get the first installment amount for a plan ---
+export function getFirstInstallmentAmount(course: Course, planLabel?: string): number {
+  if (!planLabel || planLabel === 'upfront' || !course.installmentPlans) return course.price;
+  const plan = course.installmentPlans.find(
+    p => p.label.toLowerCase().replace(/\s+/g, '-') === planLabel
+  );
+  return plan?.payments[0]?.amount ?? course.price;
 }
 
 export const TREASURY_PAY_URL = 'https://books.codevertexitsolutions.com/pay';
