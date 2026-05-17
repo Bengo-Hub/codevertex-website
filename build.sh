@@ -52,9 +52,11 @@ log_info "Image    : ${IMAGE_REPO}:${GIT_COMMIT_ID}"
 command -v git    >/dev/null || { log_error "git is required"; exit 1; }
 command -v docker >/dev/null || { log_error "docker is required"; exit 1; }
 if ! command -v trivy >/dev/null 2>&1; then
-  log_info "trivy not found — installing via official install script..."
+  log_info "trivy not found — installing to \$HOME/bin..."
+  mkdir -p "$HOME/bin"
   curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-    | sh -s -- -b /usr/local/bin 2>&1 | grep -v '^$' || true
+    | sh -s -- -b "$HOME/bin" 2>&1 | grep -v '^$' || true
+  export PATH="$HOME/bin:$PATH"
   command -v trivy >/dev/null 2>&1 || { log_error "trivy install failed — cannot continue"; exit 1; }
   log_success "trivy installed: $(trivy --version 2>&1 | head -1)"
 fi
