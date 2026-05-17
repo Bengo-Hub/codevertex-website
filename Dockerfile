@@ -58,6 +58,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # falls back to the --url flag passed in entrypoint.sh.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
+# src/config is needed by prisma/seed/courses.ts at seed time (relative import).
+COPY --from=builder --chown=nextjs:nodejs /app/src/config ./src/config
+
 # Entrypoint: migrate → seed → start
 COPY --chown=nextjs:nodejs scripts/entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
