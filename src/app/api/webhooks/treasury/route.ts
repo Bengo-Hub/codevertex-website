@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { sendInstallmentReceipt, buildPortalLink } from '@/lib/notifications';
+import { publishInstallmentPaid } from '@/lib/events';
 
 // Treasury sends: POST /api/webhooks/treasury
 // Payload: { event, reference_id, reference_type, payment_ref, status, amount, currency }
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Send payment receipt email (fire and forget)
+    // Publish domain event + send receipt email (fire and forget)
     if (nextInst && updatedEnrollment.studentUser) {
       const remaining = updatedEnrollment.installments.filter((i) => i.status !== 'paid');
       const nextUnpaid = remaining[0];
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
         .reduce((s, i) => s + i.amount, 0);
       const studentId = updatedEnrollment.studentUser.id;
 
-      sendInstallmentReceipt({
+      const receiptData = {
         studentName: updatedEnrollment.fullName,
         studentEmail: updatedEnrollment.email,
         courseName: updatedEnrollment.courseName,
@@ -129,7 +130,15 @@ export async function POST(req: NextRequest) {
         nextInstallmentDate: nextUnpaid ? nextUnpaid.dueDate.toISOString().split('T')[0] : undefined,
         nextInstallmentAmount: nextUnpaid ? nextUnpaid.amount : undefined,
         portalLink: buildPortalLink(enrollmentId, studentId),
-      }).catch((err) => console.error('[treasury-webhook] receipt email error:', err));
+        tenantId: 'codevertex',
+      };
+
+      publishInstallmentPaid(receiptData).catch(() => {});
+
+      // HTTP fallback: only call when NATS is not configured (digitika_consumer handles email when NATS is active)
+      if (!process.env.EVENTS_NATS_URL) {
+        sendInstallmentReceipt(receiptData).catch((err) => console.error('[treasury-webhook] receipt email error:', err));
+      }
     }
 
     console.info(

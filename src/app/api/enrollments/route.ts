@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
+import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
 
 const TREASURY_API_URL =
@@ -204,22 +205,43 @@ export async function POST(req: NextRequest) {
           .join(' • ')
       : '';
 
-    // 6. Send confirmation email (fire and forget)
-    sendEnrollmentConfirmation({
+    // 6. Publish domain event to NATS (consumed by notifications-api digitika_consumer)
+    //    and send HTTP notification as fallback/supplement
+    const enrollmentEventData = {
+      enrollmentId,
+      studentId: studentUser.id,
       studentName: data.fullName,
       studentEmail: data.email,
       courseName: data.courseName,
       courseCategory: data.category,
       paymentPlan: data.paymentPlan,
-      firstPaymentAmount: data.firstPaymentAmount,
       totalAmount: data.totalAmount,
+      firstPaymentAmount: data.firstPaymentAmount,
       currency: data.currency,
-      studentId: studentUser.id,
-      enrollmentId,
-      remainingBalance,
       portalLink,
       installmentsSummary,
-    }).catch((err) => console.error('[enrollment] notification error:', err));
+      tenantId: 'codevertex',
+    };
+    publishEnrollmentConfirmed(enrollmentEventData).catch(() => {});
+
+    // HTTP fallback: only call when NATS is not configured (digitika_consumer handles email when NATS is active)
+    if (!process.env.EVENTS_NATS_URL) {
+      sendEnrollmentConfirmation({
+        studentName: data.fullName,
+        studentEmail: data.email,
+        courseName: data.courseName,
+        courseCategory: data.category,
+        paymentPlan: data.paymentPlan,
+        firstPaymentAmount: data.firstPaymentAmount,
+        totalAmount: data.totalAmount,
+        currency: data.currency,
+        studentId: studentUser.id,
+        enrollmentId,
+        remainingBalance,
+        portalLink,
+        installmentsSummary,
+      }).catch((err) => console.error('[enrollment] notification error:', err));
+    }
 
     return NextResponse.json({
       success: true,

@@ -107,8 +107,9 @@ async function postNotification(
 export async function sendEnrollmentConfirmation(
   data: EnrollmentConfirmationData
 ): Promise<void> {
+  // Template ID includes subdirectory: worker constructs path as "email/" + templateID
   await postNotification(
-    'enrollment_confirmed',
+    'digitika/enrollment_confirmed',
     data.studentEmail,
     {
       student_name: data.studentName,
@@ -131,7 +132,7 @@ export async function sendInstallmentReminder(
   const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
   const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
   await postNotification(
-    'installment_reminder',
+    'digitika/installment_reminder',
     data.studentEmail,
     {
       student_name: data.studentName,
@@ -155,7 +156,7 @@ export async function sendInstallmentReceipt(
   const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
   const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
   await postNotification(
-    'installment_receipt',
+    'digitika/installment_receipt',
     data.studentEmail,
     {
       student_name: data.studentName,
@@ -176,7 +177,7 @@ export async function sendInstallmentReceipt(
 
 export async function sendContactFormReply(data: ContactFormData): Promise<void> {
   await postNotification(
-    'contact_form_reply',
+    'digitika/contact_form_reply',
     data.email,
     {
       name: data.name,
