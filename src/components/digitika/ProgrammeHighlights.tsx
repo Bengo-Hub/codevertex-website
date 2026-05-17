@@ -8,10 +8,9 @@ const TRACKS = [
     id: 'software',
     title: 'Software Engineering',
     badge: 'Most Popular',
-    badgeColor: '#10B981',
     duration: '4 months',
     price: 'KES 30,000',
-    cover: '/images/illustrations/course-software.svg',
+    cover: '/images/illustrations/course-code-starter.svg',
     outcomes: ['Full-stack web apps', 'React & Node.js', 'Real project portfolio', 'Code-Starter certification'],
     href: '/digitika/code-starter',
   },
@@ -19,21 +18,19 @@ const TRACKS = [
     id: 'icdl',
     title: 'ICDL Certification',
     badge: 'Internationally Recognised',
-    badgeColor: '#38bdf8',
     duration: '6 weeks',
     price: 'KES 15,000',
-    cover: '/images/ICDL-core-course.png',
+    cover: '/images/illustrations/course-icdl-l1.svg',
     outcomes: ['Computer fundamentals', 'Microsoft Office Suite', 'Online collaboration', 'ICDL Core certificate'],
-    href: '/digitika/icdl-core',
+    href: '/digitika/icdl-l1',
   },
   {
     id: 'ccna',
     title: 'Cisco Networking (CCNA)',
     badge: 'Industry Standard',
-    badgeColor: '#f59e0b',
     duration: '3 months',
     price: 'KES 25,000',
-    cover: '/images/Cisco.png',
+    cover: '/images/illustrations/course-ccna-1.svg',
     outcomes: ['Network design & config', 'Routing & switching', 'Network security basics', 'CCNA exam prep'],
     href: '/digitika/ccna-1',
   },
@@ -41,10 +38,9 @@ const TRACKS = [
     id: 'ai',
     title: 'AI & Data Analytics',
     badge: 'Future-Ready',
-    badgeColor: '#F59E0B',
     duration: '8 weeks',
     price: 'KES 20,000',
-    cover: '/images/illustrations/course-ai.svg',
+    cover: '/images/illustrations/course-ai-fundamentals.svg',
     outcomes: ['Python for data science', 'Machine learning basics', 'Data visualisation', 'AI tools & prompting'],
     href: '/digitika/ai-fundamentals',
   },
@@ -88,10 +84,7 @@ export function ProgrammeHighlights() {
                   sizes="(max-width: 768px) 100vw, 25vw"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-card/60 to-transparent" />
-                <span
-                  className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold text-white"
-                  style={{ background: track.badgeColor }}
-                >
+                <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary text-primary-foreground">
                   {track.badge}
                 </span>
               </div>
