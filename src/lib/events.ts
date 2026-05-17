@@ -1,7 +1,9 @@
 // NATS JetStream event publisher for digitika domain events.
-// Publishes CloudEvents-style envelopes to `digitika.>` subjects.
-// The notifications-api worker's digitika_consumer subscribes to these for email dispatch.
-// HTTP notification calls in routes are skipped when NATS is configured (this is the primary path).
+// Events are published in the platform-standard shared-events format:
+//   { id, event_type, aggregate_type, aggregate_id, tenant_id, tenant_slug, payload, metadata, timestamp, version }
+// Subject pattern: {aggregate_type}.{event_type}  (e.g. digitika.enrollment.confirmed)
+// The notifications-api worker's digitika_consumer subscribes to digitika.> for email dispatch.
+// HTTP notification calls in routes are skipped when EVENTS_NATS_URL is set (consumer handles emails).
 
 import { connect, StringCodec, NatsConnection, JetStreamClient } from 'nats';
 
@@ -60,18 +62,33 @@ export interface DigitikaPaymentEvent {
   tenantId: string;
 }
 
-async function publish(subject: string, data: Record<string, unknown>): Promise<void> {
+// publish emits a platform-standard event to NATS JetStream.
+// Subject: {aggregateType}.{eventType}  (e.g. digitika.enrollment.confirmed)
+async function publish(
+  eventType: string,
+  aggregateType: string,
+  aggregateId: string,
+  tenantSlug: string,
+  payload: Record<string, unknown>,
+): Promise<void> {
   const js = await getJS();
   if (!js) return; // NATS not configured — HTTP API fallback handles notifications
+
+  const subject = `${aggregateType}.${eventType}`;
   try {
-    const payload = {
+    const envelope = {
       id: crypto.randomUUID(),
-      type: subject,
-      tenant_id: data.tenantId ?? 'codevertex',
+      event_type: eventType,
+      aggregate_type: aggregateType,
+      aggregate_id: aggregateId,
+      tenant_id: tenantSlug,
+      tenant_slug: tenantSlug,
+      payload,
+      metadata: {},
       timestamp: new Date().toISOString(),
-      data,
+      version: '1.0',
     };
-    await js.publish(subject, sc.encode(JSON.stringify(payload)));
+    await js.publish(subject, sc.encode(JSON.stringify(envelope)));
     console.log(`[events] published: ${subject}`);
   } catch (err) {
     console.warn(`[events] publish failed for ${subject} (non-fatal):`, err);
@@ -79,9 +96,21 @@ async function publish(subject: string, data: Record<string, unknown>): Promise<
 }
 
 export async function publishEnrollmentConfirmed(event: DigitikaEnrollmentEvent): Promise<void> {
-  await publish('digitika.enrollment.confirmed', event as unknown as Record<string, unknown>);
+  await publish(
+    'enrollment.confirmed',
+    'digitika',
+    event.enrollmentId,
+    event.tenantId,
+    event as unknown as Record<string, unknown>,
+  );
 }
 
 export async function publishInstallmentPaid(event: DigitikaPaymentEvent): Promise<void> {
-  await publish('digitika.payment.succeeded', event as unknown as Record<string, unknown>);
+  await publish(
+    'payment.succeeded',
+    'digitika',
+    event.enrollmentId,
+    event.tenantId,
+    event as unknown as Record<string, unknown>,
+  );
 }

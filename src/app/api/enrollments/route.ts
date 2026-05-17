@@ -21,13 +21,17 @@ async function createTreasuryIntent(opts: {
   description: string;
   customerEmail: string;
   returnUrl: string;
+  requestId?: string;
 }): Promise<{ initiateUrl: string } | null> {
   try {
     const res = await fetch(
       `${TREASURY_API_URL}/api/v1/pay/${TREASURY_TENANT}/intents`,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-ID': opts.requestId ?? crypto.randomUUID(),
+        },
         body: JSON.stringify({
           reference_id: opts.invoiceRef,
           reference_type: 'digitika_enrollment',
@@ -85,6 +89,9 @@ function generateStudentId(): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Propagate or generate a request ID for distributed tracing (matches httpware X-Request-ID pattern)
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+
   try {
     const body = await req.json();
     const data = schema.parse(body);
@@ -193,6 +200,7 @@ export async function POST(req: NextRequest) {
       description: `Digitika — ${intentDescription}`,
       customerEmail: data.email,
       returnUrl: successUrl,
+      requestId,
     });
 
     // Build portal link for email
@@ -240,21 +248,24 @@ export async function POST(req: NextRequest) {
         remainingBalance,
         portalLink,
         installmentsSummary,
-      }).catch((err) => console.error('[enrollment] notification error:', err));
+      }, requestId).catch((err) => console.error('[enrollment] notification error:', err));
     }
 
-    return NextResponse.json({
-      success: true,
-      enrollmentId,
-      studentId: studentUser.id,
-      invoiceRef,
-      firstPaymentAmount: data.firstPaymentAmount,
-      totalAmount: data.totalAmount,
-      remainingBalance,
-      currency: data.currency,
-      // If intent pre-creation succeeded, pass initiate_url so treasury-ui skips auto-create
-      initiateUrl: treasuryIntent?.initiateUrl ?? null,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        enrollmentId,
+        studentId: studentUser.id,
+        invoiceRef,
+        firstPaymentAmount: data.firstPaymentAmount,
+        totalAmount: data.totalAmount,
+        remainingBalance,
+        currency: data.currency,
+        // If intent pre-creation succeeded, pass initiate_url so treasury-ui skips auto-create
+        initiateUrl: treasuryIntent?.initiateUrl ?? null,
+      },
+      { headers: { 'X-Request-ID': requestId } }
+    );
   } catch (err) {
     if (err instanceof z.ZodError) {
       return NextResponse.json({ error: err.issues }, { status: 400 });

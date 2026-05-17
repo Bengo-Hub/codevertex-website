@@ -13,6 +13,8 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+
   try {
     const body = await req.json();
     const data = schema.parse(body);
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest) {
       email: data.email,
       message: data.message,
       service: data.service,
-    }).catch((err) => console.error('[contact] notification error:', err));
+    }, requestId).catch((err) => console.error('[contact] notification error:', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

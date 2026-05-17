@@ -69,7 +69,8 @@ async function postNotification(
   template: string,
   to: string,
   data: Record<string, unknown>,
-  subject: string
+  subject: string,
+  requestId?: string
 ): Promise<void> {
   if (!SERVICE_KEY) {
     console.warn('[notifications] INTERNAL_SERVICE_KEY not set — skipping email');
@@ -82,6 +83,7 @@ async function postNotification(
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': SERVICE_KEY,
+        'X-Request-ID': requestId ?? crypto.randomUUID(),
       },
       body: JSON.stringify({
         channel: 'email',
@@ -105,9 +107,9 @@ async function postNotification(
 }
 
 export async function sendEnrollmentConfirmation(
-  data: EnrollmentConfirmationData
+  data: EnrollmentConfirmationData,
+  requestId?: string
 ): Promise<void> {
-  // Template ID includes subdirectory: worker constructs path as "email/" + templateID
   await postNotification(
     'digitika/enrollment_confirmed',
     data.studentEmail,
@@ -122,12 +124,14 @@ export async function sendEnrollmentConfirmation(
       portal_link: data.portalLink,
       installments_summary: data.installmentsSummary ?? '',
     },
-    `Enrollment Confirmed — ${data.courseName}`
+    `Enrollment Confirmed — ${data.courseName}`,
+    requestId
   );
 }
 
 export async function sendInstallmentReminder(
-  data: InstallmentReminderData
+  data: InstallmentReminderData,
+  requestId?: string
 ): Promise<void> {
   const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
   const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
@@ -146,12 +150,14 @@ export async function sendInstallmentReminder(
       student_id: data.studentId,
       portal_link: data.portalLink,
     },
-    `Payment Reminder — ${label} Installment Due: ${data.courseName}`
+    `Payment Reminder — ${label} Installment Due: ${data.courseName}`,
+    requestId
   );
 }
 
 export async function sendInstallmentReceipt(
-  data: InstallmentReceiptData
+  data: InstallmentReceiptData,
+  requestId?: string
 ): Promise<void> {
   const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
   const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
@@ -171,11 +177,12 @@ export async function sendInstallmentReceipt(
       student_id: data.studentId,
       portal_link: data.portalLink,
     },
-    `Payment Received — ${label} Installment: ${data.courseName}`
+    `Payment Received — ${label} Installment: ${data.courseName}`,
+    requestId
   );
 }
 
-export async function sendContactFormReply(data: ContactFormData): Promise<void> {
+export async function sendContactFormReply(data: ContactFormData, requestId?: string): Promise<void> {
   await postNotification(
     'digitika/contact_form_reply',
     data.email,
@@ -185,7 +192,8 @@ export async function sendContactFormReply(data: ContactFormData): Promise<void>
       message: data.message,
       service: data.service ?? '',
     },
-    `We received your message — Codevertex IT Solutions`
+    `We received your message — Codevertex IT Solutions`,
+    requestId
   );
 }
 

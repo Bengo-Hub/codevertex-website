@@ -58,6 +58,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   // Manually send a payment reminder for a specific installment
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
     studentId: enrollment.studentUserId ?? '',
     daysUntilDue,
     portalLink: buildPortalLink(enrollment.id, enrollment.studentUserId ?? ''),
-  });
+  }, requestId);
 
   await prisma.installmentSchedule.update({
     where: { id: installment.id },

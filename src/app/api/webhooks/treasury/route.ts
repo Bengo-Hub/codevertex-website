@@ -8,6 +8,8 @@ import { publishInstallmentPaid } from '@/lib/events';
 // reference_id format: DGT-{enrollmentId}-DGT-{studentId}
 
 export async function POST(req: NextRequest) {
+  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
+
   try {
     const body = await req.json();
     const { event, reference_id, reference_type, payment_ref, status, amount } = body;
@@ -137,7 +139,7 @@ export async function POST(req: NextRequest) {
 
       // HTTP fallback: only call when NATS is not configured (digitika_consumer handles email when NATS is active)
       if (!process.env.EVENTS_NATS_URL) {
-        sendInstallmentReceipt(receiptData).catch((err) => console.error('[treasury-webhook] receipt email error:', err));
+        sendInstallmentReceipt(receiptData, requestId).catch((err) => console.error('[treasury-webhook] receipt email error:', err));
       }
     }
 
