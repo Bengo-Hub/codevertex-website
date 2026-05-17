@@ -49,16 +49,12 @@ log_info "Service  : ${APP_NAME}"
 log_info "Namespace: ${NAMESPACE}"
 log_info "Image    : ${IMAGE_REPO}:${GIT_COMMIT_ID}"
 
+SKIP_SCAN=${SKIP_SCAN:-false}
+
 command -v git    >/dev/null || { log_error "git is required"; exit 1; }
 command -v docker >/dev/null || { log_error "docker is required"; exit 1; }
-if ! command -v trivy >/dev/null 2>&1; then
-  log_info "trivy not found — installing to \$HOME/bin..."
-  mkdir -p "$HOME/bin"
-  curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-    | sh -s -- -b "$HOME/bin" 2>&1 | grep -v '^$' || true
-  export PATH="$HOME/bin:$PATH"
-  command -v trivy >/dev/null 2>&1 || { log_error "trivy install failed — cannot continue"; exit 1; }
-  log_success "trivy installed: $(trivy --version 2>&1 | head -1)"
+if [[ ${SKIP_SCAN} != "true" ]]; then
+  command -v trivy >/dev/null || { log_error "trivy is required (runs in CI); use SKIP_SCAN=true to bypass locally"; exit 1; }
 fi
 if [[ ${DEPLOY} == "true" ]]; then
   for tool in kubectl helm yq jq; do
@@ -83,8 +79,12 @@ if [[ ${DEPLOY} == "true" ]]; then
   fi
 fi
 
-log_info "Running Trivy filesystem scan"
-trivy fs . --exit-code "$TRIVY_ECODE" --format table || true
+if [[ ${SKIP_SCAN} != "true" ]]; then
+  log_info "Running Trivy filesystem scan"
+  trivy fs . --exit-code "$TRIVY_ECODE" --format table || true
+else
+  log_warn "SKIP_SCAN=true — skipping Trivy scan"
+fi
 
 log_info "Building Docker image"
 # NEXT_PUBLIC_* must be baked at build time for Next.js
