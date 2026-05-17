@@ -1,26 +1,29 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Clock, Monitor, ArrowRight } from 'lucide-react';
-import { type Course, type CourseCategory, COURSE_COVER_IMAGES } from '@/config/courses';
+import { type CourseCategory, COURSE_COVER_IMAGES } from '@/config/courses';
+import { type DbCourse } from '@/types/course';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 
 interface Props {
-  course: Course;
+  course: DbCourse;
   category: CourseCategory;
 }
 
 export function CourseCard({ course, category }: Props) {
   const cover = course.coverImage ?? COURSE_COVER_IMAGES[course.id];
-  const isSvg = cover?.endsWith('.svg');
 
   return (
     <Link
       href={`/digitika/${course.id}`}
-      className="group flex flex-col rounded-2xl bg-card border border-border overflow-hidden hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
+      className="group flex flex-col rounded-2xl bg-card border border-border overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
     >
+      {/* Category colour accent strip — only decorative, thin */}
+      <div className="h-1 w-full shrink-0" style={{ background: category.color }} />
+
       {/* Cover image */}
-      {cover ? (
+      {cover && (
         <div className="relative h-44 w-full overflow-hidden bg-muted">
           <Image
             src={cover}
@@ -29,23 +32,13 @@ export function CourseCard({ course, category }: Props) {
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
           />
-          {/* Category color strip overlay */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1"
-            style={{ background: category.color }}
-          />
         </div>
-      ) : (
-        <div className="h-1" style={{ background: category.color }} />
       )}
 
       <div className="p-6 flex-1">
         {/* Tags */}
         <div className="flex gap-2 flex-wrap mb-4">
-          <span
-            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
-            style={{ color: category.color, borderColor: `${category.color}30`, background: `${category.color}10` }}
-          >
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-primary/20 bg-primary/8 text-primary">
             <Monitor className="h-2.5 w-2.5" /> {course.mode}
           </span>
           {course.audience && <Badge variant="secondary">{course.audience}</Badge>}
@@ -90,18 +83,15 @@ export function CourseCard({ course, category }: Props) {
       <div className="px-6 py-4 border-t border-border flex items-center justify-between gap-4">
         <div>
           <div className="text-xl font-black text-foreground">{formatCurrency(course.price, course.currency)}</div>
-          {course.installmentPlans ? (
+          {course.installmentsEnabled && course.installmentPlans.length > 1 ? (
             <div className="text-xs text-muted-foreground">
-              from {formatCurrency(course.installmentPlans[0]?.payments[0]?.amount ?? course.price, course.currency)}/installment
+              from {formatCurrency(course.installmentPlans[1]?.payments[0]?.amount ?? course.price, course.currency)}/installment
             </div>
           ) : (
             <div className="text-xs text-muted-foreground">one-time</div>
           )}
         </div>
-        <div
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white shrink-0 group-hover:opacity-90 transition-opacity"
-          style={{ background: category.color }}
-        >
+        <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-primary text-primary-foreground shrink-0 group-hover:bg-primary/90 transition-colors">
           View course <ArrowRight className="h-3.5 w-3.5" />
         </div>
       </div>

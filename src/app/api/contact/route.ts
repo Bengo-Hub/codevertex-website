@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { checkSpam } from '@/lib/spam-guard';
 
 const schema = z.object({
   name: z.string().min(2),
@@ -14,6 +15,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = schema.parse(body);
+
+    const spamCheck = checkSpam({ name: data.name, email: data.email, message: data.message });
+    if (spamCheck.blocked) {
+      return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
+    }
 
     await prisma.contactSubmission.create({
       data: {

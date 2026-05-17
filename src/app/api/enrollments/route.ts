@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
+import { checkSpam } from '@/lib/spam-guard';
 
 const TREASURY_API_URL =
   process.env.TREASURY_API_URL ?? 'https://treasury.codevertexitsolutions.com';
@@ -85,6 +86,11 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = schema.parse(body);
+
+    const spamCheck = checkSpam({ name: data.fullName, email: data.email });
+    if (spamCheck.blocked) {
+      return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
+    }
 
     // 1. Upsert student user — one record per unique email
     let studentUser = await prisma.studentUser.findUnique({

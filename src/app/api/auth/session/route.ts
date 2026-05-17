@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
 
   // Encode a minimal, unsigned session payload — used only for middleware routing,
   // not as a security boundary (the SSO token is the real credential).
-  const payload = Buffer.from(JSON.stringify({ userId, role, exp })).toString('base64');
+  // base64url avoids +/= chars that can corrupt cookie values
+  const payload = Buffer.from(JSON.stringify({ userId, role, exp })).toString('base64url');
 
   const res = NextResponse.json({ ok: true, role });
   res.cookies.set('cv_session', payload, {

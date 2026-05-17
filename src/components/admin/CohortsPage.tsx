@@ -22,6 +22,23 @@ interface Course {
   id: string;
   name: string;
   categoryId: string;
+  duration: string;
+}
+
+function parseDurationWeeks(duration: string): number | null {
+  const m = duration.match(/(\d+)\s*week/i);
+  if (m) return parseInt(m[1], 10);
+  const mo = duration.match(/(\d+)\s*month/i);
+  if (mo) return parseInt(mo[1], 10) * 4;
+  return null;
+}
+
+function calcEndDate(startDate: string, duration: string): string {
+  const weeks = parseDurationWeeks(duration);
+  if (!weeks || !startDate) return '';
+  const d = new Date(startDate);
+  d.setDate(d.getDate() + weeks * 7);
+  return d.toISOString().split('T')[0];
 }
 
 const STATUS_OPTIONS = ['open', 'full', 'closed', 'completed'];
@@ -146,7 +163,11 @@ export function CohortsPage() {
         <label className="block text-xs font-medium text-muted-foreground mb-1">Course *</label>
         <select
           value={form.courseId}
-          onChange={(e) => setForm({ ...form, courseId: e.target.value })}
+          onChange={(e) => {
+            const course = courses.find(c => c.id === e.target.value);
+            const endDate = (course && form.startDate) ? calcEndDate(form.startDate, course.duration) : form.endDate;
+            setForm({ ...form, courseId: e.target.value, endDate });
+          }}
           className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground"
         >
           <option value="">Select course</option>
@@ -167,12 +188,22 @@ export function CohortsPage() {
         <input
           type="date"
           value={form.startDate}
-          onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+          onChange={(e) => {
+            const course = courses.find(c => c.id === form.courseId);
+            const endDate = (course && e.target.value) ? calcEndDate(e.target.value, course.duration) : form.endDate;
+            setForm({ ...form, startDate: e.target.value, endDate });
+          }}
           className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground"
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-muted-foreground mb-1">End Date</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">
+          End Date
+          {form.courseId && form.startDate && (() => {
+            const c = courses.find(x => x.id === form.courseId);
+            return c ? <span className="ml-1 text-[10px] text-primary">(auto from {c.duration})</span> : null;
+          })()}
+        </label>
         <input
           type="date"
           value={form.endDate}

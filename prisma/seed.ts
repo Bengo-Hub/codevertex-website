@@ -12,9 +12,21 @@
 
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { COURSE_CATEGORIES, COURSE_COVER_IMAGES } from '../src/config/courses';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
+
+// Build lookups from static config
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const INSTALLMENT_PLANS_MAP: Record<string, any> = {};
+const COVER_IMAGE_MAP: Record<string, string> = { ...COURSE_COVER_IMAGES };
+for (const cat of COURSE_CATEGORIES) {
+  for (const course of cat.courses) {
+    INSTALLMENT_PLANS_MAP[course.id] = (course.installmentPlans ?? []) as unknown[];
+    if (course.coverImage) COVER_IMAGE_MAP[course.id] = course.coverImage;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Course seed type
@@ -42,6 +54,7 @@ interface CourseSeed {
   includes: string[];
   featured?: boolean;
   sortOrder: number;
+  installmentsEnabled?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -1115,7 +1128,15 @@ async function main() {
 
   console.log(`\n📚 Seeding ${COURSES.length} courses...`);
   for (const course of COURSES) {
-    const data = { ...course, featured: course.featured ?? false };
+    const plans = INSTALLMENT_PLANS_MAP[course.id] ?? [];
+    const svgCover = COVER_IMAGE_MAP[course.id] ?? course.coverImage ?? null;
+    const data = {
+      ...course,
+      coverImage: svgCover,
+      featured: course.featured ?? false,
+      installmentsEnabled: course.installmentsEnabled ?? plans.length > 0,
+      installmentPlans: plans,
+    };
     await prisma.course.upsert({
       where: { id: course.id },
       create: data,

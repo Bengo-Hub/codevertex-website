@@ -6,22 +6,43 @@ import { z } from 'zod';
 import { X, CheckCircle2, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addDays, addWeeks, format } from 'date-fns';
-import { type Course, type CourseCategory, type InstallmentPlan, TREASURY_PAY_URL } from '@/config/courses';
+import { type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
+import { type DbCourse, type InstallmentPlan } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 
+// Country codes for phone validation
+const COUNTRY_CODES = [
+  { code: '+254', country: 'KE', label: '🇰🇪 +254', pattern: /^(?:0|)?[17]\d{8}$/ },
+  { code: '+255', country: 'TZ', label: '🇹🇿 +255', pattern: /^0?[67]\d{8}$/ },
+  { code: '+256', country: 'UG', label: '🇺🇬 +256', pattern: /^0?[37]\d{8}$/ },
+  { code: '+250', country: 'RW', label: '🇷🇼 +250', pattern: /^0?7\d{8}$/ },
+  { code: '+251', country: 'ET', label: '🇪🇹 +251', pattern: /^0?9\d{8}$/ },
+  { code: '+1',   country: 'US', label: '🇺🇸 +1',   pattern: /^\d{10}$/ },
+  { code: '+44',  country: 'GB', label: '🇬🇧 +44',  pattern: /^0?[789]\d{9}$/ },
+];
+
+function getAgeRange(audience?: string | null): { min: number; max: number } | null {
+  if (!audience) return null;
+  const m = audience.match(/Age\s+(\d+)[–-](\d+)/i) ?? audience.match(/(\d+)[–-](\d+)/);
+  if (m) return { min: parseInt(m[1], 10), max: parseInt(m[2], 10) };
+  if (/adult/i.test(audience)) return { min: 16, max: 99 };
+  return null;
+}
+
 const schema = z.object({
-  fullName: z.string().min(2, 'Required'),
+  fullName: z.string().min(2, 'Full name required'),
   email: z.string().email('Valid email required'),
-  phone: z.string().min(9, 'Valid phone required'),
-  dob: z.string().min(1, 'Required'),
+  countryCode: z.string().min(1, 'Required'),
+  phone: z.string().min(6, 'Valid phone required'),
+  dob: z.string().min(1, 'Date of birth required'),
   experience: z.string().optional(),
   howHeard: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
 
 interface Props {
-  course: Course;
+  course: DbCourse;
   category: CourseCategory;
   onClose: () => void;
 }
@@ -46,22 +67,50 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
+  const [selectedCC, setSelectedCC] = useState(COUNTRY_CODES[0]);
+  const [ageError, setAgeError] = useState('');
 
-  const plans: InstallmentPlan[] = course.installmentPlans ?? [
-    { label: 'Upfront', payments: [{ amount: course.price, label: 'Full payment' }], totalAmount: course.price },
-  ];
+  const plans: InstallmentPlan[] = (course.installmentsEnabled && course.installmentPlans.length > 0)
+    ? course.installmentPlans
+    : [{ label: 'Upfront', payments: [{ amount: course.price, label: 'Full payment' }], totalAmount: course.price }];
   const selectedPlan = plans[selectedPlanIdx];
   const firstPayment = selectedPlan.payments[0].amount;
   const isInstallment = selectedPlan.payments.length > 1;
 
-  const { register, handleSubmit, formState: { errors }, getValues } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, getValues, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: { countryCode: '+254' },
   });
 
-  const onSubmit = () => setStep(2);
+  const phoneValue = watch('phone', '');
+
+  const validatePhone = (phone: string): boolean => {
+    const digits = phone.replace(/[\s\-()]/g, '');
+    return selectedCC.pattern.test(digits);
+  };
+
+  const onSubmit = (data: FormData) => {
+    // Validate age against course audience requirement
+    if (data.dob) {
+      const ageRange = getAgeRange(course.audience);
+      if (ageRange) {
+        const today = new Date();
+        const birth = new Date(data.dob);
+        const age = today.getFullYear() - birth.getFullYear() -
+          (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
+        if (age < ageRange.min || age > ageRange.max) {
+          setAgeError(`This course is for ages ${ageRange.min}–${ageRange.max}. Calculated age: ${age}.`);
+          return;
+        }
+      }
+    }
+    setAgeError('');
+    setStep(2);
+  };
 
   const handlePay = async () => {
-    const data = getValues();
+    const rawData = getValues();
+    const data = { ...rawData, phone: `${selectedCC.code}${rawData.phone.replace(/^0/, '').replace(/[\s\-()]/g, '')}` };
     setSubmitting(true);
     try {
       const dueDates = computeDueDates(selectedPlan);
@@ -185,6 +234,7 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
             {/* STEP 1: Personal Info */}
             {step === 1 && (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <input type="hidden" {...register('countryCode')} />
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Full Name *</label>
@@ -192,14 +242,44 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
                     {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName.message}</p>}
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Date of Birth *</label>
+                    <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                      Date of Birth *
+                      {course.audience && getAgeRange(course.audience) && (
+                        <span className="ml-1 text-[10px] text-muted-foreground font-normal">
+                          (Ages {getAgeRange(course.audience)!.min}–{getAgeRange(course.audience)!.max})
+                        </span>
+                      )}
+                    </label>
                     <input type="date" {...register('dob')} className={inputCls(errors.dob)} />
                     {errors.dob && <p className="text-xs text-destructive mt-1">{errors.dob.message}</p>}
+                    {ageError && <p className="text-xs text-destructive mt-1">{ageError}</p>}
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Phone *</label>
-                    <input {...register('phone')} placeholder="+254 7XX XXX XXX" className={inputCls(errors.phone)} />
+                    <div className="flex gap-2">
+                      <select
+                        value={selectedCC.code}
+                        onChange={e => {
+                          const cc = COUNTRY_CODES.find(c => c.code === e.target.value) ?? COUNTRY_CODES[0];
+                          setSelectedCC(cc);
+                          setValue('countryCode', cc.code);
+                        }}
+                        className="text-xs rounded-lg bg-secondary border border-border px-2 py-2.5 text-foreground focus:outline-none shrink-0"
+                      >
+                        {COUNTRY_CODES.map(cc => (
+                          <option key={cc.code} value={cc.code}>{cc.label}</option>
+                        ))}
+                      </select>
+                      <input
+                        {...register('phone')}
+                        placeholder={selectedCC.code === '+254' ? '0712 345 678' : 'Phone number'}
+                        className={inputCls(errors.phone)}
+                      />
+                    </div>
                     {errors.phone && <p className="text-xs text-destructive mt-1">{errors.phone.message}</p>}
+                    {!errors.phone && phoneValue && !validatePhone(phoneValue) && (
+                      <p className="text-xs text-destructive mt-1">Invalid phone number for {selectedCC.country}</p>
+                    )}
                   </div>
                   <div className="col-span-2">
                     <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Email *</label>

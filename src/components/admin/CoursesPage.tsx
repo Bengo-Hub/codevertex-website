@@ -1,10 +1,22 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { RefreshCw, Pencil, X, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCw, Pencil, X, Search, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+
+interface InstallmentPayment {
+  amount: number;
+  label: string;
+}
+
+interface InstallmentPlan {
+  label: string;
+  payments: InstallmentPayment[];
+  totalAmount: number;
+  badge?: string;
+}
 
 interface Course {
   id: string;
@@ -17,9 +29,12 @@ interface Course {
   price: number;
   currency: string;
   description: string;
+  longDescription: string | null;
   level: string;
   featured: boolean;
   isActive: boolean;
+  installmentsEnabled: boolean;
+  installmentPlans: InstallmentPlan[];
   sortOrder: number;
 }
 
@@ -30,13 +45,185 @@ interface EditForm {
   mode: string;
   level: string;
   description: string;
+  longDescription: string;
   price: string;
   sortOrder: string;
+  installmentsEnabled: boolean;
+  installmentPlans: InstallmentPlan[];
 }
 
 const PAGE_SIZE = 12;
-const MODES = ['online', 'in-person', 'hybrid'];
-const LEVELS = ['beginner', 'intermediate', 'advanced'];
+
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      onClick={onChange}
+      disabled={disabled}
+      className={`w-9 h-5 rounded-full transition-colors shrink-0 ${
+        checked ? 'bg-primary' : 'bg-muted-foreground/30'
+      } disabled:opacity-50`}
+    >
+      <span
+        className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm mx-0.5 transition-transform ${
+          checked ? 'translate-x-4' : ''
+        }`}
+      />
+    </button>
+  );
+}
+
+// ── Installment Plan Editor ────────────────────────────────────────────────
+
+function InstallmentPlanEditor({
+  plans,
+  onChange,
+}: {
+  plans: InstallmentPlan[];
+  onChange: (plans: InstallmentPlan[]) => void;
+}) {
+  function updatePlan(idx: number, patch: Partial<InstallmentPlan>) {
+    onChange(plans.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+  }
+
+  function updatePayment(planIdx: number, payIdx: number, patch: Partial<InstallmentPayment>) {
+    onChange(
+      plans.map((p, i) =>
+        i === planIdx
+          ? {
+              ...p,
+              payments: p.payments.map((pay, j) => (j === payIdx ? { ...pay, ...patch } : pay)),
+              totalAmount: p.payments
+                .map((pay, j) => (j === payIdx ? { ...pay, ...patch } : pay))
+                .reduce((sum, pay) => sum + (Number(pay.amount) || 0), 0),
+            }
+          : p
+      )
+    );
+  }
+
+  function addPayment(planIdx: number) {
+    const p = plans[planIdx];
+    onChange(
+      plans.map((plan, i) =>
+        i === planIdx
+          ? { ...plan, payments: [...plan.payments, { amount: 0, label: '' }] }
+          : plan
+      )
+    );
+  }
+
+  function removePayment(planIdx: number, payIdx: number) {
+    onChange(
+      plans.map((plan, i) =>
+        i === planIdx
+          ? {
+              ...plan,
+              payments: plan.payments.filter((_, j) => j !== payIdx),
+              totalAmount: plan.payments
+                .filter((_, j) => j !== payIdx)
+                .reduce((sum, pay) => sum + pay.amount, 0),
+            }
+          : plan
+      )
+    );
+  }
+
+  function addPlan() {
+    onChange([...plans, { label: 'New Plan', payments: [{ amount: 0, label: 'At enrollment' }], totalAmount: 0 }]);
+  }
+
+  function removePlan(idx: number) {
+    onChange(plans.filter((_, i) => i !== idx));
+  }
+
+  return (
+    <div className="space-y-3">
+      {plans.map((plan, pidx) => (
+        <div key={pidx} className="rounded-lg border border-border bg-background p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              value={plan.label}
+              onChange={(e) => updatePlan(pidx, { label: e.target.value })}
+              placeholder="Plan label"
+              className="flex-1 text-xs rounded border border-border bg-muted px-2 py-1 text-foreground focus:outline-none"
+            />
+            <input
+              value={plan.badge ?? ''}
+              onChange={(e) => updatePlan(pidx, { badge: e.target.value || undefined })}
+              placeholder="Badge (e.g. Popular)"
+              className="w-28 text-xs rounded border border-border bg-muted px-2 py-1 text-foreground focus:outline-none"
+            />
+            <button
+              onClick={() => removePlan(pidx)}
+              className="text-muted-foreground hover:text-destructive transition-colors p-0.5"
+              title="Remove plan"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div className="space-y-1.5 ml-2">
+            {plan.payments.map((pay, payidx) => (
+              <div key={payidx} className="flex items-center gap-2">
+                <input
+                  value={pay.label}
+                  onChange={(e) => updatePayment(pidx, payidx, { label: e.target.value })}
+                  placeholder="Payment label"
+                  className="flex-1 text-xs rounded border border-border bg-muted px-2 py-1 text-foreground focus:outline-none"
+                />
+                <span className="text-xs text-muted-foreground shrink-0">KES</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={pay.amount}
+                  onChange={(e) => updatePayment(pidx, payidx, { amount: Number(e.target.value) })}
+                  className="w-24 text-xs rounded border border-border bg-muted px-2 py-1 text-foreground focus:outline-none text-right"
+                />
+                {plan.payments.length > 1 && (
+                  <button
+                    onClick={() => removePayment(pidx, payidx)}
+                    className="text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border">
+              <button
+                onClick={() => addPayment(pidx)}
+                className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80"
+              >
+                <Plus className="h-2.5 w-2.5" /> Add payment
+              </button>
+              <span className="text-[10px] text-muted-foreground">
+                Total: KES {plan.payments.reduce((s, p) => s + (Number(p.amount) || 0), 0).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <button
+        onClick={addPlan}
+        className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 border border-dashed border-primary/30 rounded-lg px-3 py-2 w-full justify-center transition-colors"
+      >
+        <Plus className="h-3.5 w-3.5" /> Add installment plan
+      </button>
+    </div>
+  );
+}
+
+// ── Edit Modal ─────────────────────────────────────────────────────────────
 
 function EditModal({
   course,
@@ -44,7 +231,7 @@ function EditModal({
   onClose,
 }: {
   course: Course;
-  onSave: (id: string, data: Partial<Course>) => Promise<void>;
+  onSave: (id: string, data: Record<string, unknown>) => Promise<void>;
   onClose: () => void;
 }) {
   const [form, setForm] = useState<EditForm>({
@@ -54,22 +241,28 @@ function EditModal({
     mode: course.mode,
     level: course.level,
     description: course.description,
+    longDescription: course.longDescription ?? '',
     price: String(course.price),
     sortOrder: String(course.sortOrder),
+    installmentsEnabled: course.installmentsEnabled,
+    installmentPlans: course.installmentPlans ?? [],
   });
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<'details' | 'installments'>('details');
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
+    function handler(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
   async function handleSave() {
     setSaving(true);
+    const plans = form.installmentPlans.map(p => ({
+      ...p,
+      totalAmount: p.payments.reduce((s, pay) => s + (Number(pay.amount) || 0), 0),
+    }));
     await onSave(course.id, {
       name: form.name,
       shortName: form.shortName || null,
@@ -77,12 +270,17 @@ function EditModal({
       mode: form.mode,
       level: form.level,
       description: form.description,
+      longDescription: form.longDescription || null,
       price: Number(form.price),
       sortOrder: Number(form.sortOrder),
+      installmentsEnabled: form.installmentsEnabled,
+      installmentPlans: plans,
     });
     setSaving(false);
     onClose();
   }
+
+  const inputCls = 'w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50';
 
   return (
     <div
@@ -90,99 +288,102 @@ function EditModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
-      <div className="w-full max-w-lg bg-card rounded-2xl border border-border shadow-xl flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-xl bg-card rounded-2xl border border-border shadow-xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-border">
           <div>
             <h2 className="text-base font-semibold text-foreground">Edit Course</h2>
             <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-xs">{course.name}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-border px-6">
+          {(['details', 'installments'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2.5 text-xs font-medium capitalize border-b-2 transition-colors -mb-px ${
+                tab === t ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t === 'installments' ? 'Installments' : 'Details'}
+            </button>
+          ))}
+        </div>
+
         {/* Body */}
-        <div className="overflow-y-auto px-6 py-4 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Course Name</label>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
+        <div className="overflow-y-auto px-6 py-4">
+          {tab === 'details' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Course Name</label>
+                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Short Name</label>
+                <input value={form.shortName} onChange={e => setForm({ ...form, shortName: e.target.value })} placeholder="e.g. Data Science" className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Duration</label>
+                <input value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} placeholder="e.g. 10 weeks" className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Mode</label>
+                <input value={form.mode} onChange={e => setForm({ ...form, mode: e.target.value })} className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Level</label>
+                <select value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} className={inputCls}>
+                  {['beginner', 'intermediate', 'advanced'].map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Price ({course.currency})</label>
+                <input type="number" min={0} value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Sort Order</label>
+                <input type="number" value={form.sortOrder} onChange={e => setForm({ ...form, sortOrder: e.target.value })} className={inputCls} />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Short Description</label>
+                <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={2} className={`${inputCls} resize-none`} />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Long Description</label>
+                <textarea value={form.longDescription} onChange={e => setForm({ ...form, longDescription: e.target.value })} rows={5} className={`${inputCls} resize-y`} placeholder="Detailed course description shown on the course page…" />
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Short Name</label>
-              <input
-                value={form.shortName}
-                onChange={(e) => setForm({ ...form, shortName: e.target.value })}
-                placeholder="e.g. Data Science"
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
+          )}
+
+          {tab === 'installments' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Enable installments</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Allow students to pay in multiple installments</p>
+                </div>
+                <Toggle
+                  checked={form.installmentsEnabled}
+                  onChange={() => setForm({ ...form, installmentsEnabled: !form.installmentsEnabled })}
+                />
+              </div>
+
+              {form.installmentsEnabled && (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Payment plans</p>
+                  <InstallmentPlanEditor
+                    plans={form.installmentPlans}
+                    onChange={plans => setForm({ ...form, installmentPlans: plans })}
+                  />
+                </div>
+              )}
             </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Duration</label>
-              <input
-                value={form.duration}
-                onChange={(e) => setForm({ ...form, duration: e.target.value })}
-                placeholder="e.g. 3 months"
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Mode</label>
-              <select
-                value={form.mode}
-                onChange={(e) => setForm({ ...form, mode: e.target.value })}
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none"
-              >
-                {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Level</label>
-              <select
-                value={form.level}
-                onChange={(e) => setForm({ ...form, level: e.target.value })}
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none"
-              >
-                {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Price ({course.currency})</label>
-              <input
-                type="number"
-                min={0}
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Sort Order</label>
-              <input
-                type="number"
-                value={form.sortOrder}
-                onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-            <div className="col-span-2">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-                className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -206,35 +407,7 @@ function EditModal({
   );
 }
 
-function Toggle({
-  checked,
-  onChange,
-  color = 'primary',
-  disabled,
-}: {
-  checked: boolean;
-  onChange: () => void;
-  color?: 'primary' | 'green';
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      onClick={onChange}
-      disabled={disabled}
-      className={`w-9 h-5 rounded-full transition-colors shrink-0 ${
-        checked
-          ? color === 'green' ? 'bg-green-500' : 'bg-primary'
-          : 'bg-muted-foreground/30'
-      } disabled:opacity-50`}
-    >
-      <span
-        className={`block w-3.5 h-3.5 rounded-full bg-white shadow-sm mx-0.5 transition-transform ${
-          checked ? 'translate-x-4' : ''
-        }`}
-      />
-    </button>
-  );
-}
+// ── Main CoursesPage ───────────────────────────────────────────────────────
 
 export function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -255,11 +428,9 @@ export function CoursesPage() {
   }, [includeInactive]);
 
   useEffect(() => { load(); }, [load]);
-
-  // Reset page when filters change
   useEffect(() => { setPage(1); }, [search, categoryFilter, includeInactive]);
 
-  async function saveEdit(id: string, data: Partial<Course>) {
+  async function saveEdit(id: string, data: Record<string, unknown>) {
     const res = await fetch(`/api/admin/courses/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -273,7 +444,7 @@ export function CoursesPage() {
     }
   }
 
-  async function toggleField(courseId: string, field: 'featured' | 'isActive', current: boolean) {
+  async function toggleField(courseId: string, field: 'featured' | 'isActive' | 'installmentsEnabled', current: boolean) {
     setToggling(courseId);
     const res = await fetch(`/api/admin/courses/${courseId}`, {
       method: 'PATCH',
@@ -281,8 +452,8 @@ export function CoursesPage() {
       body: JSON.stringify({ [field]: !current }),
     });
     if (res.ok) {
-      const label = field === 'featured' ? 'Featured' : 'Active';
-      toast.success(`${label} ${!current ? 'enabled' : 'disabled'}`);
+      const labels = { featured: 'Featured', isActive: 'Active', installmentsEnabled: 'Installments' };
+      toast.success(`${labels[field]} ${!current ? 'enabled' : 'disabled'}`);
       load();
     } else {
       toast.error('Update failed');
@@ -290,10 +461,9 @@ export function CoursesPage() {
     setToggling(null);
   }
 
-  const categories = [...new Set(courses.map((c) => c.categoryId))].sort();
+  const categories = [...new Set(courses.map(c => c.categoryId))].sort();
 
-  // Filter
-  const filtered = courses.filter((c) => {
+  const filtered = courses.filter(c => {
     if (categoryFilter && c.categoryId !== categoryFilter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -302,12 +472,9 @@ export function CoursesPage() {
     return true;
   });
 
-  // Paginate
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  // Group paginated by category
-  const paginatedCategories = [...new Set(paginated.map((c) => c.categoryId))].sort();
+  const paginatedCategories = [...new Set(paginated.map(c => c.categoryId))].sort();
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -315,11 +482,7 @@ export function CoursesPage() {
         title="Courses"
         description={`${filtered.length} course${filtered.length !== 1 ? 's' : ''}${search || categoryFilter ? ' (filtered)' : ''}`}
         actions={
-          <button
-            onClick={load}
-            className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
-            title="Refresh"
-          >
+          <button onClick={load} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors" title="Refresh">
             <RefreshCw className="h-4 w-4" />
           </button>
         }
@@ -331,28 +494,21 @@ export function CoursesPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder="Search courses…"
             className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
         <select
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={e => setCategoryFilter(e.target.value)}
           className="text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground"
         >
           <option value="">All categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
+          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
         </select>
         <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={includeInactive}
-            onChange={(e) => setIncludeInactive(e.target.checked)}
-            className="rounded"
-          />
+          <input type="checkbox" checked={includeInactive} onChange={e => setIncludeInactive(e.target.checked)} className="rounded" />
           Show inactive
         </label>
       </div>
@@ -364,12 +520,12 @@ export function CoursesPage() {
       ) : (
         <>
           <div className="space-y-8">
-            {paginatedCategories.map((cat) => (
+            {paginatedCategories.map(cat => (
               <div key={cat}>
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
                   {cat}
                   <span className="font-normal normal-case tracking-normal">
-                    ({paginated.filter((c) => c.categoryId === cat).length})
+                    ({paginated.filter(c => c.categoryId === cat).length})
                   </span>
                 </h3>
                 <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -377,57 +533,43 @@ export function CoursesPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border bg-muted/40">
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Course</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Level</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Mode</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Duration</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Price</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Featured</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Active</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">Order</th>
-                          <th className="px-4 py-3"></th>
+                          {['Course', 'Level', 'Mode', 'Duration', 'Price', 'Featured', 'Active', 'Instl.', 'Plans', 'Order', ''].map(h => (
+                            <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
-                        {paginated.filter((c) => c.categoryId === cat).map((course) => (
-                          <tr
-                            key={course.id}
-                            className={`hover:bg-muted/30 transition-colors ${!course.isActive ? 'opacity-50' : ''}`}
-                          >
-                            <td className="px-4 py-3 min-w-50">
+                        {paginated.filter(c => c.categoryId === cat).map(course => (
+                          <tr key={course.id} className={`hover:bg-muted/30 transition-colors ${!course.isActive ? 'opacity-50' : ''}`}>
+                            <td className="px-4 py-3 min-w-48">
                               <p className="font-medium text-sm text-foreground">{course.name}</p>
-                              {course.shortName && (
-                                <p className="text-xs text-muted-foreground">{course.shortName}</p>
-                              )}
+                              {course.shortName && <p className="text-xs text-muted-foreground">{course.shortName}</p>}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <span className="text-xs capitalize text-muted-foreground">{course.level}</span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="text-xs capitalize text-muted-foreground">{course.mode}</span>
+                              <span className="text-xs text-muted-foreground">{course.mode}</span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <span className="text-xs text-muted-foreground">{course.duration}</span>
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="text-xs font-semibold text-foreground">
-                                {formatCurrency(course.price, course.currency)}
+                              <span className="text-xs font-semibold text-foreground">{formatCurrency(course.price, course.currency)}</span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Toggle checked={course.featured} onChange={() => toggleField(course.id, 'featured', course.featured)} disabled={toggling === course.id} />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Toggle checked={course.isActive} onChange={() => toggleField(course.id, 'isActive', course.isActive)} disabled={toggling === course.id} />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Toggle checked={course.installmentsEnabled} onChange={() => toggleField(course.id, 'installmentsEnabled', course.installmentsEnabled)} disabled={toggling === course.id} />
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <span className="text-xs text-muted-foreground">
+                                {course.installmentPlans?.length ?? 0} plan{(course.installmentPlans?.length ?? 0) !== 1 ? 's' : ''}
                               </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <Toggle
-                                checked={course.featured}
-                                onChange={() => toggleField(course.id, 'featured', course.featured)}
-                                disabled={toggling === course.id}
-                              />
-                            </td>
-                            <td className="px-4 py-3">
-                              <Toggle
-                                checked={course.isActive}
-                                onChange={() => toggleField(course.id, 'isActive', course.isActive)}
-                                color="green"
-                                disabled={toggling === course.id}
-                              />
                             </td>
                             <td className="px-4 py-3">
                               <span className="text-xs text-muted-foreground">{course.sortOrder}</span>
@@ -437,8 +579,7 @@ export function CoursesPage() {
                                 onClick={() => setEditCourse(course)}
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                               >
-                                <Pencil className="h-3 w-3" />
-                                Edit
+                                <Pencil className="h-3 w-3" /> Edit
                               </button>
                             </td>
                           </tr>
@@ -458,15 +599,11 @@ export function CoursesPage() {
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
               </p>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="p-1.5 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
-                >
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="p-1.5 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors">
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
                   .reduce<(number | '…')[]>((acc, p, idx, arr) => {
                     if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('…');
                     acc.push(p);
@@ -474,26 +611,20 @@ export function CoursesPage() {
                   }, [])
                   .map((p, i) =>
                     p === '…' ? (
-                      <span key={`ellipsis-${i}`} className="px-1 text-muted-foreground text-xs">…</span>
+                      <span key={`e-${i}`} className="px-1 text-muted-foreground text-xs">…</span>
                     ) : (
                       <button
                         key={p}
                         onClick={() => setPage(p as number)}
                         className={`min-w-8 h-8 rounded-lg text-xs font-medium transition-colors border ${
-                          page === p
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'border-border hover:bg-muted text-foreground'
+                          page === p ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted text-foreground'
                         }`}
                       >
                         {p}
                       </button>
                     )
                   )}
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="p-1.5 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors"
-                >
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="p-1.5 rounded-lg border border-border hover:bg-muted disabled:opacity-40 transition-colors">
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -502,7 +633,6 @@ export function CoursesPage() {
         </>
       )}
 
-      {/* Edit modal */}
       {editCourse && (
         <EditModal
           course={editCourse}

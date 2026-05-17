@@ -8,22 +8,35 @@ import {
   Star, Briefcase, GraduationCap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { type Course, type CourseCategory, ALUMNI_COMPANIES } from '@/config/courses';
+import { type CourseCategory, ALUMNI_COMPANIES, type WeeklyModule, type Testimonial } from '@/config/courses';
+import { type DbCourse } from '@/types/course';
 import { formatCurrency } from '@/lib/utils';
 import { EnrollmentModal } from './EnrollmentModal';
 import { cn } from '@/lib/utils';
 
-interface Props {
-  course: Course;
-  category: CourseCategory;
+// Static supplemental data that's not stored in DB
+interface StaticData {
+  curriculum?: WeeklyModule[];
+  testimonials?: Testimonial[];
+  alumniCompanies?: { name: string; logo: string }[];
+  brochure?: string;
+  location?: string;
+  cohortSize?: number;
+  startDate?: string;
 }
 
-export function CourseDetailClient({ course, category }: Props) {
+interface Props {
+  course: DbCourse;
+  category: CourseCategory;
+  staticData?: StaticData;
+}
+
+export function CourseDetailClient({ course, category, staticData = {} }: Props) {
+  const plans = course.installmentsEnabled ? course.installmentPlans : [];
+  const defaultPlanIdx = plans.findIndex(p => p.badge) >= 0 ? plans.findIndex(p => p.badge) : 0;
+
   const [showCurriculum, setShowCurriculum] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(
-    course.installmentPlans ? (course.installmentPlans.findIndex(p => p.badge) >= 0 ? course.installmentPlans.findIndex(p => p.badge) : 0) : 0
-  );
+  const [selectedPlan, setSelectedPlan] = useState(defaultPlanIdx);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -40,10 +53,10 @@ export function CourseDetailClient({ course, category }: Props) {
     }
   };
 
-  const hasCurriculum = course.curriculum && course.curriculum.length > 0;
-  const hasInstallments = course.installmentPlans && course.installmentPlans.length > 0;
-  const hasTestimonials = course.testimonials && course.testimonials.length > 0;
-  const hasAlumni = course.alumniCompanies && course.alumniCompanies.length > 0;
+  const hasCurriculum = staticData.curriculum && staticData.curriculum.length > 0;
+  const hasInstallments = plans.length > 0;
+  const hasTestimonials = staticData.testimonials && staticData.testimonials.length > 0;
+  const hasAlumni = staticData.alumniCompanies && staticData.alumniCompanies.length > 0;
 
   return (
     <div className="min-h-screen bg-background pt-16">
@@ -92,9 +105,9 @@ export function CourseDetailClient({ course, category }: Props) {
             {[
               { icon: Clock, label: course.duration },
               { icon: BookOpen, label: course.mode },
-              ...(course.cohortSize ? [{ icon: Users, label: `${course.cohortSize} slots per cohort` }] : []),
-              ...(course.location ? [{ icon: MapPin, label: course.location }] : []),
-              ...(course.startDate ? [{ icon: Calendar, label: `Next: ${course.startDate}` }] : []),
+              ...(staticData.cohortSize ? [{ icon: Users, label: `${staticData.cohortSize} slots per cohort` }] : []),
+              ...(staticData.location ? [{ icon: MapPin, label: staticData.location }] : []),
+              ...(staticData.startDate ? [{ icon: Calendar, label: `Next: ${staticData.startDate}` }] : []),
               ...(course.audience ? [{ icon: GraduationCap, label: course.audience }] : []),
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-2 px-4 py-2 rounded-full bg-background border border-border text-sm text-muted-foreground">
@@ -129,7 +142,7 @@ export function CourseDetailClient({ course, category }: Props) {
             </section>
 
             {/* Includes */}
-            {course.includes && (
+            {course.includes.length > 0 && (
               <section>
                 <h2 className="text-xl font-black text-foreground mb-5">Everything included</h2>
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -155,7 +168,7 @@ export function CourseDetailClient({ course, category }: Props) {
                 >
                   <span className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5" style={{ color: category.color }} />
-                    {course.curriculum!.length}-Week Curriculum
+                    {staticData.curriculum!.length}-Week Curriculum
                   </span>
                   {showCurriculum ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                 </button>
@@ -163,12 +176,9 @@ export function CourseDetailClient({ course, category }: Props) {
 
                 {showCurriculum && (
                   <div className="space-y-3">
-                    {course.curriculum!.map(mod => (
+                    {staticData.curriculum!.map(mod => (
                       <div key={mod.week} className="flex gap-4 p-4 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors">
-                        <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xs font-black text-white"
-                          style={{ background: category.color }}
-                        >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xs font-black bg-primary text-primary-foreground">
                           W{mod.week}
                         </div>
                         <div>
@@ -199,7 +209,7 @@ export function CourseDetailClient({ course, category }: Props) {
             )}
 
             {/* Prerequisites */}
-            {course.prerequisites && (
+            {course.prerequisites.length > 0 && (
               <section>
                 <h2 className="text-xl font-black text-foreground mb-4">Prerequisites</h2>
                 <div className="space-y-2">
@@ -214,7 +224,7 @@ export function CourseDetailClient({ course, category }: Props) {
             )}
 
             {/* Career paths */}
-            {course.careerPaths && (
+            {course.careerPaths.length > 0 && (
               <section>
                 <h2 className="text-xl font-black text-foreground mb-4 flex items-center gap-2">
                   <Briefcase className="h-5 w-5" style={{ color: category.color }} /> Career Pathways
@@ -223,8 +233,7 @@ export function CourseDetailClient({ course, category }: Props) {
                   {course.careerPaths.map(path => (
                     <span
                       key={path}
-                      className="px-3 py-1.5 rounded-full text-sm font-medium border"
-                      style={{ color: category.color, borderColor: `${category.color}40`, background: `${category.color}0d` }}
+                      className="px-3 py-1.5 rounded-full text-sm font-medium border border-primary/30 bg-primary/5 text-primary"
                     >
                       {path}
                     </span>
@@ -239,7 +248,7 @@ export function CourseDetailClient({ course, category }: Props) {
                 <h2 className="text-xl font-black text-foreground mb-2">Our graduates work at</h2>
                 <p className="text-sm text-muted-foreground mb-6">Companies that have hired Digitika Academy graduates</p>
                 <div className="flex flex-wrap items-center gap-8">
-                  {(course.alumniCompanies ?? ALUMNI_COMPANIES).map(co => (
+                  {(staticData.alumniCompanies ?? ALUMNI_COMPANIES).map(co => (
                     <div key={co.name} className="grayscale hover:grayscale-0 opacity-50 hover:opacity-100 transition-all duration-300" title={co.name}>
                       <Image src={co.logo} alt={co.name} width={100} height={32} className="h-7 w-auto object-contain" />
                     </div>
@@ -253,15 +262,12 @@ export function CourseDetailClient({ course, category }: Props) {
               <section>
                 <h2 className="text-xl font-black text-foreground mb-6">What graduates say</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {course.testimonials!.map(t => (
+                  {staticData.testimonials!.map(t => (
                     <div key={t.name} className="p-5 rounded-2xl bg-card border border-border hover:border-primary/20 transition-colors">
                       <Star className="h-4 w-4 mb-3" style={{ color: category.color }} />
                       <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">&ldquo;{t.quote}&rdquo;</p>
                       <div className="flex items-center gap-3">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black shrink-0"
-                          style={{ background: category.color }}
-                        >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-primary-foreground bg-primary text-xs font-black shrink-0">
                           {t.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
@@ -287,7 +293,7 @@ export function CourseDetailClient({ course, category }: Props) {
                     <>
                       <h3 className="font-bold text-foreground text-base mb-4">Choose a payment plan</h3>
                       <div className="space-y-3 mb-6">
-                        {course.installmentPlans!.map((plan, idx) => (
+                        {plans.map((plan, idx) => (
                           <button
                             key={plan.label}
                             onClick={() => setSelectedPlan(idx)}
@@ -321,7 +327,7 @@ export function CourseDetailClient({ course, category }: Props) {
                       <div className="flex justify-between items-baseline mb-5 px-1">
                         <span className="text-sm text-muted-foreground">Total</span>
                         <span className="text-2xl font-black text-foreground">
-                          {formatCurrency(course.installmentPlans![selectedPlan]?.totalAmount ?? course.price, 'KES')}
+                          {formatCurrency(plans[selectedPlan]?.totalAmount ?? course.price, 'KES')}
                         </span>
                       </div>
                     </>
@@ -337,14 +343,13 @@ export function CourseDetailClient({ course, category }: Props) {
                     onClick={() => setEnrollOpen(true)}
                     className="w-full"
                     size="lg"
-                    style={{ background: category.color, color: '#fff' }}
                   >
                     Apply Now <ArrowRight className="h-4 w-4" />
                   </Button>
 
-                  {course.brochure && (
+                  {staticData.brochure && (
                     <Link
-                      href={course.brochure}
+                      href={staticData.brochure}
                       target="_blank"
                       className="flex items-center justify-center gap-2 mt-3 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
                     >
@@ -354,11 +359,11 @@ export function CourseDetailClient({ course, category }: Props) {
 
                   <p className="text-[11px] text-center text-muted-foreground mt-4 leading-relaxed">
                     Questions?{' '}
-                    <a href="https://wa.me/254743793901" className="font-semibold" style={{ color: category.color }}>
+                    <a href="https://wa.me/254743793901" className="font-semibold text-primary hover:underline">
                       WhatsApp us
                     </a>
                     {' '}or call{' '}
-                    <a href="tel:+254743793901" className="font-semibold" style={{ color: category.color }}>
+                    <a href="tel:+254743793901" className="font-semibold text-primary hover:underline">
                       +254 743 793 901
                     </a>
                   </p>
@@ -370,7 +375,7 @@ export function CourseDetailClient({ course, category }: Props) {
                 <p className="text-xs font-bold text-foreground mb-2">Share this course</p>
                 <div className="flex gap-2 flex-wrap">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(`Check out this course: ${course.name} at Digitika Academy — ${typeof window !== 'undefined' ? window.location.href : 'https://codevertexitsolutions.com/digitika'}`)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(`Check out this course: ${course.name} at Digitika Academy — https://codevertexitsolutions.com/digitika/${course.id}`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex-1 text-center px-3 py-2 rounded-lg bg-[#25D366] text-white text-xs font-bold hover:opacity-90 transition-opacity"

@@ -101,8 +101,8 @@ export function Navbar() {
         className={cn(
           'fixed top-0 inset-x-0 z-50 transition-all duration-300',
           scrolled
-            ? 'bg-background/90 backdrop-blur-xl border-b border-border shadow-sm'
-            : 'bg-transparent'
+            ? 'bg-background/95 backdrop-blur-xl border-b border-border shadow-sm'
+            : 'bg-background/80 backdrop-blur-md border-b border-border/40'
         )}
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
@@ -113,10 +113,7 @@ export function Navbar() {
               alt="Codevertex IT Solutions"
               width={160}
               height={44}
-              className={cn(
-                'h-9 w-auto object-contain group-hover:opacity-90 transition-opacity',
-                scrolled ? '' : 'invert dark:invert'
-              )}
+              className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"
               priority
             />
           </Link>
@@ -132,13 +129,9 @@ export function Navbar() {
                   href={link.href}
                   className={cn(
                     'px-3.5 py-2 rounded-lg text-sm font-medium transition-colors',
-                    scrolled
-                      ? isActive
-                        ? 'text-primary bg-primary/8'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                      : isActive
-                        ? 'text-white dark:text-foreground bg-white/10 dark:bg-foreground/10'
-                        : 'text-white/70 dark:text-foreground/70 hover:text-white dark:hover:text-foreground hover:bg-white/8 dark:hover:bg-foreground/8'
+                    isActive
+                      ? 'text-primary bg-primary/8'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                   )}
                 >
                   {link.label}
