@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { sendInstallmentReceipt, buildPortalLink } from '@/lib/notifications';
 
 // Treasury sends: POST /api/webhooks/treasury
 // Payload: { event, reference_id, reference_type, payment_ref, status, amount, currency }
@@ -90,14 +91,46 @@ export async function POST(req: NextRequest) {
     }
 
     // Update enrollment payment status
-    await prisma.enrollment.update({
+    const updatedEnrollment = await prisma.enrollment.update({
       where: { id: enrollmentId },
       data: {
         paymentStatus: 'succeeded',
         paymentRef: payment_ref ?? null,
         notifiedAt: new Date(),
       },
+      include: {
+        installments: { orderBy: { installmentNo: 'asc' } },
+        studentUser: true,
+      },
     });
+
+    // Send payment receipt email (fire and forget)
+    if (nextInst && updatedEnrollment.studentUser) {
+      const remaining = updatedEnrollment.installments.filter((i) => i.status !== 'paid');
+      const nextUnpaid = remaining[0];
+      const totalAmount = updatedEnrollment.totalAmount ?? updatedEnrollment.amount;
+      const totalPaid = updatedEnrollment.installments
+        .filter((i) => i.status === 'paid')
+        .reduce((s, i) => s + i.amount, 0);
+      const studentId = updatedEnrollment.studentUser.id;
+
+      sendInstallmentReceipt({
+        studentName: updatedEnrollment.fullName,
+        studentEmail: updatedEnrollment.email,
+        courseName: updatedEnrollment.courseName,
+        installmentNo: nextInst.installmentNo,
+        totalInstallments: updatedEnrollment.installments.length,
+        amountPaid: paidAmount > 0 ? paidAmount : nextInst.amount,
+        currency: updatedEnrollment.currency,
+        paymentRef: payment_ref ?? undefined,
+        studentId,
+        enrollmentId: enrollmentId.toString(),
+        remainingBalance: Math.max(0, totalAmount - totalPaid),
+        nextInstallmentDate: nextUnpaid ? nextUnpaid.dueDate.toISOString().split('T')[0] : undefined,
+        nextInstallmentAmount: nextUnpaid ? nextUnpaid.amount : undefined,
+        portalLink: buildPortalLink(enrollmentId, studentId),
+      }).catch((err) => console.error('[treasury-webhook] receipt email error:', err));
+    }
 
     console.info(
       `[treasury-webhook] enrollment ${enrollmentId} marked succeeded, ref=${payment_ref}, amount=${paidAmount}`

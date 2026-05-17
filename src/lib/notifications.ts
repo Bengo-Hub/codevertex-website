@@ -7,6 +7,7 @@ const NOTIFICATIONS_URL =
   process.env.NOTIFICATIONS_API_URL ?? 'https://notificationsapi.codevertexitsolutions.com';
 const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
 const TENANT = 'codevertex';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://codevertexitsolutions.com';
 
 export interface EnrollmentConfirmationData {
   studentName: string;
@@ -38,6 +39,30 @@ export interface InstallmentReminderData {
   studentId: string;
   daysUntilDue: number;
   portalLink: string;
+}
+
+export interface InstallmentReceiptData {
+  studentName: string;
+  studentEmail: string;
+  courseName: string;
+  installmentNo: number;
+  totalInstallments: number;
+  amountPaid: number;
+  currency: string;
+  paymentRef?: string;
+  studentId: string;
+  enrollmentId: string;
+  remainingBalance: number;
+  nextInstallmentDate?: string;
+  nextInstallmentAmount?: number;
+  portalLink: string;
+}
+
+export interface ContactFormData {
+  name: string;
+  email: string;
+  message: string;
+  service?: string;
 }
 
 async function postNotification(
@@ -103,19 +128,66 @@ export async function sendEnrollmentConfirmation(
 export async function sendInstallmentReminder(
   data: InstallmentReminderData
 ): Promise<void> {
+  const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
+  const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
   await postNotification(
-    'enrollment_confirmed',
+    'installment_reminder',
     data.studentEmail,
     {
       student_name: data.studentName,
       course_name: data.courseName,
-      payment_plan: `Installment ${data.installmentNo} of ${data.totalInstallments}`,
-      total_amount: data.amount.toLocaleString(),
+      payment_label: label,
+      total_installments: data.totalInstallments,
+      amount: data.amount.toLocaleString(),
       currency: data.currency,
+      due_date: data.dueDate,
+      days_until_due: data.daysUntilDue,
       student_id: data.studentId,
       portal_link: data.portalLink,
-      installments_summary: `Due on ${data.dueDate} — ${data.daysUntilDue} days remaining`,
     },
-    `Installment ${data.installmentNo} Due — ${data.courseName}`
+    `Payment Reminder — ${label} Installment Due: ${data.courseName}`
   );
+}
+
+export async function sendInstallmentReceipt(
+  data: InstallmentReceiptData
+): Promise<void> {
+  const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
+  const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
+  await postNotification(
+    'installment_receipt',
+    data.studentEmail,
+    {
+      student_name: data.studentName,
+      course_name: data.courseName,
+      payment_label: label,
+      amount_paid: data.amountPaid.toLocaleString(),
+      currency: data.currency,
+      payment_ref: data.paymentRef ?? '',
+      remaining_balance: data.remainingBalance > 0 ? data.remainingBalance.toLocaleString() : '',
+      next_installment_date: data.nextInstallmentDate ?? '',
+      next_installment_amount: data.nextInstallmentAmount ? data.nextInstallmentAmount.toLocaleString() : '',
+      student_id: data.studentId,
+      portal_link: data.portalLink,
+    },
+    `Payment Received — ${label} Installment: ${data.courseName}`
+  );
+}
+
+export async function sendContactFormReply(data: ContactFormData): Promise<void> {
+  await postNotification(
+    'contact_form_reply',
+    data.email,
+    {
+      name: data.name,
+      email: data.email,
+      message: data.message,
+      service: data.service ?? '',
+    },
+    `We received your message — Codevertex IT Solutions`
+  );
+}
+
+export function buildPortalLink(enrollmentId: string | bigint, studentId: string): string {
+  return `${APP_URL}/digitika/success?reference=DGT-${enrollmentId}-DGT-${studentId}`;
 }

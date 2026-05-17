@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { sendInstallmentReminder } from '@/lib/notifications';
+import { sendInstallmentReminder, buildPortalLink } from '@/lib/notifications';
 
 const patchSchema = z.object({
   id: z.string(),
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     enrollmentId: enrollment.id.toString(),
     studentId: enrollment.studentUserId ?? '',
     daysUntilDue,
-    portalLink: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://codevertexitsolutions.com'}/digitika/success?reference=DGT-${enrollment.id}-DGT-${enrollment.studentUserId ?? ''}`,
+    portalLink: buildPortalLink(enrollment.id, enrollment.studentUserId ?? ''),
   });
 
   await prisma.installmentSchedule.update({

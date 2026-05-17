@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { checkSpam } from '@/lib/spam-guard';
+import { sendContactFormReply } from '@/lib/notifications';
 
 const schema = z.object({
   name: z.string().min(2),
@@ -30,6 +31,14 @@ export async function POST(req: NextRequest) {
         message: data.message,
       },
     });
+
+    // Fire-and-forget auto-reply to the visitor
+    sendContactFormReply({
+      name: data.name,
+      email: data.email,
+      message: data.message,
+      service: data.service,
+    }).catch((err) => console.error('[contact] notification error:', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {
