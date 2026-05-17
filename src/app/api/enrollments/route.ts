@@ -173,13 +173,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 4. Unique invoice ref — enrollmentId + studentId prevents collision across same course/cohort
-    const invoiceRef = `DGT-${enrollmentId}-${studentUser.id}`;
+    // 4. Unique invoice ref — DGT-{enrollmentId}-DGT-{studentId} parsed by treasury webhook
+    const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;
     const remainingBalance = data.totalAmount - data.firstPaymentAmount;
 
     // 5. Pre-create treasury payment intent so Paystack's success redirect goes directly to
     //    our /digitika/success page (not via treasury-ui's intermediate success page).
-    const successUrl = `${SITE_URL}/digitika/success?reference_id=${invoiceRef}`;
+    const successUrl = `${SITE_URL}/digitika/success`;
     const isInstallment = data.installments && data.installments.length > 1;
     const intentDescription = isInstallment
       ? `${data.courseName} — Installment 1 of ${data.installments!.length}`
@@ -194,6 +194,16 @@ export async function POST(req: NextRequest) {
       returnUrl: successUrl,
     });
 
+    // Build portal link for email
+    const portalLink = `${SITE_URL}/digitika/success?reference=${invoiceRef}`;
+
+    // Build installments summary for email
+    const installmentsSummary = data.installments && data.installments.length > 1
+      ? data.installments
+          .map((i) => `${i.label}: ${data.currency} ${i.amount.toLocaleString()} (due ${i.dueDate})`)
+          .join(' • ')
+      : '';
+
     // 6. Send confirmation email (fire and forget)
     sendEnrollmentConfirmation({
       studentName: data.fullName,
@@ -207,7 +217,8 @@ export async function POST(req: NextRequest) {
       studentId: studentUser.id,
       enrollmentId,
       remainingBalance,
-      installments: data.installments,
+      portalLink,
+      installmentsSummary,
     }).catch((err) => console.error('[enrollment] notification error:', err));
 
     return NextResponse.json({

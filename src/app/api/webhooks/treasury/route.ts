@@ -3,13 +3,11 @@ import { prisma } from '@/lib/db';
 
 // Treasury sends: POST /api/webhooks/treasury
 // Payload: { event, reference_id, reference_type, payment_ref, status, amount, currency }
-// reference_id format: DGT-{enrollmentId}-{studentId}
+// reference_id format: DGT-{enrollmentId}-DGT-{studentId}
 
 export async function POST(req: NextRequest) {
   try {
-    const signature = req.headers.get('x-treasury-signature') ?? '';
     const body = await req.json();
-
     const { event, reference_id, reference_type, payment_ref, status, amount } = body;
 
     // Only handle Digitika enrollment payments
@@ -29,33 +27,80 @@ export async function POST(req: NextRequest) {
     }
 
     const enrollmentId = BigInt(match[1]);
+    const paidAmount: number = typeof amount === 'number' ? amount : 0;
 
-    // Update the enrollment payment status
-    const enrollment = await prisma.enrollment.update({
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { id: enrollmentId },
+      include: { installments: { orderBy: { installmentNo: 'asc' } } },
+    });
+
+    if (!enrollment) {
+      console.error('[treasury-webhook] enrollment not found:', enrollmentId);
+      return NextResponse.json({ received: true });
+    }
+
+    // Find the next unpaid installment
+    const unpaidInsts = enrollment.installments.filter((i) => i.status !== 'paid');
+    const nextInst = unpaidInsts[0];
+
+    // Mark the next installment as paid with the actual paid amount
+    if (nextInst) {
+      await prisma.installmentSchedule.update({
+        where: { id: nextInst.id },
+        data: {
+          status: 'paid',
+          paidAt: new Date(),
+          paymentRef: payment_ref ?? null,
+          amount: paidAmount > 0 ? paidAmount : nextInst.amount,
+        },
+      });
+
+      // Overpayment: if paid more than scheduled, recalculate remaining installments
+      if (paidAmount > 0 && paidAmount > nextInst.amount && unpaidInsts.length > 1) {
+        const totalPaidSoFar =
+          enrollment.installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0) +
+          paidAmount;
+        const totalAmount = enrollment.totalAmount ?? enrollment.amount;
+        const remainingBalance = Math.max(0, totalAmount - totalPaidSoFar);
+        const remainingInsts = unpaidInsts.slice(1); // excludes the one just paid
+
+        if (remainingInsts.length > 0 && remainingBalance > 0) {
+          const perInst = Math.ceil(remainingBalance / remainingInsts.length);
+          for (let i = 0; i < remainingInsts.length; i++) {
+            const isLast = i === remainingInsts.length - 1;
+            const newAmount = isLast
+              ? remainingBalance - perInst * (remainingInsts.length - 1)
+              : perInst;
+            await prisma.installmentSchedule.update({
+              where: { id: remainingInsts[i].id },
+              data: { amount: newAmount },
+            });
+          }
+          console.info(
+            `[treasury-webhook] overpayment detected — recalculated ${remainingInsts.length} remaining installments (balance=${remainingBalance})`
+          );
+        } else if (remainingBalance <= 0) {
+          // Overpaid entire balance — mark all remaining as paid
+          await prisma.installmentSchedule.updateMany({
+            where: { enrollmentId, status: { not: 'paid' } },
+            data: { status: 'paid', paidAt: new Date(), paymentRef: payment_ref ?? null },
+          });
+        }
+      }
+    }
+
+    // Update enrollment payment status
+    await prisma.enrollment.update({
       where: { id: enrollmentId },
       data: {
         paymentStatus: 'succeeded',
         paymentRef: payment_ref ?? null,
         notifiedAt: new Date(),
       },
-      include: { installments: true },
     });
 
-    // Mark installment 1 as paid
-    const inst1 = enrollment.installments.find((i) => i.installmentNo === 1);
-    if (inst1) {
-      await prisma.installmentSchedule.update({
-        where: { id: inst1.id },
-        data: {
-          status: 'paid',
-          paidAt: new Date(),
-          paymentRef: payment_ref ?? null,
-        },
-      });
-    }
-
     console.info(
-      `[treasury-webhook] enrollment ${enrollmentId} marked succeeded, ref=${payment_ref}`
+      `[treasury-webhook] enrollment ${enrollmentId} marked succeeded, ref=${payment_ref}, amount=${paidAmount}`
     );
 
     return NextResponse.json({ received: true });

@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle2, AlertCircle, CreditCard, Calendar, BookOpen,
   ArrowRight, MessageCircle, GraduationCap, Clock, ChevronRight,
-  Sparkles, Wallet, BadgeCheck,
+  Sparkles, Wallet, BadgeCheck, Bookmark, Share2, Copy, Check,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { SITE, TREASURY } from '@/lib/constants';
@@ -29,6 +29,7 @@ interface EnrollmentSummary {
   paymentPlan: string;
   firstPaymentAmount: number;
   totalAmount: number;
+  amountPaid: number;
   remainingBalance: number;
   currency: string;
   paymentStatus: string;
@@ -48,6 +49,7 @@ export function PaymentSuccessClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payingInst, setPayingInst] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Treasury-ui redirects with ?reference=DGT-{id}-DGT-{suffix}&payment=succeeded
   // Fallback to ?reference_id= and ?status= for direct treasury intent return URLs
@@ -77,6 +79,14 @@ export function PaymentSuccessClient() {
       .catch((err) => setError(err.message ?? 'Could not load enrollment details'))
       .finally(() => setLoading(false));
   }, [referenceId]);
+
+  function copyPageLink() {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
 
   async function handlePayInstallment(inst: InstallmentRow) {
     if (!summary) return;
@@ -164,10 +174,9 @@ export function PaymentSuccessClient() {
   const paidCount = summary.installments.filter((i) => i.status === 'paid').length;
   const totalInstallments = summary.installments.length;
   const progressPct = isUpfront ? 100 : totalInstallments > 0 ? Math.round((paidCount / totalInstallments) * 100) : 100;
-  const amountPaid = isUpfront
-    ? summary.totalAmount
-    : summary.installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0) || summary.firstPaymentAmount;
+  const amountPaid = summary.amountPaid ?? (isUpfront ? summary.totalAmount : summary.firstPaymentAmount);
   const firstName = summary.fullName.split(' ')[0];
+  const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   const planLabel =
     summary.paymentPlan === '2-installments' ? '2 Installments' :
@@ -225,7 +234,38 @@ export function PaymentSuccessClient() {
       </div>
 
       {/* ── Body ───────────────────────────────────────────────────────── */}
-      <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 py-10 space-y-6">
+
+        {/* ── Save this page banner ─── */}
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-2xl bg-amber-500/8 border border-amber-500/25"
+        >
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <Bookmark className="h-5 w-5 text-amber-500 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-foreground">Save this page</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                Use this link to view your enrollment and pay upcoming installments. It was also sent to your email.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={copyPageLink}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition-colors shrink-0"
+          >
+            {copied ? <><Check className="h-3.5 w-3.5" /> Copied!</> : <><Copy className="h-3.5 w-3.5" /> Copy Link</>}
+          </button>
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(`My Digitika enrollment: ${pageUrl}`)}`}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-card text-foreground text-xs font-bold hover:bg-muted transition-colors shrink-0"
+          >
+            <Share2 className="h-3.5 w-3.5" /> Share
+          </a>
+        </motion.div>
 
         {/* ── Payment overview ─── */}
         <motion.div

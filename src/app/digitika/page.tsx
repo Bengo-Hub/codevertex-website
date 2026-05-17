@@ -4,6 +4,7 @@ import { AlumniBar } from '@/components/digitika/AlumniBar';
 import { LifeAtDigitika } from '@/components/digitika/LifeAtDigitika';
 import { TestimonialsSection } from '@/components/digitika/TestimonialsSection';
 import { CourseCatalog } from '@/components/digitika/CourseCatalog';
+import { StudentPortalBanner } from '@/components/digitika/StudentPortalBanner';
 
 export const metadata: Metadata = {
   title: 'Digitika Academy — Tech Education',
@@ -23,6 +24,7 @@ export default function DigitikaPage() {
       <LifeAtDigitika />
       <TestimonialsSection />
       <CourseCatalog />
+      <StudentPortalBanner />
     </>
   );
 }

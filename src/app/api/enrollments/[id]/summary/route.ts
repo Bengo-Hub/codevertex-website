@@ -21,6 +21,11 @@ export async function GET(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
+    const totalAmount = enrollment.totalAmount ?? enrollment.amount;
+    const amountPaid = enrollment.installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
+      || (enrollment.paymentStatus === 'succeeded' ? enrollment.amount : 0);
+    const remainingBalance = Math.max(0, totalAmount - amountPaid);
+
     return NextResponse.json({
       enrollmentId: enrollment.id.toString(),
       studentId: enrollment.studentUser?.id ?? '',
@@ -29,8 +34,9 @@ export async function GET(
       fullName: enrollment.fullName,
       paymentPlan: enrollment.paymentPlan ?? 'upfront',
       firstPaymentAmount: enrollment.amount,
-      totalAmount: enrollment.totalAmount ?? enrollment.amount,
-      remainingBalance: (enrollment.totalAmount ?? enrollment.amount) - enrollment.amount,
+      totalAmount,
+      amountPaid,
+      remainingBalance,
       currency: enrollment.currency,
       paymentStatus: enrollment.paymentStatus,
       createdAt: enrollment.createdAt.toISOString(),
