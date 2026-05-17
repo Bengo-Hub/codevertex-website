@@ -37,9 +37,10 @@ export function PaymentSuccessClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Treasury redirects back with ?reference_id=DGT-{id}-DGT-{studentSuffix}&status=succeeded
-  const referenceId = searchParams.get('reference_id');
-  const status = searchParams.get('status');
+  // Treasury-ui redirects with ?reference=DGT-{id}-DGT-{suffix}&payment=succeeded
+  // Fallback to ?reference_id= and ?status= for direct treasury intent return URLs
+  const referenceId = searchParams.get('reference') ?? searchParams.get('reference_id');
+  const paymentParam = searchParams.get('payment') ?? searchParams.get('status');
 
   useEffect(() => {
     if (!referenceId) {

@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2, Clock, Users, MapPin, Calendar, ChevronDown, ChevronUp,
   Download, ArrowRight, ArrowLeft, Share2, Check, BookOpen, Target,
-  Star, Briefcase, GraduationCap, Award, TrendingUp, Zap, Code2,
+  Star, Briefcase, GraduationCap, Award, TrendingUp, Zap, Code2, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type CourseCategory, ALUMNI_COMPANIES, type WeeklyModule, type Testimonial } from '@/config/courses';
@@ -14,6 +14,17 @@ import { type DbCourse } from '@/types/course';
 import { formatCurrency } from '@/lib/utils';
 import { EnrollmentModal } from './EnrollmentModal';
 import { cn } from '@/lib/utils';
+
+interface CohortInfo {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string | null;
+  maxSlots: number;
+  enrolledCount: number;
+  availableSlots: number;
+  isFull: boolean;
+}
 
 interface StaticData {
   curriculum?: WeeklyModule[];
@@ -54,6 +65,21 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
   const [selectedPlan, setSelectedPlan] = useState(defaultPlanIdx);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [cohorts, setCohorts] = useState<CohortInfo[]>([]);
+  const [cohortsLoading, setCohortsLoading] = useState(true);
+  const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/courses/${course.id}/cohorts`)
+      .then((r) => r.json())
+      .then((data: CohortInfo[]) => {
+        setCohorts(data);
+        const first = data.find((c) => !c.isFull);
+        if (first) setSelectedCohortId(first.id);
+      })
+      .catch(() => setCohorts([]))
+      .finally(() => setCohortsLoading(false));
+  }, [course.id]);
 
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -72,6 +98,11 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
   const hasTestimonials = staticData.testimonials && staticData.testimonials.length > 0;
   const hasAlumni = staticData.alumniCompanies && staticData.alumniCompanies.length > 0;
   const level = LEVEL_CONFIG[course.level] ?? LEVEL_CONFIG.beginner;
+
+  const hasActiveCohorts = cohorts.length > 0;
+  const allCohortsFull = hasActiveCohorts && cohorts.every((c) => c.isFull);
+  const selectedCohort = cohorts.find((c) => c.id === selectedCohortId) ?? null;
+  const canEnroll = hasActiveCohorts && !allCohortsFull && selectedCohort && !selectedCohort.isFull;
 
   return (
     <div className="min-h-screen bg-background pt-16">
@@ -525,12 +556,79 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                     </div>
                   )}
 
+                  {/* Cohort selection */}
+                  {!cohortsLoading && hasActiveCohorts && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">Select cohort</p>
+                      <div className="space-y-2">
+                        {cohorts.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            disabled={c.isFull}
+                            onClick={() => !c.isFull && setSelectedCohortId(c.id)}
+                            className={cn(
+                              'w-full text-left p-3 rounded-xl border-2 transition-all text-sm',
+                              c.isFull
+                                ? 'border-border bg-secondary/40 opacity-60 cursor-not-allowed'
+                                : selectedCohortId === c.id
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/30'
+                            )}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {!c.isFull && (
+                                  <div className={cn('w-3.5 h-3.5 rounded-full border-2 shrink-0', selectedCohortId === c.id ? 'border-primary bg-primary' : 'border-border')} />
+                                )}
+                                <span className="font-semibold text-foreground text-xs leading-snug">
+                                  {new Date(c.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                              </div>
+                              {c.isFull ? (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold">Full</span>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground">{c.availableSlots} slot{c.availableSlots !== 1 ? 's' : ''} left</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {!cohortsLoading && !hasActiveCohorts && (
+                    <div className="mb-4 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                        No upcoming cohorts are currently open. <a href="https://wa.me/254743793901" className="font-bold underline">Contact us</a> to get notified when the next cohort launches.
+                      </p>
+                    </div>
+                  )}
+
+                  {!cohortsLoading && allCohortsFull && (
+                    <div className="mb-4 p-3 rounded-xl bg-rose-500/8 border border-rose-500/20 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+                        All current cohorts are fully booked. <a href="https://wa.me/254743793901" className="font-bold underline">Join the waitlist</a> to be first for the next intake.
+                      </p>
+                    </div>
+                  )}
+
                   <Button
-                    onClick={() => setEnrollOpen(true)}
+                    onClick={() => canEnroll && setEnrollOpen(true)}
                     className="w-full"
                     size="lg"
+                    disabled={!canEnroll || cohortsLoading}
                   >
-                    Apply Now <ArrowRight className="h-4 w-4" />
+                    {cohortsLoading
+                      ? 'Loading…'
+                      : !hasActiveCohorts
+                      ? 'No Open Cohorts'
+                      : allCohortsFull
+                      ? 'All Cohorts Full'
+                      : 'Apply Now'}
+                    {canEnroll && <ArrowRight className="h-4 w-4" />}
                   </Button>
 
                   {staticData.brochure && (
@@ -588,6 +686,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
         <EnrollmentModal
           course={course}
           category={category}
+          cohortId={selectedCohortId ?? undefined}
           onClose={() => setEnrollOpen(false)}
         />
       )}

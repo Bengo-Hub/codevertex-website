@@ -46,6 +46,11 @@ export async function GET(req: NextRequest) {
       ...e,
       id: e.id.toString(),
       cohortId: e.cohortId?.toString() ?? null,
+      installments: e.installments.map((i) => ({
+        ...i,
+        id: i.id.toString(),
+        enrollmentId: i.enrollmentId.toString(),
+      })),
     })),
   });
 }

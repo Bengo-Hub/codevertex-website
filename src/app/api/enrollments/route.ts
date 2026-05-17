@@ -51,6 +51,7 @@ const schema = z.object({
   courseId: z.string(),
   courseName: z.string(),
   category: z.string(),
+  cohortId: z.string().optional(),
   fullName: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(9),
@@ -90,6 +91,23 @@ export async function POST(req: NextRequest) {
     const spamCheck = checkSpam({ name: data.fullName, email: data.email });
     if (spamCheck.blocked) {
       return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
+    }
+
+    // 0. Validate cohort capacity if cohortId provided
+    if (data.cohortId) {
+      const cohort = await prisma.cohort.findUnique({
+        where: { id: BigInt(data.cohortId) },
+        include: { _count: { select: { enrollments: true } } },
+      });
+      if (!cohort) {
+        return NextResponse.json({ error: 'Selected cohort not found' }, { status: 400 });
+      }
+      if (cohort.status !== 'open') {
+        return NextResponse.json({ error: 'This cohort is no longer open for enrollment' }, { status: 400 });
+      }
+      if (cohort._count.enrollments >= cohort.maxSlots) {
+        return NextResponse.json({ error: 'This cohort is fully booked' }, { status: 409 });
+      }
     }
 
     // 1. Upsert student user — one record per unique email
@@ -135,6 +153,7 @@ export async function POST(req: NextRequest) {
         paymentPlan: data.paymentPlan,
         installmentNo: 1,
         studentUserId: studentUser.id,
+        cohortId: data.cohortId ? BigInt(data.cohortId) : null,
       },
     });
 

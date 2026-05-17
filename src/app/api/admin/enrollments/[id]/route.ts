@@ -26,6 +26,14 @@ export async function GET(
     ...enrollment,
     id: enrollment.id.toString(),
     cohortId: enrollment.cohortId?.toString() ?? null,
+    cohort: enrollment.cohort
+      ? { ...enrollment.cohort, id: enrollment.cohort.id.toString() }
+      : null,
+    installments: enrollment.installments.map((i) => ({
+      ...i,
+      id: i.id.toString(),
+      enrollmentId: i.enrollmentId.toString(),
+    })),
   });
 }
 

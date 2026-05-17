@@ -44,6 +44,7 @@ type FormData = z.infer<typeof schema>;
 interface Props {
   course: DbCourse;
   category: CourseCategory;
+  cohortId?: string;
   onClose: () => void;
 }
 
@@ -63,7 +64,7 @@ function computeDueDates(plan: InstallmentPlan): Date[] {
   });
 }
 
-export function EnrollmentModal({ course, category, onClose }: Props) {
+export function EnrollmentModal({ course, category, cohortId, onClose }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
@@ -131,6 +132,7 @@ export function EnrollmentModal({ course, category, onClose }: Props) {
           courseId: course.id,
           courseName: course.name,
           category: category.name,
+          cohortId: cohortId ?? undefined,
           totalAmount: course.price,
           currency: course.currency,
           paymentPlan: planKey,
