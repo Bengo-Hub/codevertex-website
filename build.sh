@@ -51,7 +51,13 @@ log_info "Image    : ${IMAGE_REPO}:${GIT_COMMIT_ID}"
 
 command -v git    >/dev/null || { log_error "git is required"; exit 1; }
 command -v docker >/dev/null || { log_error "docker is required"; exit 1; }
-command -v trivy  >/dev/null || { log_error "trivy is required"; exit 1; }
+if ! command -v trivy >/dev/null 2>&1; then
+  log_info "trivy not found — installing via official install script..."
+  curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+    | sh -s -- -b /usr/local/bin 2>&1 | grep -v '^$' || true
+  command -v trivy >/dev/null 2>&1 || { log_error "trivy install failed — cannot continue"; exit 1; }
+  log_success "trivy installed: $(trivy --version 2>&1 | head -1)"
+fi
 if [[ ${DEPLOY} == "true" ]]; then
   for tool in kubectl helm yq jq; do
     command -v "$tool" >/dev/null || { log_error "$tool is required"; exit 1; }
