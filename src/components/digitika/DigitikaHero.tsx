@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Award, Users, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, BookOpen, Award, Users, Globe, ChevronLeft, ChevronRight, GraduationCap, CreditCard, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STATS = [
@@ -116,7 +116,8 @@ export function DigitikaHero() {
             </div>
           </div>
 
-          {/* Right: image carousel */}
+          {/* Right: image carousel + enrollment card */}
+          <div className="flex flex-col gap-4">
           <div className="relative rounded-2xl overflow-hidden border border-border shadow-xl shadow-primary/5 bg-card aspect-4/3">
             {GALLERY.map((item, i) => (
               <div
@@ -181,6 +182,53 @@ export function DigitikaHero() {
               </div>
             </div>
           </div>
+
+          {/* My Enrollment card — fills the space below the carousel */}
+          <div
+            className="rounded-2xl p-5 flex items-center gap-4"
+            style={{ background: 'hsl(var(--primary))' }}
+          >
+            <div
+              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}
+            >
+              <GraduationCap className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1" style={{ minWidth: 0 }}>
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                Already enrolled?
+              </p>
+              <p className="text-sm font-black text-white leading-snug mt-0.5">
+                Access your student portal
+              </p>
+              <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                {[
+                  { icon: CreditCard, text: 'Payment schedule' },
+                  { icon: Bell, text: 'Pay installments' },
+                ].map(({ icon: Icon, text }) => (
+                  <span key={text} className="inline-flex items-center gap-1 text-[11px]" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                    <Icon className="h-3 w-3 shrink-0" />
+                    {text}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Link
+              href="/digitika/my-enrollment"
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-black transition-opacity hover:opacity-90 shrink-0"
+              style={{
+                background: 'white',
+                color: 'hsl(var(--primary))',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              My Enrollment
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          </div>{/* end right column */}
 
         </div>
       </div>
