@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
     }
 
-    // 0. Validate cohort capacity if cohortId provided
+    // 0. Validate cohort: capacity + registration window
     if (data.cohortId) {
       const cohort = await prisma.cohort.findUnique({
         where: { id: BigInt(data.cohortId) },
@@ -119,6 +119,19 @@ export async function POST(req: NextRequest) {
       }
       if (cohort._count.enrollments >= cohort.maxSlots) {
         return NextResponse.json({ error: 'This cohort is fully booked' }, { status: 409 });
+      }
+      // Check registration window
+      const now = new Date();
+      if (cohort.registrationFrom && now < cohort.registrationFrom) {
+        return NextResponse.json({ error: 'Registration for this cohort has not opened yet' }, { status: 400 });
+      }
+      if (cohort.registrationUntil) {
+        const effectiveDeadline = new Date(
+          cohort.registrationUntil.getTime() + cohort.registrationExtDays * 86_400_000
+        );
+        if (now > effectiveDeadline) {
+          return NextResponse.json({ error: 'Registration deadline for this cohort has passed' }, { status: 400 });
+        }
       }
     }
 

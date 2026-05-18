@@ -142,14 +142,17 @@ model InstallmentSchedule {
 }
 
 model Cohort {
-  id          BigInt       @id @default(autoincrement())
-  courseId    String       @map("course_id")
-  name        String
-  startDate   DateTime     @map("start_date") @db.Date
-  endDate     DateTime?    @map("end_date") @db.Date
-  maxSlots    Int          @default(20) @map("max_slots")
-  status      String       @default("open")
-  createdAt   DateTime     @default(now()) @map("created_at")
+  id                BigInt       @id @default(autoincrement())
+  courseId          String       @map("course_id")
+  name              String
+  startDate         DateTime     @map("start_date") @db.Date
+  endDate           DateTime?    @map("end_date") @db.Date
+  registrationFrom       DateTime?    @map("registration_from")        // when enrollment/registration opens
+  registrationUntil      DateTime?    @map("registration_until")       // registration deadline (discount valid-until auto-filled from this)
+  registrationExtDays    Int          @default(0) @map("registration_ext_days")  // admin-granted extension in days added on top of registrationUntil
+  maxSlots          Int          @default(20) @map("max_slots")
+  status            String       @default("open")
+  createdAt         DateTime     @default(now()) @map("created_at")
 
   enrollments Enrollment[]
 

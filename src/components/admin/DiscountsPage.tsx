@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import {
-  BadgePercent, Plus, Pencil, Trash2, RefreshCw, ToggleLeft, ToggleRight,
+  BadgePercent, Plus, Pencil, Trash2, RefreshCw, ToggleLeft, ToggleRight, CalendarDays, Sparkles,
 } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { StatusBadge } from './StatusBadge';
@@ -25,6 +25,25 @@ interface DiscountRule {
   createdAt: string;
 }
 
+interface Course {
+  id: string;
+  name: string;
+  categoryId: string;
+  price: number;
+  currency: string;
+}
+
+interface Cohort {
+  id: string;
+  courseId: string;
+  name: string;
+  startDate: string;
+  registrationFrom: string | null;
+  registrationUntil: string | null;
+  registrationExtDays: number;
+  status: string;
+}
+
 interface PageData { total: number; page: number; pages: number; rules: DiscountRule[] }
 
 const EMPTY_FORM = {
@@ -34,6 +53,7 @@ const EMPTY_FORM = {
   discountPct: '',
   discountAmount: '',
   courseId: '',
+  cohortId: '',
   maxUses: '',
   validFrom: '',
   validUntil: '',
@@ -47,6 +67,12 @@ export function DiscountsPage() {
   const [editing, setEditing] = useState<DiscountRule | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
+
+  // course + cohort dropdown state
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [cohorts, setCohorts] = useState<Cohort[]>([]);
+  const [cohortsLoading, setCohortsLoading] = useState(false);
+  const [datesAutoFilled, setDatesAutoFilled] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -62,9 +88,37 @@ export function DiscountsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Load courses when modal opens
+  useEffect(() => {
+    if (!showModal) return;
+    fetch('/api/admin/courses?includeInactive=true')
+      .then((r) => r.json())
+      .then(setCourses)
+      .catch(() => {});
+  }, [showModal]);
+
+  // Load cohorts when a course is selected
+  useEffect(() => {
+    if (!form.courseId) {
+      setCohorts([]);
+      return;
+    }
+    setCohortsLoading(true);
+    fetch(`/api/admin/cohorts?courseId=${form.courseId}`)
+      .then((r) => r.json())
+      .then((data: Cohort[]) => {
+        // Only show open/upcoming cohorts at the top; include all for editing
+        setCohorts(data);
+      })
+      .catch(() => {})
+      .finally(() => setCohortsLoading(false));
+  }, [form.courseId]);
+
   function openCreate() {
     setEditing(null);
     setForm({ ...EMPTY_FORM });
+    setCohorts([]);
+    setDatesAutoFilled(false);
     setShowModal(true);
   }
 
@@ -77,12 +131,36 @@ export function DiscountsPage() {
       discountPct: rule.discountPct?.toString() ?? '',
       discountAmount: rule.discountAmount?.toString() ?? '',
       courseId: rule.courseId ?? '',
+      cohortId: '',
       maxUses: rule.maxUses?.toString() ?? '',
       validFrom: rule.validFrom ? rule.validFrom.slice(0, 16) : '',
       validUntil: rule.validUntil ? rule.validUntil.slice(0, 16) : '',
       active: rule.active,
     });
+    setCohorts([]);
+    setDatesAutoFilled(false);
     setShowModal(true);
+  }
+
+  function handleCourseChange(courseId: string) {
+    setForm((f) => ({ ...f, courseId, cohortId: '', validFrom: '', validUntil: '' }));
+    setDatesAutoFilled(false);
+  }
+
+  function handleCohortChange(cohortId: string) {
+    const cohort = cohorts.find((c) => c.id === cohortId);
+    if (cohort && (cohort.registrationFrom || cohort.registrationUntil)) {
+      setForm((f) => ({
+        ...f,
+        cohortId,
+        validFrom: cohort.registrationFrom ? cohort.registrationFrom.slice(0, 16) : f.validFrom,
+        validUntil: cohort.registrationUntil ? cohort.registrationUntil.slice(0, 16) : f.validUntil,
+      }));
+      setDatesAutoFilled(true);
+    } else {
+      setForm((f) => ({ ...f, cohortId }));
+      setDatesAutoFilled(false);
+    }
   }
 
   async function handleSave() {
@@ -155,6 +233,8 @@ export function DiscountsPage() {
   }
 
   const rules = data?.rules ?? [];
+  const selectedCourse = courses.find((c) => c.id === form.courseId);
+  const selectedCohort = cohorts.find((c) => c.id === form.cohortId);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -221,7 +301,11 @@ export function DiscountsPage() {
                         KES {rule.discountAmount.toLocaleString()} off
                       </span>
                     )}
-                    {rule.courseId && <p className="text-[10px] text-muted-foreground mt-1">Course: {rule.courseId}</p>}
+                    {rule.courseId && (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {courses.find((c) => c.id === rule.courseId)?.name ?? rule.courseId}
+                      </p>
+                    )}
                   </td>
                   <td className="px-5 py-4 text-center">
                     <p className="font-bold text-sm">{rule.usedCount}{rule.maxUses != null ? ` / ${rule.maxUses}` : ''}</p>
@@ -276,57 +360,186 @@ export function DiscountsPage() {
             <h2 className="text-lg font-black mb-5">{editing ? 'Edit Discount Rule' : 'New Discount Rule'}</h2>
 
             <div className="space-y-4">
+              {/* Name + Code */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold mb-1">Name *</label>
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Early Bird — May 2026" />
+                  <input
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Early Bird — May 2026"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold mb-1">Code *</label>
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="EARLY10" disabled={!!editing} />
+                  <input
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={form.code}
+                    onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                    placeholder="EARLY10"
+                    disabled={!!editing}
+                  />
                 </div>
               </div>
 
+              {/* Description */}
               <div>
                 <label className="block text-xs font-bold mb-1">Description</label>
-                <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Optional description" />
+                <input
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Optional description"
+                />
               </div>
 
+              {/* Discount amount */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold mb-1">Discount % <span className="text-muted-foreground font-normal">(or amount)</span></label>
-                  <input type="number" min={1} max={100} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.discountPct} onChange={(e) => setForm({ ...form, discountPct: e.target.value, discountAmount: '' })} placeholder="e.g. 10" />
+                  <input
+                    type="number" min={1} max={100}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={form.discountPct}
+                    onChange={(e) => setForm({ ...form, discountPct: e.target.value, discountAmount: '' })}
+                    placeholder="e.g. 10"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1">Discount KES <span className="text-muted-foreground font-normal">(or %)</span></label>
-                  <input type="number" min={1} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.discountAmount} onChange={(e) => setForm({ ...form, discountAmount: e.target.value, discountPct: '' })} placeholder="e.g. 5000" />
+                  <label className="block text-xs font-bold mb-1">
+                    Discount KES <span className="text-muted-foreground font-normal">(or %)</span>
+                    {selectedCourse && (
+                      <span className="ml-1 text-[10px] text-primary font-normal">course: {selectedCourse.currency} {selectedCourse.price.toLocaleString()}</span>
+                    )}
+                  </label>
+                  <input
+                    type="number" min={1}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={form.discountAmount}
+                    onChange={(e) => setForm({ ...form, discountAmount: e.target.value, discountPct: '' })}
+                    placeholder="e.g. 5000"
+                  />
                 </div>
               </div>
 
+              {/* Max Uses */}
+              <div>
+                <label className="block text-xs font-bold mb-1">Max Uses <span className="text-muted-foreground font-normal">(blank = unlimited)</span></label>
+                <input
+                  type="number" min={1}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={form.maxUses}
+                  onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
+                  placeholder="e.g. 5"
+                />
+              </div>
+
+              {/* Course select */}
+              <div>
+                <label className="block text-xs font-bold mb-1">Course <span className="text-muted-foreground font-normal">(blank = all courses)</span></label>
+                <select
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={form.courseId}
+                  onChange={(e) => handleCourseChange(e.target.value)}
+                >
+                  <option value="">— All courses —</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Cohort select — shown only when a course is selected */}
+              {form.courseId && (
+                <div>
+                  <label className="block text-xs font-bold mb-1">
+                    Cohort
+                    <span className="ml-1 text-[10px] text-muted-foreground font-normal">(select to auto-fill registration dates)</span>
+                  </label>
+                  {cohortsLoading ? (
+                    <div className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground">Loading cohorts…</div>
+                  ) : cohorts.length === 0 ? (
+                    <div className="w-full rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">
+                      No cohorts for this course yet
+                    </div>
+                  ) : (
+                    <select
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                      value={form.cohortId}
+                      onChange={(e) => handleCohortChange(e.target.value)}
+                    >
+                      <option value="">— No specific cohort —</option>
+                      {cohorts.map((c) => {
+                        const hasReg = c.registrationFrom || c.registrationUntil;
+                        let deadlineLabel = '?';
+                        if (c.registrationUntil) {
+                          const effective = new Date(new Date(c.registrationUntil).getTime() + (c.registrationExtDays || 0) * 86_400_000);
+                          deadlineLabel = effective.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+                          if (c.registrationExtDays > 0) deadlineLabel += ` (+${c.registrationExtDays}d ext)`;
+                        }
+                        const regLabel = hasReg
+                          ? ` · reg ${c.registrationFrom ? new Date(c.registrationFrom).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '?'} → ${deadlineLabel}`
+                          : ' · no reg dates';
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.status}){regLabel}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  )}
+                  {selectedCohort && datesAutoFilled && (
+                    <p className="mt-1.5 flex items-center gap-1 text-[11px] text-emerald-600">
+                      <Sparkles className="h-3 w-3" />
+                      Dates auto-filled from cohort registration period — you can still edit them below.
+                    </p>
+                  )}
+                  {selectedCohort && !selectedCohort.registrationFrom && !selectedCohort.registrationUntil && (
+                    <p className="mt-1.5 text-[11px] text-amber-600">
+                      This cohort has no registration period set. Add one in the Cohorts admin page.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Valid From / Until */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold mb-1">Max Uses <span className="text-muted-foreground font-normal">(blank = unlimited)</span></label>
-                  <input type="number" min={1} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} placeholder="e.g. 5" />
+                  <label className="flex items-center gap-1 text-xs font-bold mb-1">
+                    <CalendarDays className="h-3 w-3" /> Valid From
+                    {datesAutoFilled && form.validFrom && <span className="text-[10px] text-emerald-600 font-normal">(auto)</span>}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={form.validFrom}
+                    onChange={(e) => { setForm({ ...form, validFrom: e.target.value }); setDatesAutoFilled(false); }}
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1">Course ID <span className="text-muted-foreground font-normal">(blank = all)</span></label>
-                  <input className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.courseId} onChange={(e) => setForm({ ...form, courseId: e.target.value })} placeholder="e.g. software-engineering" />
+                  <label className="flex items-center gap-1 text-xs font-bold mb-1">
+                    <CalendarDays className="h-3 w-3" /> Valid Until
+                    {datesAutoFilled && form.validUntil && <span className="text-[10px] text-emerald-600 font-normal">(auto)</span>}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={form.validUntil}
+                    onChange={(e) => { setForm({ ...form, validUntil: e.target.value }); setDatesAutoFilled(false); }}
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold mb-1">Valid From</label>
-                  <input type="datetime-local" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.validFrom} onChange={(e) => setForm({ ...form, validFrom: e.target.value })} />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1">Valid Until</label>
-                  <input type="datetime-local" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" value={form.validUntil} onChange={(e) => setForm({ ...form, validUntil: e.target.value })} />
-                </div>
-              </div>
-
+              {/* Active */}
               <div className="flex items-center gap-3">
-                <input type="checkbox" id="active" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="h-4 w-4 rounded border-border accent-primary" />
+                <input
+                  type="checkbox"
+                  id="active"
+                  checked={form.active}
+                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                  className="h-4 w-4 rounded border-border accent-primary"
+                />
                 <label htmlFor="active" className="text-sm font-medium">Active (can be used immediately)</label>
               </div>
             </div>

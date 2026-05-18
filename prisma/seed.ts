@@ -61,6 +61,9 @@ async function main() {
         data: {
           startDate: cohort.startDate,
           endDate: cohort.endDate,
+          registrationFrom: cohort.registrationFrom,
+          registrationUntil: cohort.registrationUntil,
+          // Do NOT reset registrationExtDays — admin may have extended it
           maxSlots: cohort.maxSlots,
           status: cohort.status,
         },

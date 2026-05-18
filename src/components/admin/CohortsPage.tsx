@@ -12,6 +12,9 @@ interface Cohort {
   name: string;
   startDate: string;
   endDate: string | null;
+  registrationFrom: string | null;
+  registrationUntil: string | null;
+  registrationExtDays: number;
   maxSlots: number;
   status: string;
   createdAt: string;
@@ -44,7 +47,7 @@ function calcEndDate(startDate: string, duration: string): string {
 const STATUS_OPTIONS = ['open', 'full', 'closed', 'completed'];
 const PAGE_SIZE = 15;
 
-const blankForm = { courseId: '', name: '', startDate: '', endDate: '', maxSlots: 20, status: 'open' };
+const blankForm = { courseId: '', name: '', startDate: '', endDate: '', registrationFrom: '', registrationUntil: '', registrationExtDays: 0, maxSlots: 20, status: 'open' };
 
 export function CohortsPage() {
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -81,6 +84,9 @@ export function CohortsPage() {
       name: cohort.name,
       startDate: cohort.startDate.split('T')[0],
       endDate: cohort.endDate ? cohort.endDate.split('T')[0] : '',
+      registrationFrom: cohort.registrationFrom ? cohort.registrationFrom.slice(0, 16) : '',
+      registrationUntil: cohort.registrationUntil ? cohort.registrationUntil.slice(0, 16) : '',
+      registrationExtDays: cohort.registrationExtDays ?? 0,
       maxSlots: cohort.maxSlots,
       status: cohort.status,
     });
@@ -104,6 +110,9 @@ export function CohortsPage() {
       name: form.name,
       startDate: form.startDate,
       endDate: form.endDate || undefined,
+      registrationFrom: form.registrationFrom ? new Date(form.registrationFrom).toISOString() : null,
+      registrationUntil: form.registrationUntil ? new Date(form.registrationUntil).toISOString() : null,
+      registrationExtDays: form.registrationExtDays,
       maxSlots: form.maxSlots,
       status: form.status,
     };
@@ -230,6 +239,43 @@ export function CohortsPage() {
           {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Registration Opens</label>
+        <input
+          type="datetime-local"
+          value={form.registrationFrom}
+          onChange={(e) => setForm({ ...form, registrationFrom: e.target.value })}
+          className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Registration Deadline</label>
+        <input
+          type="datetime-local"
+          value={form.registrationUntil}
+          onChange={(e) => setForm({ ...form, registrationUntil: e.target.value })}
+          className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">
+          Deadline Extension
+          <span className="ml-1 text-[10px] font-normal">(days added to deadline)</span>
+        </label>
+        <input
+          type="number"
+          min={0}
+          value={form.registrationExtDays}
+          onChange={(e) => setForm({ ...form, registrationExtDays: Math.max(0, Number(e.target.value)) })}
+          className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+          placeholder="0"
+        />
+        {form.registrationUntil && form.registrationExtDays > 0 && (
+          <p className="mt-1 text-[10px] text-amber-600">
+            Effective deadline: {new Date(new Date(form.registrationUntil).getTime() + form.registrationExtDays * 86_400_000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </p>
+        )}
+      </div>
     </div>
   );
 
@@ -309,7 +355,7 @@ export function CohortsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    {['Cohort', 'Course', 'Start Date', 'End Date', 'Slots', 'Enrolled', 'Status', ''].map((h) => (
+                    {['Cohort', 'Course', 'Start Date', 'End Date', 'Reg. Period', 'Slots', 'Enrolled', 'Status', ''].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                         {h}
                       </th>
@@ -320,7 +366,7 @@ export function CohortsPage() {
                   {paginated.map((cohort) =>
                     editId === cohort.id ? (
                       <tr key={cohort.id} className="bg-muted/20">
-                        <td colSpan={8} className="px-4 py-4">
+                        <td colSpan={9} className="px-4 py-4">
                           {formFields}
                           <div className="flex gap-2 mt-3">
                             <button
@@ -361,6 +407,24 @@ export function CohortsPage() {
                           <span className="text-xs text-muted-foreground">
                             {cohort.endDate ? new Date(cohort.endDate).toLocaleDateString('en-GB') : '—'}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {cohort.registrationFrom || cohort.registrationUntil ? (
+                            <div>
+                              <span className="text-xs text-muted-foreground">
+                                {cohort.registrationFrom ? new Date(cohort.registrationFrom).toLocaleDateString('en-GB') : '?'}
+                                {' → '}
+                                {cohort.registrationUntil ? new Date(cohort.registrationUntil).toLocaleDateString('en-GB') : '?'}
+                              </span>
+                              {cohort.registrationExtDays > 0 && cohort.registrationUntil && (
+                                <p className="text-[10px] text-amber-600 mt-0.5">
+                                  +{cohort.registrationExtDays}d → {new Date(new Date(cohort.registrationUntil).getTime() + cohort.registrationExtDays * 86_400_000).toLocaleDateString('en-GB')}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-xs text-muted-foreground">{cohort.maxSlots}</span>
