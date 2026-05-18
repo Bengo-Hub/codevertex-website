@@ -15,12 +15,13 @@ const patchSchema = z.object({
   active: z.boolean().optional(),
 });
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const body = await req.json();
   const data = patchSchema.parse(body);
 
   const rule = await prisma.discountRule.update({
-    where: { id: BigInt(params.id) },
+    where: { id: BigInt(id) },
     data: {
       ...data,
       validFrom: data.validFrom === null ? null : data.validFrom ? new Date(data.validFrom) : undefined,
@@ -31,20 +32,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ ...rule, id: rule.id.toString() });
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const existing = await prisma.discountRule.findUnique({
-    where: { id: BigInt(params.id) },
+    where: { id: BigInt(id) },
     include: { _count: { select: { enrollments: true } } },
   });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   if (existing._count.enrollments > 0) {
     // Deactivate instead of hard-delete to preserve enrollment history
     await prisma.discountRule.update({
-      where: { id: BigInt(params.id) },
+      where: { id: BigInt(id) },
       data: { active: false },
     });
     return NextResponse.json({ deactivated: true });
   }
-  await prisma.discountRule.delete({ where: { id: BigInt(params.id) } });
+  await prisma.discountRule.delete({ where: { id: BigInt(id) } });
   return NextResponse.json({ deleted: true });
 }
