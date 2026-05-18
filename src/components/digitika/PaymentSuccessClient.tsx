@@ -51,9 +51,11 @@ export function PaymentSuccessClient() {
   const [payingInst, setPayingInst] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Treasury-ui redirects with ?reference=DGT-{id}-DGT-{suffix}&payment=succeeded
-  // Fallback to ?reference_id= and ?status= for direct treasury intent return URLs
+  // Treasury-api redirects with ?reference=DGT-{id}-DGT-{suffix}&payment=succeeded&payment_ref=<paystack_ref>
+  // Fallback to ?reference_id= and ?status= for direct portal links
   const referenceId = searchParams.get('reference') ?? searchParams.get('reference_id');
+  const paymentStatus = searchParams.get('payment');
+  const paymentRef = searchParams.get('payment_ref') ?? undefined;
 
   useEffect(() => {
     if (!referenceId) {
@@ -70,15 +72,36 @@ export function PaymentSuccessClient() {
     }
 
     const enrollmentId = match[1];
-    fetch(`/api/enrollments/${enrollmentId}/summary`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) throw new Error(data.error);
-        setSummary(data);
-      })
-      .catch((err) => setError(err.message ?? 'Could not load enrollment details'))
-      .finally(() => setLoading(false));
-  }, [referenceId]);
+
+    const loadSummary = () =>
+      fetch(`/api/enrollments/${enrollmentId}/summary`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) throw new Error(data.error);
+          setSummary(data);
+        });
+
+    // When redirected from Paystack (payment=succeeded), call the sync endpoint first
+    // to ensure the DB reflects the payment before loading the summary.
+    const run = async () => {
+      try {
+        if (paymentStatus === 'succeeded') {
+          await fetch(`/api/enrollments/${enrollmentId}/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentRef }),
+          }).catch(() => {}); // non-fatal
+        }
+        await loadSummary();
+      } catch (err: unknown) {
+        setError((err as Error).message ?? 'Could not load enrollment details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    run();
+  }, [referenceId, paymentStatus, paymentRef]);
 
   function copyPageLink() {
     const url = typeof window !== 'undefined' ? window.location.href : '';
@@ -187,7 +210,7 @@ export function PaymentSuccessClient() {
     <main className="min-h-screen bg-background">
 
       {/* ── Hero band ──────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 py-14 px-4 text-white">
+      <div className="relative overflow-hidden bg-linear-to-br from-emerald-600 via-emerald-500 to-teal-500 py-14 px-4 text-white">
         {/* Decorative rings */}
         <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/5 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5 blur-2xl" />

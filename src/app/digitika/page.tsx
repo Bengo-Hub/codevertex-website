@@ -21,10 +21,10 @@ export default function DigitikaPage() {
     <>
       <DigitikaHero />
       <AlumniBar />
+      <StudentPortalBanner />
       <LifeAtDigitika />
       <TestimonialsSection />
       <CourseCatalog />
-      <StudentPortalBanner />
     </>
   );
 }
