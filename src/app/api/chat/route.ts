@@ -71,14 +71,9 @@ async function tryMarketflowAI(
         'X-API-Key': SERVICE_KEY,
       },
       body: JSON.stringify({
-        message: lastUserMsg.content,
+        question: lastUserMsg.content,
         session_id: `website-${Date.now()}`,
-        tenant_id: 'codevertex',
-        mode: 'platform',
-        history: messages.slice(0, -1).map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        stream: false,
       }),
       signal: controller.signal,
     });
@@ -108,7 +103,7 @@ async function callAnthropic(
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages,

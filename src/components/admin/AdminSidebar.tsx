@@ -13,6 +13,7 @@ import {
   CreditCard,
   Library,
   ChevronRight,
+  BadgePercent,
 } from 'lucide-react';
 
 const NAV = [
@@ -24,6 +25,7 @@ const NAV = [
   { label: 'Courses', href: '/admin/courses', icon: Library },
   { label: 'Cohorts', href: '/admin/cohorts', icon: Calendar },
   { label: 'Installments', href: '/admin/installments', icon: CreditCard },
+  { label: 'Discounts', href: '/admin/discounts', icon: BadgePercent },
 ];
 
 export function AdminSidebar() {

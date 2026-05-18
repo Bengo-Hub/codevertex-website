@@ -67,6 +67,10 @@ const schema = z.object({
   currency: z.string().default('KES'),
   paymentPlan: z.string().default('upfront'),
   firstPaymentAmount: z.number(),
+  discountRuleId: z.string().optional(),
+  discountCode: z.string().optional(),
+  discountPct: z.number().int().optional(),
+  discountAmount: z.number().int().optional(),
   installments: z
     .array(
       z.object({
@@ -162,6 +166,10 @@ export async function POST(req: NextRequest) {
         installmentNo: 1,
         studentUserId: studentUser.id,
         cohortId: data.cohortId ? BigInt(data.cohortId) : null,
+        discountRuleId: data.discountRuleId ? BigInt(data.discountRuleId) : null,
+        discountCode: data.discountCode ?? null,
+        discountPct: data.discountPct ?? null,
+        discountAmount: data.discountAmount ?? null,
       },
     });
 

@@ -1,7 +1,7 @@
 // Background NATS subscriber that listens for treasury.payment.succeeded events
 // and updates the local Prisma DB so the enrollment success page shows correct payment status.
-// This runs in the Next.js Node.js process via instrumentation.ts.
-// Subject: treasury.payment.succeeded (stream: treasury, subjects: treasury.*)
+// Runs in the Next.js Node.js process via instrumentation.ts.
+// Stream: treasury  Subject: treasury.payment.succeeded  Consumer: codevertex-website-treasury
 
 import { prisma } from './db';
 
@@ -33,38 +33,47 @@ export async function startTreasuryEventSubscriber(): Promise<void> {
     return;
   }
 
-  // Dynamically import nats to avoid edge-runtime issues
-  const { connect, StringCodec, consumerOpts, AckPolicy, DeliverPolicy } = await import('nats');
+  const { connect, StringCodec, AckPolicy, DeliverPolicy } = await import('nats');
   const sc = StringCodec();
 
-  let nc: Awaited<ReturnType<typeof connect>> | null = null;
-
   const attemptConnect = async (): Promise<void> => {
+    let nc: Awaited<ReturnType<typeof connect>> | null = null;
     try {
       nc = await connect({
         servers: NATS_URL,
         timeout: 5000,
-        maxReconnectAttempts: -1, // infinite reconnect
+        maxReconnectAttempts: -1,
         reconnectTimeWait: 2000,
       });
 
       console.log('[treasury-subscriber] connected to NATS');
 
+      const jsm = await nc.jetstreamManager();
       const js = nc.jetstream();
-      const opts = consumerOpts();
-      opts.durable('codevertex-website-treasury');
-      opts.ackExplicit();
-      opts.filterSubject('treasury.payment.succeeded');
-      // DeliverNew so we only process new events (not replaying historical)
-      opts.deliverNew();
-      opts.manualAck();
 
-      const sub = await js.subscribe('treasury.payment.succeeded', opts);
+      // Ensure durable consumer exists (upsert — idempotent)
+      try {
+        await jsm.consumers.add('treasury', {
+          durable_name: 'codevertex-website-treasury',
+          filter_subject: 'treasury.payment.succeeded',
+          ack_policy: AckPolicy.Explicit,
+          deliver_policy: DeliverPolicy.New,
+        });
+      } catch (err: unknown) {
+        // Consumer already exists — that's fine
+        const msg = err instanceof Error ? err.message : String(err);
+        if (!msg.includes('consumer name already in use') && !msg.includes('existing consumer')) {
+          throw err;
+        }
+      }
+
+      const consumer = await js.consumers.get('treasury', 'codevertex-website-treasury');
+      const messages = await consumer.consume();
+
       console.log('[treasury-subscriber] subscribed to treasury.payment.succeeded');
 
-      // Process messages in a background async loop
       (async () => {
-        for await (const msg of sub) {
+        for await (const msg of messages) {
           try {
             const raw = sc.decode(msg.data);
             const event: TreasuryEventEnvelope = JSON.parse(raw);
@@ -101,18 +110,19 @@ export async function startTreasuryEventSubscriber(): Promise<void> {
         console.error('[treasury-subscriber] subscription loop error:', err);
       });
 
-      // Reconnect on close
       nc.closed().then(() => {
         console.log('[treasury-subscriber] NATS connection closed, reconnecting in 5s...');
         setTimeout(attemptConnect, 5000);
       });
     } catch (err) {
       console.warn('[treasury-subscriber] connect failed, retrying in 10s:', err);
+      if (nc) {
+        nc.close().catch(() => {});
+      }
       setTimeout(attemptConnect, 10000);
     }
   };
 
-  // Start without blocking server startup
   attemptConnect().catch(() => {});
 }
 
@@ -131,7 +141,6 @@ async function updateEnrollmentPayment(
     return;
   }
 
-  // Idempotency: already succeeded — nothing to do
   if (enrollment.paymentStatus === 'succeeded' && enrollment.installments.some((i) => i.status === 'paid')) {
     console.log(`[treasury-subscriber] enrollment ${enrollmentId} already recorded — skipping`);
     return;
@@ -151,7 +160,6 @@ async function updateEnrollmentPayment(
       },
     });
 
-    // Overpayment: recalculate remaining installments
     if (paidAmount > 0 && paidAmount > nextInst.amount && unpaidInsts.length > 1) {
       const totalPaidSoFar =
         enrollment.installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0) +

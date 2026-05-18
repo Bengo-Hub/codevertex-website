@@ -15,6 +15,8 @@ const STATUS_STYLES: Record<string, string> = {
   closed:    'bg-muted text-muted-foreground',
   completed: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   reminded:  'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  active:    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  inactive:  'bg-muted text-muted-foreground',
 };
 
 export function StatusBadge({ status }: { status: string }) {

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, CheckCircle2, CreditCard } from 'lucide-react';
+import { X, CheckCircle2, CreditCard, BadgePercent, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addDays, addWeeks, format } from 'date-fns';
 import { type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
@@ -71,12 +71,64 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   const [selectedCC, setSelectedCC] = useState(COUNTRY_CODES[0]);
   const [ageError, setAgeError] = useState('');
 
+  // Discount code state
+  const [discountInput, setDiscountInput] = useState('');
+  const [discountValidating, setDiscountValidating] = useState(false);
+  const [discount, setDiscount] = useState<{
+    ruleId: string; code: string; name: string;
+    discountPct?: number; discountAmount?: number;
+    discountedTotal: number; remaining: number | null;
+  } | null>(null);
+  const [discountError, setDiscountError] = useState('');
+
   const plans: InstallmentPlan[] = (course.installmentsEnabled && course.installmentPlans.length > 0)
     ? course.installmentPlans
     : [{ label: 'Upfront', payments: [{ amount: course.price, label: 'Full payment' }], totalAmount: course.price }];
   const selectedPlan = plans[selectedPlanIdx];
-  const firstPayment = selectedPlan.payments[0].amount;
+  const baseTotal = selectedPlan.totalAmount;
+  const discountedTotal = discount?.discountedTotal ?? baseTotal;
+  const discountSaving = baseTotal - discountedTotal;
+  // Scale all installment amounts proportionally when a discount is applied
+  const scaledPayments = discount
+    ? selectedPlan.payments.map((p) => ({
+        ...p,
+        amount: Math.round(p.amount * (discountedTotal / baseTotal)),
+      }))
+    : selectedPlan.payments;
+  const firstPayment = scaledPayments[0].amount;
   const isInstallment = selectedPlan.payments.length > 1;
+
+  async function applyDiscount() {
+    if (!discountInput.trim()) return;
+    setDiscountValidating(true);
+    setDiscountError('');
+    setDiscount(null);
+    try {
+      const res = await fetch('/api/discounts/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: discountInput.trim(), courseId: course.id, amount: baseTotal }),
+      });
+      const data = await res.json();
+      if (!data.valid) {
+        setDiscountError(data.error ?? 'Invalid code');
+        return;
+      }
+      setDiscount({
+        ruleId: data.ruleId,
+        code: data.code,
+        name: data.name,
+        discountPct: data.discountPct,
+        discountAmount: data.discountAmount,
+        discountedTotal: data.discountedAmount ?? baseTotal,
+        remaining: data.remaining,
+      });
+    } catch {
+      setDiscountError('Could not validate code. Please try again.');
+    } finally {
+      setDiscountValidating(false);
+    }
+  }
 
   const { register, handleSubmit, formState: { errors }, getValues, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -115,7 +167,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
     setSubmitting(true);
     try {
       const dueDates = computeDueDates(selectedPlan);
-      const installments = selectedPlan.payments.map((p, i) => ({
+      const installments = scaledPayments.map((p, i) => ({
         installmentNo: i + 1,
         amount: p.amount,
         label: p.label,
@@ -133,8 +185,12 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
           courseName: course.name,
           category: category.name,
           cohortId: cohortId ?? undefined,
-          totalAmount: course.price,
+          totalAmount: discountedTotal,
           currency: course.currency,
+          discountRuleId: discount?.ruleId,
+          discountCode: discount?.code,
+          discountPct: discount?.discountPct,
+          discountAmount: discountSaving > 0 ? discountSaving : undefined,
           paymentPlan: planKey,
           firstPaymentAmount: firstPayment,
           installments,
@@ -365,16 +421,61 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                   ))}
                 </div>
 
+                {/* Discount Code */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground block">Have a promo code?</label>
+                  {discount ? (
+                    <div className="flex items-center gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/8 px-3 py-2.5">
+                      <BadgePercent className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">{discount.code} — {discount.name}</p>
+                        <p className="text-[10px] text-emerald-600">
+                          {discount.discountPct != null ? `${discount.discountPct}% off` : `KES ${discountSaving.toLocaleString()} off`}
+                          {' · '}You save <strong>{formatCurrency(discountSaving, course.currency)}</strong>
+                          {discount.remaining != null && ` · ${discount.remaining} use${discount.remaining !== 1 ? 's' : ''} left`}
+                        </p>
+                      </div>
+                      <button type="button" onClick={() => { setDiscount(null); setDiscountInput(''); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Remove</button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={discountInput}
+                        onChange={(e) => { setDiscountInput(e.target.value.toUpperCase()); setDiscountError(''); }}
+                        onKeyDown={(e) => e.key === 'Enter' && applyDiscount()}
+                        placeholder="e.g. EARLY10"
+                        className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyDiscount}
+                        disabled={discountValidating || !discountInput.trim()}
+                        className="px-3 py-2 rounded-lg bg-muted border border-border text-xs font-bold hover:bg-accent transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {discountValidating ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {discountError && <p className="text-xs text-destructive">{discountError}</p>}
+                </div>
+
                 <div className="rounded-lg bg-emerald-500/8 border border-emerald-500/20 p-3 text-xs text-emerald-700 dark:text-emerald-400">
                   <CreditCard className="inline h-3.5 w-3.5 mr-1.5" />
                   You will pay <strong>{formatCurrency(firstPayment, course.currency)}</strong> today via Paystack or M-Pesa.
-                  {isInstallment && ` Remaining ${formatCurrency(course.price - firstPayment, course.currency)} will be billed in ${selectedPlan.payments.length - 1} future installment(s).`}
+                  {discount && discountSaving > 0 && (
+                    <span className="ml-1 font-bold">(saving {formatCurrency(discountSaving, course.currency)})</span>
+                  )}
+                  {isInstallment && ` Remaining ${formatCurrency(discountedTotal - firstPayment, course.currency)} will be billed in ${selectedPlan.payments.length - 1} future installment(s).`}
                 </div>
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1">← Back</Button>
                   <Button onClick={handlePay} disabled={submitting} className="flex-1">
                     {submitting ? 'Redirecting…' : `Pay ${formatCurrency(firstPayment, course.currency)} →`}
+                  {discount && discountSaving > 0 && !submitting && (
+                    <span className="ml-1 line-through text-primary-foreground/60 text-xs">{formatCurrency(selectedPlan.payments[0].amount, course.currency)}</span>
+                  )}
                   </Button>
                 </div>
               </div>

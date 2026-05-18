@@ -54,36 +54,69 @@ model StudentUser {
   @@map("student_users")
 }
 
-model Enrollment {
+// ---------------------------------------------------------------------------
+// Discount rules — admin-configurable promo discounts for course enrollments
+// ---------------------------------------------------------------------------
+model DiscountRule {
   id            BigInt    @id @default(autoincrement())
-  courseId      String    @map("course_id")
-  courseName    String    @map("course_name")
-  category      String
-  fullName      String    @map("full_name")
-  email         String
-  phone         String
-  dob           DateTime? @db.Date
-  experience    String?
-  howHeard      String?   @map("how_heard")
-  amount        Int                        // first payment amount (installment 1 or full)
-  totalAmount   Int?      @map("total_amount")  // full course price
-  currency      String    @default("KES")
-  paymentRef    String?   @map("payment_ref")
-  paymentStatus String    @default("pending") @map("payment_status")
-  paymentPlan   String?   @map("payment_plan")  // 'upfront' | '2-installments' | '3-installments'
-  installmentNo Int?      @map("installment_no")
-  cohortId      BigInt?   @map("cohort_id")
-  studentUserId String?   @map("student_user_id")
-  notifiedAt    DateTime? @map("notified_at")
+  name          String                        // e.g. "Early Bird — May 2026"
+  code          String    @unique             // e.g. "EARLY5" or "FIRST10"
+  description   String?
+  discountPct   Int?      @map("discount_pct")    // percentage (1-100), mutually exclusive with discountAmount
+  discountAmount Int?     @map("discount_amount")  // fixed KES amount off
+  courseId      String?   @map("course_id")   // null = applies to all courses
+  maxUses       Int?      @map("max_uses")    // null = unlimited
+  usedCount     Int       @default(0) @map("used_count")
+  validFrom     DateTime? @map("valid_from")
+  validUntil    DateTime? @map("valid_until")
+  active        Boolean   @default(true)
   createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  cohort      Cohort?      @relation(fields: [cohortId], references: [id])
-  studentUser StudentUser? @relation(fields: [studentUserId], references: [id])
-  installments InstallmentSchedule[]
+  enrollments   Enrollment[]
+
+  @@index([code])
+  @@index([active])
+  @@map("discount_rules")
+}
+
+model Enrollment {
+  id              BigInt    @id @default(autoincrement())
+  courseId        String    @map("course_id")
+  courseName      String    @map("course_name")
+  category        String
+  fullName        String    @map("full_name")
+  email           String
+  phone           String
+  dob             DateTime? @db.Date
+  experience      String?
+  howHeard        String?   @map("how_heard")
+  amount          Int                        // first payment amount (installment 1 or full)
+  totalAmount     Int?      @map("total_amount")  // full course price
+  currency        String    @default("KES")
+  paymentRef      String?   @map("payment_ref")
+  paymentStatus   String    @default("pending") @map("payment_status")
+  paymentPlan     String?   @map("payment_plan")  // 'upfront' | '2-installments' | '3-installments'
+  installmentNo   Int?      @map("installment_no")
+  cohortId        BigInt?   @map("cohort_id")
+  studentUserId   String?   @map("student_user_id")
+  notifiedAt      DateTime? @map("notified_at")
+  // Discount fields — set at enrollment time from applicable DiscountRule
+  discountRuleId  BigInt?   @map("discount_rule_id")
+  discountCode    String?   @map("discount_code")
+  discountPct     Int?      @map("discount_pct")    // percentage applied (0-100)
+  discountAmount  Int?      @map("discount_amount")  // absolute KES discount applied
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  cohort        Cohort?       @relation(fields: [cohortId], references: [id])
+  studentUser   StudentUser?  @relation(fields: [studentUserId], references: [id])
+  discountRule  DiscountRule? @relation(fields: [discountRuleId], references: [id])
+  installments  InstallmentSchedule[]
 
   @@index([email])
   @@index([paymentStatus])
   @@index([studentUserId])
+  @@index([discountRuleId])
   @@map("enrollments")
 }
 
