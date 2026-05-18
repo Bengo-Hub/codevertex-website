@@ -64,11 +64,14 @@ async function tryMarketflowAI(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
 
-    const res = await fetch(`${MF_AI_URL}/api/v1/chat`, {
+    const res = await fetch(`${MF_AI_URL}/api/v1/public/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': SERVICE_KEY,
+        // X-Tenant-ID is required by the chat handler even in public mode.
+        // "codevertex" resolves to a deterministic slug-UUID for KB scoping.
+        'X-Tenant-ID': 'codevertex',
       },
       body: JSON.stringify({
         question: lastUserMsg.content,
@@ -83,7 +86,8 @@ async function tryMarketflowAI(
     if (!res.ok) return null;
 
     const data = await res.json();
-    return (data.text ?? data.reply ?? data.response ?? null) as string | null;
+    // Response envelope: { session_id, result: { response, intent, ... } }
+    return (data.result?.response ?? data.text ?? data.reply ?? data.response ?? null) as string | null;
   } catch {
     return null;
   }
