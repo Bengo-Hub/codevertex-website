@@ -59,10 +59,10 @@ export function DigitikaHero() {
       <div className="absolute bottom-0 left-0 w-87.5 h-87.5 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto pt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:items-stretch">
 
           {/* Left: text */}
-          <div>
+          <div className="flex flex-col">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               Digitika Academy — by Codevertex IT Solutions
@@ -102,6 +102,9 @@ export function DigitikaHero() {
               </Button>
             </div>
 
+            {/* Spacer: pushes stats to the bottom so it aligns with the enrollment card */}
+            <div className="flex-1 hidden lg:block" />
+
             {/* Stats row */}
             <div className="grid grid-cols-2 gap-px bg-border rounded-2xl overflow-hidden border border-border">
               {STATS.map(({ icon: Icon, value, label }) => (
@@ -118,7 +121,7 @@ export function DigitikaHero() {
 
           {/* Right: image carousel + enrollment card */}
           <div className="flex flex-col gap-4">
-          <div className="relative rounded-2xl overflow-hidden border border-border shadow-xl shadow-primary/5 bg-card aspect-4/3">
+          <div className="relative rounded-2xl overflow-hidden border border-border shadow-xl shadow-primary/5 bg-card flex-1 min-h-64 aspect-4/3 lg:aspect-auto">
             {GALLERY.map((item, i) => (
               <div
                 key={item.src}
