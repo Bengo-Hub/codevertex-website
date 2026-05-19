@@ -211,6 +211,8 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           # AI — stored in devops-k8s and synced to the K8s secret, not baked into the image
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # S2S key for Vera chatbot to authenticate to marketflow-ai
+          INTERNAL_SERVICE_KEY: ${{ secrets.INTERNAL_SERVICE_KEY }}
         run: |
           chmod +x build.sh
           ./build.sh

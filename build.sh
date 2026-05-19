@@ -220,6 +220,7 @@ if [[ -n "${KUBE_CONFIG:-}" ]] && kubectl get ns "$NAMESPACE" >/dev/null 2>&1; t
   PATCH_JSON+="\"DATABASE_URL\":\"$(echo -n "${DATABASE_URL}" | base64 -w0)\","
   PATCH_JSON+="\"DIRECT_DATABASE_URL\":\"$(echo -n "${DIRECT_DATABASE_URL}" | base64 -w0)\""
   [[ -n "${ANTHROPIC_API_KEY:-}" ]] && PATCH_JSON+=",\"ANTHROPIC_API_KEY\":\"$(echo -n "${ANTHROPIC_API_KEY}" | base64 -w0)\""
+  [[ -n "${INTERNAL_SERVICE_KEY:-}" ]] && PATCH_JSON+=",\"INTERNAL_SERVICE_KEY\":\"$(echo -n "${INTERNAL_SERVICE_KEY}" | base64 -w0)\""
   PATCH_JSON+='}}'
 
   if kubectl get secret "$ENV_SECRET_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
@@ -232,6 +233,7 @@ if [[ -n "${KUBE_CONFIG:-}" ]] && kubectl get ns "$NAMESPACE" >/dev/null 2>&1; t
       --from-literal=DATABASE_URL="${DATABASE_URL}" \
       --from-literal=DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL}" \
       ${ANTHROPIC_API_KEY:+--from-literal=ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"} \
+      ${INTERNAL_SERVICE_KEY:+--from-literal=INTERNAL_SERVICE_KEY="${INTERNAL_SERVICE_KEY}"} \
       --dry-run=client -o yaml | kubectl apply -f - || log_warn "Secret creation failed"
   fi
 fi
