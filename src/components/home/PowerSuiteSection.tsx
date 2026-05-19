@@ -49,10 +49,10 @@ const SUITE = [
     img: '/images/illustrations/product-books.svg',
   },
   {
-    id: 'vera',
-    name: 'Vera AI',
-    tag: 'AI Assistant',
-    desc: 'Centralised AI assistant for your entire Codevertex workspace — answers queries, generates reports, and surfaces insights across all products.',
+    id: 'chatbot',
+    name: 'Custom Chatbot Solutions',
+    tag: 'AI & Automation',
+    desc: 'Tailored AI chatbot deployments for your business — customer support, lead capture, internal helpdesks, and workflow automation built on your data.',
     href: '/contact',
     img: '/images/illustrations/product-vera.svg',
   },
@@ -62,10 +62,10 @@ export function PowerSuiteSection() {
   const [active, setActive] = useState(0);
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30">
+    <section className="py-10 px-4 sm:px-6 lg:px-8 bg-secondary/30">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
           <div className="max-w-xl">
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">One Account</p>
             <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-tight tracking-tight">
@@ -111,18 +111,18 @@ export function PowerSuiteSection() {
             className="lg:col-span-3 flex flex-col"
           >
             {/* Product illustration */}
-            <div className="relative w-full h-64 overflow-hidden bg-muted dark:bg-card border-b border-border">
+            <div className="relative w-full h-64 overflow-hidden bg-[#0f1117] border-b border-border flex items-center justify-center">
               <Image
                 src={SUITE[active].img}
                 alt={SUITE[active].name}
                 fill
-                className="object-cover"
+                className="object-contain p-4"
                 sizes="(max-width: 1024px) 100vw, 60vw"
               />
             </div>
 
             {/* Text content */}
-            <div className="p-8 lg:p-10 flex flex-col justify-center flex-1">
+            <div className="p-6 lg:p-8 flex flex-col justify-center flex-1">
               <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">{SUITE[active].tag}</p>
               <h3 className="text-3xl font-black text-foreground tracking-tight mb-4">{SUITE[active].name}</h3>
               <p className="text-muted-foreground leading-relaxed text-base mb-6">{SUITE[active].desc}</p>
@@ -141,7 +141,7 @@ export function PowerSuiteSection() {
         </div>
 
         {/* Security badges */}
-        <div className="mt-8 flex flex-wrap gap-3 justify-center">
+        <div className="mt-6 flex flex-wrap gap-3 justify-center">
           {['OAuth 2.0', 'OpenID Connect', 'AES-256', 'GDPR-aware', 'Multi-tenant SSO'].map(b => (
             <span key={b} className="px-3 py-1.5 rounded-full bg-card border border-border text-xs font-semibold text-muted-foreground">{b}</span>
           ))}

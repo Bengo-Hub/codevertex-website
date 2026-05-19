@@ -12,9 +12,9 @@ const PREVIEW_IMAGES = [
 
 export function DigitikaTeaser() {
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
+    <section className="py-10 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
           {/* Left — pitch + courses */}
           <div className="lg:sticky lg:top-24">

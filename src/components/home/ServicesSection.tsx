@@ -7,7 +7,7 @@ import { SERVICE_PILLARS } from '@/config/services';
 
 export function ServicesSection() {
   return (
-    <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
+    <section className="relative py-10 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
       {/* Magic grid lines background */}
       <div className="absolute inset-0 grid-bg opacity-40 pointer-events-none" />
       {/* Radial fade — keeps edges clean */}
@@ -22,7 +22,7 @@ export function ServicesSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mb-14"
+          className="mb-8"
         >
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">What we do</p>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -118,7 +118,7 @@ export function ServicesSection() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
-          className="mt-8 flex justify-center"
+          className="mt-6 flex justify-center"
         >
           <Link
             href="/services"

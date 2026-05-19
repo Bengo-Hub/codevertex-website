@@ -17,8 +17,8 @@ const ADVANTAGES = [
 
 export function TrustSection() {
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30">
-      <div className="max-w-7xl mx-auto space-y-14">
+    <section className="py-10 px-4 sm:px-6 lg:px-8 bg-secondary/30">
+      <div className="max-w-7xl mx-auto space-y-10">
 
         {/* Team photo + pull quote */}
         <div className="relative rounded-2xl overflow-hidden h-80 border border-border">
@@ -44,7 +44,7 @@ export function TrustSection() {
         </div>
 
         {/* Clients + Advantages */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-6">Institutional partners</p>
             <div className="flex flex-col gap-3">
