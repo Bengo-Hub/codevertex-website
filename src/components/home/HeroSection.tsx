@@ -61,13 +61,13 @@ const SLIDES = [
     highlights: ['Invoicing with M-Pesa & Paystack', 'Project tracking & team collab'],
   },
   {
-    id: 'vera',
-    product: 'Vera AI',
-    tag: 'AI Business Assistant',
+    id: 'automation',
+    product: 'AI & Automation',
+    tag: 'Custom AI Assistants & BI',
     img: '/images/illustrations/product-vera.svg',
     color: '#0EA5E9',
     href: '/contact',
-    highlights: ['24/7 business intelligence', 'Claude-powered, integrated across suite'],
+    highlights: ['Custom chatbots and virtual assistants', 'Business intelligence and workflow automation'],
   },
 ];
 
