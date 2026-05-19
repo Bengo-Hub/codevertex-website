@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SSO_URL } from '@/lib/constants';
+import { motion } from 'framer-motion';
+import { ChevronRight } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 
 const SUITE = [
   {
@@ -50,8 +50,8 @@ const SUITE = [
   },
   {
     id: 'chatbot',
-    name: 'Custom Chatbot Solutions',
-    tag: 'AI & Automation',
+    name: 'AI & Automation',
+    tag: 'Business Intelligence & Workflow Automation',
     desc: 'Tailored AI chatbot deployments for your business — customer support, lead capture, internal helpdesks, and workflow automation built on your data.',
     href: '/contact',
     img: '/images/illustrations/product-vera.svg',
