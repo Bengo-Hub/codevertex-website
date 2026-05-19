@@ -4,7 +4,6 @@ import './globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteShell } from '@/components/layout/SiteShell';
-import { ChatBot } from '@/components/chat/ChatBot';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -64,9 +63,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <SiteShell>{children}</SiteShell>
-          <ChatBot />
           <Toaster richColors position="top-right" />
         </ThemeProvider>
+        {/* Vera AI widget — loaded as a plain async script so document.currentScript works */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          async
+          src="https://marketflow.codevertexitsolutions.com/widget/chat.js"
+          data-tenant="codevertex"
+          data-mode="platform"
+          data-business-type="codevertex"
+          data-api-url="https://marketflowai.codevertexitsolutions.com"
+          data-primary-color="#4F46E5"
+          data-accent-color="#7C3AED"
+          data-widget-title="Vera"
+          data-whatsapp="254743793901"
+          data-phone="+254743793901"
+        />
       </body>
     </html>
   );
