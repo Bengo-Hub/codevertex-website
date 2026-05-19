@@ -62,7 +62,7 @@ async function tryMarketflowAI(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 45000);
 
     const res = await fetch(`${MF_AI_URL}/api/v1/public/chat`, {
       method: 'POST',
@@ -99,6 +99,10 @@ async function callAnthropic(
 ): Promise<string> {
   if (!ANTHROPIC_KEY) throw new Error('No AI provider configured');
 
+  // Anthropic requires messages to start with a user turn.
+  const firstUserIdx = messages.findIndex((m) => m.role === 'user');
+  const normalised = firstUserIdx > 0 ? messages.slice(firstUserIdx) : messages;
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -110,7 +114,7 @@ async function callAnthropic(
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      messages,
+      messages: normalised,
     }),
   });
 
