@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 550" width="600" height="550">
+  <defs>
+    <style>
+      .logo-text {
+        font-family: 'Arial Black', 'Franklin Gothic Heavy', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 38px;
+        fill: #ffffff;
+        letter-spacing: -1px;
+      }
+      .logo-tag {
+        font-family: 'Arial', Arial, sans-serif;
+        font-weight: 700;
+        font-size: 10px;
+        fill: #ffffff;
+        letter-spacing: 3px;
+      }
+    </style>
+  </defs>
+
+  <!-- T-Shirt shape (dark, brand colour) -->
+  <!-- Body -->
+  <path d="
+    M 150 120
+    L 80 80
+    L 10 160
+    L 100 195
+    L 100 510
+    L 500 510
+    L 500 195
+    L 590 160
+    L 520 80
+    L 450 120
+    C 420 160 380 180 300 180
+    C 220 180 180 160 150 120
+    Z
+  " fill="#722F5F" stroke="#5a2047" stroke-width="2"/>
+
+  <!-- Collar curve detail -->
+  <path d="M 150 120 C 200 155 240 175 300 178 C 360 175 400 155 450 120"
+    fill="none" stroke="#5a2047" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Logo group — centred on chest -->
+  <!-- "Code" -->
+  <text class="logo-text" x="152" y="320">Code</text>
+
+  <!-- Circle checkmark -->
+  <circle cx="304" cy="289" r="27" stroke="#ffffff" stroke-width="3.5" fill="#722F5F"/>
+  <polyline points="291,289 301,302 319,274" stroke="#ffffff" stroke-width="3.5"
+    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- "ertex" -->
+  <text class="logo-text" x="327" y="320">ertex</text>
+
+  <!-- AFRICA LIMITED tagline -->
+  <text class="logo-tag" x="233" y="338" text-anchor="end">AFRICA</text>
+  <text class="logo-tag" x="374" y="338" text-anchor="start">LIMITED</text>
+
+  <!-- Tagline below -->
+  <text x="300" y="372" text-anchor="middle"
+    font-family="'Arial', sans-serif" font-size="11" fill="#f0c8e0" letter-spacing="2">
+    Architecting Africa's Digital Renaissance
+  </text>
+</svg>

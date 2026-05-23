@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 600" width="500" height="600">
+  <defs>
+    <linearGradient id="coverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8a3972"/>
+      <stop offset="100%" style="stop-color:#4a1535"/>
+    </linearGradient>
+    <linearGradient id="spineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3a0f2a"/>
+      <stop offset="100%" style="stop-color:#5a1f4a"/>
+    </linearGradient>
+    <style>
+      .nb-logo {
+        font-family: 'Arial Black', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 42px;
+        fill: #ffffff;
+        letter-spacing: -1px;
+      }
+      .nb-tag {
+        font-family: 'Arial', sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        fill: #f0d0e8;
+        letter-spacing: 3px;
+      }
+      .nb-tagline {
+        font-family: 'Arial', sans-serif;
+        font-size: 11px;
+        fill: #d8b0cc;
+        letter-spacing: 1px;
+      }
+    </style>
+    <!-- Paper page clip -->
+    <clipPath id="pageClip">
+      <rect x="68" y="18" width="408" height="565" rx="4"/>
+    </clipPath>
+  </defs>
+
+  <!-- Drop shadow -->
+  <rect x="78" y="28" width="408" height="568" rx="6" fill="#1a0a14" opacity="0.25"/>
+
+  <!-- Spine -->
+  <rect x="28" y="18" width="48" height="568" rx="4" fill="url(#spineGrad)"/>
+
+  <!-- Binding rings -->
+  <g fill="none" stroke="#c0a0b8" stroke-width="3">
+    <path d="M 28 90 Q 4 90 4 110 Q 4 130 28 130" stroke-linecap="round"/>
+    <path d="M 28 180 Q 4 180 4 200 Q 4 220 28 220" stroke-linecap="round"/>
+    <path d="M 28 270 Q 4 270 4 290 Q 4 310 28 310" stroke-linecap="round"/>
+    <path d="M 28 360 Q 4 360 4 380 Q 4 400 28 400" stroke-linecap="round"/>
+    <path d="M 28 450 Q 4 450 4 470 Q 4 490 28 490" stroke-linecap="round"/>
+  </g>
+
+  <!-- Cover (front) -->
+  <rect x="68" y="18" width="408" height="568" rx="4" fill="url(#coverGrad)"/>
+
+  <!-- Subtle grid texture on cover -->
+  <g clip-path="url(#pageClip)" opacity="0.06">
+    <g stroke="#ffffff" stroke-width="0.5">
+      <line x1="68" y1="58" x2="476" y2="58"/>
+      <line x1="68" y1="98" x2="476" y2="98"/>
+      <line x1="68" y1="138" x2="476" y2="138"/>
+      <line x1="68" y1="178" x2="476" y2="178"/>
+      <line x1="68" y1="218" x2="476" y2="218"/>
+      <line x1="68" y1="258" x2="476" y2="258"/>
+      <line x1="68" y1="298" x2="476" y2="298"/>
+      <line x1="68" y1="338" x2="476" y2="338"/>
+      <line x1="68" y1="378" x2="476" y2="378"/>
+      <line x1="68" y1="418" x2="476" y2="418"/>
+      <line x1="68" y1="458" x2="476" y2="458"/>
+      <line x1="68" y1="498" x2="476" y2="498"/>
+      <line x1="68" y1="538" x2="476" y2="538"/>
+    </g>
+  </g>
+
+  <!-- Decorative accent line at top -->
+  <rect x="68" y="18" width="408" height="5" rx="2" fill="#ea8022" opacity="0.8"/>
+
+  <!-- Logo group — centred on cover -->
+  <!-- "Code" -->
+  <text class="nb-logo" x="128" y="310">Code</text>
+
+  <!-- Circle checkmark -->
+  <circle cx="302" cy="280" r="30" stroke="#ffffff" stroke-width="3.5" fill="none"/>
+  <polyline points="287,280 299,295 320,262" stroke="#ffffff" stroke-width="3.5"
+    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- "ertex" -->
+  <text class="nb-logo" x="328" y="310">ertex</text>
+
+  <!-- AFRICA LIMITED -->
+  <text class="nb-tag" x="240" y="332" text-anchor="end">AFRICA</text>
+  <text class="nb-tag" x="364" y="332" text-anchor="start">LIMITED</text>
+
+  <!-- Tagline below -->
+  <text class="nb-tagline" x="272" y="362" text-anchor="middle">Architecting Africa's Digital Renaissance</text>
+
+  <!-- Website URL at bottom -->
+  <text x="272" y="555" text-anchor="middle"
+    font-family="'Arial', sans-serif" font-size="10" fill="#c090b0" letter-spacing="1">
+    www.codevertexitsolutions.com
+  </text>
+</svg>
