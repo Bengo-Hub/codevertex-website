@@ -105,9 +105,9 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
   const canEnroll = hasActiveCohorts && !allCohortsFull && selectedCohort && !selectedCohort.isFull;
 
   return (
-    <div className="min-h-screen bg-background pt-16">
+    <div className="min-h-screen bg-background pt-20">
       {/* Breadcrumb */}
-      <div className="border-b border-border bg-background/80 backdrop-blur sticky top-16 z-20">
+      <div className="border-b border-border bg-background/80 backdrop-blur sticky top-20 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 text-sm">
           <Link href="/digitika" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
             <ArrowLeft className="h-3.5 w-3.5" /> Digitika Academy

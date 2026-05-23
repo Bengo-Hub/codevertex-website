@@ -132,7 +132,7 @@ export function HeroSection() {
      * bg-foreground → dark navy in light mode, near-white in dark mode
      * dark:bg-background → deep navy in dark mode (always dark in both themes)
      */
-    <section className="relative min-h-screen flex items-start pt-16 overflow-hidden bg-foreground dark:bg-background">
+    <section className="relative min-h-screen flex items-start pt-20 overflow-hidden bg-foreground dark:bg-background">
       {/* Animated grid background */}
       <div className="absolute inset-0 grid-bg opacity-[0.07] pointer-events-none" />
 

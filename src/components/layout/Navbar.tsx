@@ -1,15 +1,15 @@
 // Next.js 16 / React 19.2 compatible Navbar
 'use client';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
-import { Menu, X, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { cn } from '@/lib/utils';
-import { NAV_LINKS } from '@/lib/constants';
 import { useAuth } from '@/hooks/use-auth';
+import { NAV_LINKS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronDown, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
 function UserMenu() {
   const { user, logout } = useAuth();
@@ -105,15 +105,15 @@ export function Navbar() {
             : 'bg-background/80 backdrop-blur-md border-b border-border/40'
         )}
       >
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="shrink-0 group" aria-label="Codevertex Africa Limited">
             <Image
               src="/images/logo.png"
               alt="Codevertex Africa Limited"
-              width={220}
-              height={60}
-              className="h-14 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"
+              width={250}
+              height={100}
+              className="h-16 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"
               priority
             />
           </Link>
@@ -179,7 +179,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-x-0 top-16 z-40 md:hidden bg-background border-b border-border shadow-lg"
+            className="fixed inset-x-0 top-20 z-40 md:hidden bg-background border-b border-border shadow-lg"
           >
             <div className="px-4 py-4 flex flex-col gap-1">
               {NAV_LINKS.map((link) => (

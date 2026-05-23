@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ServicesPage() {
   return (
-    <div className="pt-16">
+    <div className="pt-20">
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">

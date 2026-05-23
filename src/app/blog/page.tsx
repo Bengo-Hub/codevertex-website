@@ -76,7 +76,7 @@ const CAT_COLORS: Record<string, string> = {
 
 export default function BlogPage() {
   return (
-    <div className="pt-16">
+    <div className="pt-20">
       {/* Hero — theme-aware */}
       <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <div className="absolute bottom-0 left-0 w-100 h-75 bg-primary/15 rounded-full blur-[100px] pointer-events-none" />

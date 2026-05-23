@@ -14,7 +14,7 @@ const TRACK_RECORD = [
 
 export default function AboutPage() {
   return (
-    <div className="pt-16">
+    <div className="pt-20">
       <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-125 h-100 bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
         <div className="max-w-7xl mx-auto relative z-10">
