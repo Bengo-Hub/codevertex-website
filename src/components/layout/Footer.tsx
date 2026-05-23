@@ -31,9 +31,9 @@ export function Footer() {
               <Image
                 src="/images/logo.png"
                 alt="Codevertex Africa Limited"
-                width={180}
-                height={50}
-                className="h-10 w-auto object-contain dark:invert"
+                width={220}
+                height={60}
+                className="h-14 w-auto object-contain dark:invert"
               />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-xs">

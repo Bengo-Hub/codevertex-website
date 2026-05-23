@@ -118,9 +118,9 @@ export function LifeAtDigitika() {
                 <Image
                   src="/images/logo.png"
                   alt="Digitika Academy"
-                  width={100}
-                  height={26}
-                  className="h-6 w-auto object-contain bg-black rounded px-1"
+                  width={160}
+                  height={44}
+                  className="h-9 w-auto object-contain bg-black rounded px-1"
                 />
                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">× Maseno University</span>
               </div>

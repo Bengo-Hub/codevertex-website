@@ -174,9 +174,9 @@ export function DigitikaHero() {
                 <Image
                   src="/images/logo.png"
                   alt="Digitika Academy — Learn | Innovate | Disrupt"
-                  width={110}
-                  height={28}
-                  className="h-6 w-auto object-contain"
+                  width={160}
+                  height={44}
+                  className="h-9 w-auto object-contain"
                 />
               </div>
               <div className="flex flex-col gap-2 items-end">

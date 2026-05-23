@@ -43,11 +43,11 @@ export function AdminSidebar() {
         <Link href="/admin" className="block">
           <Image
             src="/images/logo.png"
-            alt="Codevertex"
-            width={140}
-            height={38}
+            alt="Codevertex Africa Limited"
+            width={200}
+            height={54}
             priority
-            className="h-9 w-auto object-contain"
+            className="h-12 w-auto object-contain"
           />
         </Link>
       </div>
