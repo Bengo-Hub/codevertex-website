@@ -44,10 +44,12 @@ const config: Config = {
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         brand: {
-          pink: '#EC4899',
-          'pink-dark': '#DB2777',
+          purple: '#9100B0',
+          'purple-dark': '#6a0082',
+          'purple-light': '#b800e0',
+          black: '#000000',
+          grey: '#6E6873',
           navy: '#0f172a',
-          sky: '#0EA5E9',
         },
       },
       borderRadius: {
@@ -56,7 +58,7 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-poppins)', 'var(--font-geist-sans)', 'Inter', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'monospace'],
       },
       animation: {
