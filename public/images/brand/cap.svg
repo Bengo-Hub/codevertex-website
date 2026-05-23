@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" width="600" height="420">
+  <!--
+    Baseball cap — clean front view.
+    Crown fills the upper dome. Brim extends as a flat bill below centre.
+  -->
+  <defs>
+    <linearGradient id="crn" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"   stop-color="#9100B0"/>
+      <stop offset="100%" stop-color="#2d0040"/>
+    </linearGradient>
+    <linearGradient id="brm" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#4a0060"/>
+      <stop offset="100%" stop-color="#160020"/>
+    </linearGradient>
+    <linearGradient id="swt" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#c880d8"/>
+      <stop offset="50%"  stop-color="#e8b0f0"/>
+      <stop offset="100%" stop-color="#c880d8"/>
+    </linearGradient>
+    <filter id="sh">
+      <feDropShadow dx="2" dy="5" stdDeviation="7" flood-color="#060004" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#sh)">
+    <!-- Crown dome -->
+    <path d="M 80,290 Q 76,148 300,58 Q 524,148 520,290 Z" fill="url(#crn)"/>
+
+    <!-- Centre seam -->
+    <line x1="300" y1="58" x2="300" y2="290" stroke="#3a0048" stroke-width="1.5" opacity="0.35"/>
+    <!-- Side panel seams -->
+    <path d="M 300,58 Q 195,145 148,254" fill="none" stroke="#3a0048" stroke-width="1" opacity="0.25"/>
+    <path d="M 300,58 Q 405,145 452,254" fill="none" stroke="#3a0048" stroke-width="1" opacity="0.25"/>
+
+    <!-- Sweatband strip -->
+    <path d="M 80,290 Q 190,314 300,318 Q 410,314 520,290 L 520,305 Q 410,330 300,334 Q 190,330 80,305 Z"
+      fill="url(#swt)"/>
+
+    <!-- Brim (flat bill) -->
+    <path d="M 148,298 Q 148,334 176,352 Q 238,378 300,382 Q 362,378 424,352 Q 452,334 452,298
+      Q 410,312 300,316 Q 190,312 148,298 Z"
+      fill="url(#brm)"/>
+
+    <!-- Brim underside edge -->
+    <path d="M 176,352 Q 238,380 300,384 Q 362,380 424,352"
+      fill="none" stroke="#5a0075" stroke-width="1.5" opacity="0.5"/>
+
+    <!-- Crown button -->
+    <circle cx="300" cy="60" r="8" fill="#d890e8" stroke="#b060c8" stroke-width="1.5"/>
+
+    <!-- Eyelets -->
+    <circle cx="172" cy="188" r="4" fill="none" stroke="#3a0048" stroke-width="1.5" opacity="0.5"/>
+    <circle cx="428" cy="188" r="4" fill="none" stroke="#3a0048" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- Logo on front panel: scale 0.34, circle centre at (300, 206). -->
+  <g transform="translate(300,206) scale(0.34)">
+    <text x="-393" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff" opacity="0.95">Code</text>
+    <circle cx="0" cy="0" r="45" stroke="#ffffff" stroke-width="8" fill="none" opacity="0.95"/>
+    <polyline points="-19,3 -6,19 21,-19"
+      stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95"/>
+    <text x="48" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff" opacity="0.95">ertex</text>
+    <text x="-220" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4" opacity="0.9">AFRICA</text>
+    <text x="224" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4" opacity="0.9">LIMITED</text>
+  </g>
+</svg>

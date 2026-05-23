@@ -1,88 +1,70 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 520" width="500" height="520">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 540" width="520" height="540">
   <defs>
-    <linearGradient id="mugBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#5a2047"/>
-      <stop offset="35%" style="stop-color:#722F5F"/>
-      <stop offset="65%" style="stop-color:#7a3568"/>
-      <stop offset="100%" style="stop-color:#5a2047"/>
+    <linearGradient id="mbg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#2d0040"/>
+      <stop offset="30%"  stop-color="#9100B0"/>
+      <stop offset="68%"  stop-color="#9500b5"/>
+      <stop offset="100%" stop-color="#2d0040"/>
     </linearGradient>
-    <linearGradient id="mugTopGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#d8b0cc"/>
-      <stop offset="100%" style="stop-color:#b88aac"/>
+    <linearGradient id="mrim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d8b0e8"/><stop offset="100%" stop-color="#b080c8"/>
     </linearGradient>
-    <linearGradient id="mugBottomGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#5a2047"/>
-      <stop offset="100%" style="stop-color:#3a1030"/>
+    <linearGradient id="mbot" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2d0040"/><stop offset="100%" stop-color="#100018"/>
     </linearGradient>
-    <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#5a2047"/>
-      <stop offset="50%" style="stop-color:#8a4070"/>
-      <stop offset="100%" style="stop-color:#5a2047"/>
+    <linearGradient id="mhdl" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1e0030"/><stop offset="50%" stop-color="#9100B0"/><stop offset="100%" stop-color="#1e0030"/>
     </linearGradient>
-    <linearGradient id="liquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#c8a0b8" stop-opacity="0.9"/>
-      <stop offset="100%" style="stop-color:#9a7090" stop-opacity="0.7"/>
+    <linearGradient id="mliq" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d0a0e0" stop-opacity="0.9"/><stop offset="100%" stop-color="#906090" stop-opacity="0.7"/>
     </linearGradient>
-    <style>
-      .mug-logo {
-        font-family: 'Arial Black', Arial, sans-serif;
-        font-weight: 900;
-        font-size: 36px;
-        fill: #ffffff;
-        letter-spacing: -1px;
-      }
-      .mug-tag {
-        font-family: 'Arial', sans-serif;
-        font-weight: 700;
-        font-size: 10px;
-        fill: #f0d0e8;
-        letter-spacing: 2.5px;
-      }
-    </style>
   </defs>
 
-  <!-- Mug shadow -->
-  <ellipse cx="230" cy="498" rx="145" ry="12" fill="#1a0a14" opacity="0.18"/>
+  <!-- Shadow -->
+  <ellipse cx="240" cy="524" rx="152" ry="10" fill="#0a0008" opacity="0.16"/>
 
-  <!-- Mug handle -->
-  <path d="M 350 185 Q 430 185 430 260 Q 430 335 350 335"
-    fill="none" stroke="url(#handleGrad)" stroke-width="28" stroke-linecap="round"/>
-  <path d="M 350 185 Q 415 185 415 260 Q 415 335 350 335"
-    fill="none" stroke="#9a5080" stroke-width="10" stroke-linecap="round" opacity="0.4"/>
+  <!-- Handle -->
+  <path d="M362,192 Q452,192 452,275 Q452,358 362,358"
+    fill="none" stroke="url(#mhdl)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M362,192 Q434,192 434,275 Q434,358 362,358"
+    fill="none" stroke="#b050c8" stroke-width="10" stroke-linecap="round" opacity="0.25"/>
 
   <!-- Mug body -->
-  <path d="M 62 118 L 88 470 Q 90 488 108 488 L 358 488 Q 376 488 378 470 L 404 118 Z"
-    fill="url(#mugBodyGrad)"/>
+  <path d="M60,122 L88,494 Q90,510 110,510 L374,510 Q394,510 396,494 L424,122 Z" fill="url(#mbg)"/>
 
-  <!-- Rim ellipse top -->
-  <ellipse cx="233" cy="118" rx="171" ry="28" fill="url(#mugTopGrad)"/>
-  <ellipse cx="233" cy="118" rx="155" ry="20" fill="url(#liquidGrad)"/>
+  <!-- Rim ellipse -->
+  <ellipse cx="242" cy="122" rx="182" ry="30" fill="url(#mrim)"/>
 
-  <!-- Bottom rim -->
-  <ellipse cx="233" cy="488" rx="130" ry="14" fill="url(#mugBottomGrad)"/>
+  <!-- Liquid surface -->
+  <ellipse cx="242" cy="122" rx="164" ry="21" fill="url(#mliq)"/>
 
-  <!-- Highlight stripe on left -->
-  <path d="M 82 140 L 102 468" stroke="#a06080" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+  <!-- Bottom ellipse -->
+  <ellipse cx="242" cy="510" rx="138" ry="14" fill="url(#mbot)"/>
 
-  <!-- Logo group on mug body -->
-  <!-- "Code" -->
-  <text class="mug-logo" x="106" y="294">Code</text>
+  <!-- Side highlight -->
+  <path d="M80,148 L102,488" stroke="#c060d8" stroke-width="9" stroke-linecap="round" opacity="0.3"/>
 
-  <!-- Circle checkmark -->
-  <circle cx="280" cy="264" r="26" stroke="#ffffff" stroke-width="3" fill="none"/>
-  <polyline points="266,264 277,278 296,248" stroke="#ffffff" stroke-width="3"
-    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Logo: scale 0.30 at mug face centre (242, 300). -->
+  <g transform="translate(242,300) scale(0.30)">
+    <text x="-393" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff">Code</text>
+    <circle cx="0" cy="0" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+    <polyline points="-19,3 -6,19 21,-19"
+      stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="48" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff">ertex</text>
+    <text x="-220" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4">AFRICA</text>
+    <text x="224" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4">LIMITED</text>
+  </g>
 
-  <!-- "ertex" -->
-  <text class="mug-logo" x="303" y="294">ertex</text>
-
-  <!-- AFRICA LIMITED -->
-  <text class="mug-tag" x="222" y="313" text-anchor="end">AFRICA</text>
-  <text class="mug-tag" x="338" y="313" text-anchor="start">LIMITED</text>
-
-  <!-- Website text at mug bottom -->
-  <text x="233" y="460" text-anchor="middle"
-    font-family="'Arial', sans-serif" font-size="9" fill="#d0a0c0" letter-spacing="1">
+  <text x="242" y="480" text-anchor="middle"
+    font-family="'Arial',sans-serif" font-size="9" fill="#d090e8" letter-spacing="0.8">
     codevertexitsolutions.com
   </text>
 </svg>

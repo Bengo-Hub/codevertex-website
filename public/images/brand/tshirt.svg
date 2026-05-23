@@ -1,64 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 550" width="600" height="550">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 640" width="700" height="640">
   <defs>
-    <style>
-      .logo-text {
-        font-family: 'Arial Black', 'Franklin Gothic Heavy', Arial, sans-serif;
-        font-weight: 900;
-        font-size: 38px;
-        fill: #ffffff;
-        letter-spacing: -1px;
-      }
-      .logo-tag {
-        font-family: 'Arial', Arial, sans-serif;
-        font-weight: 700;
-        font-size: 10px;
-        fill: #ffffff;
-        letter-spacing: 3px;
-      }
-    </style>
+    <linearGradient id="tsg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#1e0030"/>
+      <stop offset="25%"  stop-color="#9100B0"/>
+      <stop offset="60%"  stop-color="#a400cc"/>
+      <stop offset="100%" stop-color="#1e0030"/>
+    </linearGradient>
   </defs>
 
-  <!-- T-Shirt shape (dark, brand colour) -->
-  <!-- Body -->
-  <path d="
-    M 150 120
-    L 80 80
-    L 10 160
-    L 100 195
-    L 100 510
-    L 500 510
-    L 500 195
-    L 590 160
-    L 520 80
-    L 450 120
-    C 420 160 380 180 300 180
-    C 220 180 180 160 150 120
-    Z
-  " fill="#722F5F" stroke="#5a2047" stroke-width="2"/>
+  <!-- T-shirt body -->
+  <path d="M 168,132 L 82,84 L 8,176 L 108,214 L 108,586 L 592,586 L 592,214 L 692,176 L 618,84 L 532,132
+    C 498,174 430,196 350,196 C 270,196 202,174 168,132 Z"
+    fill="url(#tsg)" stroke="#3a0048" stroke-width="2"/>
 
-  <!-- Collar curve detail -->
-  <path d="M 150 120 C 200 155 240 175 300 178 C 360 175 400 155 450 120"
-    fill="none" stroke="#5a2047" stroke-width="1.5" opacity="0.6"/>
+  <!-- Neckline highlight -->
+  <path d="M 168,132 C 228,172 284,193 350,196 C 416,193 472,172 532,132"
+    fill="none" stroke="#c040e0" stroke-width="1.5" opacity="0.5"/>
 
-  <!-- Logo group — centred on chest -->
-  <!-- "Code" -->
-  <text class="logo-text" x="152" y="320">Code</text>
+  <!-- Sleeve seams -->
+  <line x1="82"  y1="84"  x2="108" y2="214" stroke="#3a0048" stroke-width="1" opacity="0.4"/>
+  <line x1="618" y1="84"  x2="592" y2="214" stroke="#3a0048" stroke-width="1" opacity="0.4"/>
 
-  <!-- Circle checkmark -->
-  <circle cx="304" cy="289" r="27" stroke="#ffffff" stroke-width="3.5" fill="#722F5F"/>
-  <polyline points="291,289 301,302 319,274" stroke="#ffffff" stroke-width="3.5"
-    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-
-  <!-- "ertex" -->
-  <text class="logo-text" x="327" y="320">ertex</text>
-
-  <!-- AFRICA LIMITED tagline -->
-  <text class="logo-tag" x="233" y="338" text-anchor="end">AFRICA</text>
-  <text class="logo-tag" x="374" y="338" text-anchor="start">LIMITED</text>
-
-  <!-- Tagline below -->
-  <text x="300" y="372" text-anchor="middle"
-    font-family="'Arial', sans-serif" font-size="11" fill="#f0c8e0" letter-spacing="2">
-    Architecting Africa's Digital Renaissance
-  </text>
+  <!-- Logo: circle-centred, scale 0.42. Circle centre → (350,370). -->
+  <g transform="translate(350,370) scale(0.42)">
+    <text x="-393" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff">Code</text>
+    <circle cx="0" cy="0" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+    <polyline points="-19,3 -6,19 21,-19"
+      stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="48" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff">ertex</text>
+    <text x="-220" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4">AFRICA</text>
+    <text x="224" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4">LIMITED</text>
+  </g>
 </svg>

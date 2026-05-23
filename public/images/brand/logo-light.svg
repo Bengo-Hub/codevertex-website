@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 178" width="800" height="178">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;800&amp;display=swap');
+      .wm { font-family: 'Poppins', 'Arial Black', sans-serif; font-weight: 800; font-size: 128px; fill: #ffffff; }
+      .tl { font-family: 'Poppins', Arial, sans-serif; font-weight: 500; font-size: 19px; fill: #ffffff; letter-spacing: 4px; }
+    </style>
+  </defs>
+
+  <!-- Wordmark -->
+  <text class="wm" x="5"   y="132">Code</text>
+  <text class="wm" x="446" y="132">ertex</text>
+
+  <!-- Circle — white on dark backgrounds -->
+  <circle cx="398" cy="87" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+  <polyline points="379,90 392,106 419,68"
+    stroke="#ffffff" stroke-width="8"
+    stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Decorative lines flanking tagline row -->
+  <line x1="18"  y1="155" x2="112" y2="155" stroke="#ffffff" stroke-width="1.2" opacity="0.6"/>
+  <line x1="688" y1="155" x2="782" y2="155" stroke="#ffffff" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- AFRICA centred under "Code" | LIMITED centred under "ertex" -->
+  <text class="tl" x="178" y="161" text-anchor="middle">AFRICA</text>
+  <text class="tl" x="622" y="161" text-anchor="middle">LIMITED</text>
+</svg>

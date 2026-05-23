@@ -1,68 +1,56 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 600" width="200" height="600">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 700" width="240" height="700">
   <defs>
-    <linearGradient id="penBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#5a2047"/>
-      <stop offset="40%" style="stop-color:#722F5F"/>
-      <stop offset="70%" style="stop-color:#8a3972"/>
-      <stop offset="100%" style="stop-color:#5a2047"/>
+    <linearGradient id="pbg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#1e0030"/>
+      <stop offset="30%"  stop-color="#9100B0"/>
+      <stop offset="65%"  stop-color="#a400cc"/>
+      <stop offset="100%" stop-color="#1e0030"/>
     </linearGradient>
-    <linearGradient id="penClipGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#c0a0b8"/>
-      <stop offset="50%" style="stop-color:#e8d0e0"/>
-      <stop offset="100%" style="stop-color:#c0a0b8"/>
+    <linearGradient id="pcap" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#c880d8"/>
+      <stop offset="50%"  stop-color="#e8b0f0"/>
+      <stop offset="100%" stop-color="#c880d8"/>
     </linearGradient>
-    <style>
-      .pen-logo {
-        font-family: 'Arial Black', Arial, sans-serif;
-        font-weight: 900;
-        font-size: 13px;
-        fill: #ffffff;
-        letter-spacing: -0.5px;
-      }
-      .pen-tag {
-        font-family: 'Arial', sans-serif;
-        font-weight: 700;
-        font-size: 5.5px;
-        fill: #f0d0e8;
-        letter-spacing: 1.5px;
-      }
-    </style>
   </defs>
 
-  <!-- Pen cap (top) -->
-  <rect x="72" y="10" width="56" height="70" rx="8" ry="8" fill="url(#penClipGrad)"/>
-  <rect x="80" y="8" width="40" height="10" rx="5" ry="5" fill="#d0b0c8"/>
-  <!-- Clip -->
-  <rect x="92" y="10" width="8" height="90" rx="3" ry="3" fill="url(#penClipGrad)"/>
-  <circle cx="96" cy="100" r="5" fill="#c0a0b8"/>
+  <!-- Cap -->
+  <rect x="82" y="14" width="76" height="82" rx="10" fill="url(#pcap)"/>
+  <rect x="92" y="10" width="56" height="12" rx="6" fill="#d8a0e8"/>
+  <rect x="111" y="14" width="10" height="106" rx="4" fill="url(#pcap)"/>
+  <ellipse cx="116" cy="120" rx="7" ry="5" fill="#c070d0"/>
 
-  <!-- Pen body -->
-  <rect x="72" y="78" width="56" height="420" rx="4" ry="4" fill="url(#penBodyGrad)"/>
+  <!-- Body -->
+  <rect x="82" y="90" width="76" height="484" rx="5" fill="url(#pbg)"/>
+  <rect x="85" y="100" width="8" height="464" rx="4" fill="#b040c8" opacity="0.3"/>
 
-  <!-- Logo text on pen body — rotated 90° along the pen -->
-  <g transform="translate(100, 290) rotate(-90)">
-    <!-- "Code" -->
-    <text class="pen-logo" x="-120" y="-14">Code</text>
-    <!-- Circle checkmark -->
-    <circle cx="-14" cy="-24" r="12" stroke="#ffffff" stroke-width="1.5" fill="#722F5F"/>
-    <polyline points="-21,-24 -16,-18 -6,-32" stroke="#ffffff" stroke-width="1.5"
-      stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    <!-- "ertex" -->
-    <text class="pen-logo" x="0" y="-14">ertex</text>
-    <!-- Tagline -->
-    <text class="pen-tag" x="-60" y="-2">AFRICA LIMITED</text>
+  <!-- Logo: rotate(-90) so it reads normally when pen is horizontal nib-right.
+       Scale 0.32. Circle centre on pen axis at (120, 330). -->
+  <g transform="translate(120,330) rotate(-90) scale(0.32)">
+    <text x="-393" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff">Code</text>
+    <circle cx="0" cy="0" r="45" stroke="#ffffff" stroke-width="8" fill="none"/>
+    <polyline points="-19,3 -6,19 21,-19"
+      stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="48" y="45"
+      font-family="'Poppins','Arial Black',sans-serif"
+      font-weight="800" font-size="128" fill="#ffffff">ertex</text>
+    <text x="-220" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4">AFRICA</text>
+    <text x="224" y="73" text-anchor="middle"
+      font-family="'Poppins',Arial,sans-serif"
+      font-weight="500" font-size="19" fill="#f0c8f8" letter-spacing="4">LIMITED</text>
   </g>
 
-  <!-- Pen grip / rubber section -->
-  <rect x="72" y="468" width="56" height="30" rx="3" ry="3" fill="#4a1a3a"/>
-  <!-- Grip texture lines -->
-  <line x1="72" y1="476" x2="128" y2="476" stroke="#5a2a4a" stroke-width="1" opacity="0.5"/>
-  <line x1="72" y1="482" x2="128" y2="482" stroke="#5a2a4a" stroke-width="1" opacity="0.5"/>
-  <line x1="72" y1="488" x2="128" y2="488" stroke="#5a2a4a" stroke-width="1" opacity="0.5"/>
+  <!-- Grip -->
+  <rect x="82" y="548" width="76" height="28" rx="3" fill="#160020"/>
+  <line x1="82" y1="557" x2="158" y2="557" stroke="#3a0048" stroke-width="1" opacity="0.7"/>
+  <line x1="82" y1="565" x2="158" y2="565" stroke="#3a0048" stroke-width="1" opacity="0.7"/>
+  <line x1="82" y1="573" x2="158" y2="573" stroke="#3a0048" stroke-width="1" opacity="0.7"/>
 
-  <!-- Pen taper section -->
-  <path d="M72,498 L100,570 L128,498 Z" fill="#5a2047"/>
-  <!-- Pen tip / nib -->
-  <path d="M96,566 L100,585 L104,566 Z" fill="#c0a0b8"/>
-  <line x1="100" y1="575" x2="100" y2="590" stroke="#a08898" stroke-width="1.5"/>
+  <!-- Taper + nib -->
+  <path d="M82,576 L120,660 L158,576 Z" fill="#2d0040"/>
+  <path d="M117,656 L120,678 L123,656 Z" fill="#c880d8"/>
+  <line x1="120" y1="666" x2="120" y2="682" stroke="#a870c0" stroke-width="2"/>
 </svg>
