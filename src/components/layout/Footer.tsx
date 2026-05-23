@@ -27,10 +27,10 @@ export function Footer() {
         <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand column */}
           <div className="lg:col-span-1">
-            <Link href="/" aria-label="Codevertex IT Solutions" className="inline-block mb-5">
+            <Link href="/" aria-label="Codevertex Africa Limited" className="inline-block mb-5">
               <Image
                 src="/images/logo.png"
-                alt="Codevertex IT Solutions"
+                alt="Codevertex Africa Limited"
                 width={160}
                 height={44}
                 className="h-9 w-auto object-contain dark:invert"
@@ -141,7 +141,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="py-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Codevertex IT Solutions. All rights reserved.
+            © {new Date().getFullYear()} Codevertex Africa Limited. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             {LEGAL_LINKS.map((l) => (

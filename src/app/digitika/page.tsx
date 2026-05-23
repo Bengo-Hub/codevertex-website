@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'Digitika Academy — Tech Education',
   description: 'Industry-aligned certification programmes in software engineering, AI, networking, data analytics, and ICDL. Enroll from Kisumu or online.',
   openGraph: {
-    title: 'Digitika Academy | Codevertex IT Solutions',
+    title: 'Digitika Academy | Codevertex Africa Limited',
     description: "Closing Africa's digital skills gap. Courses in coding, AI, networking, and data analytics.",
     url: 'https://codevertexitsolutions.com/digitika',
   },

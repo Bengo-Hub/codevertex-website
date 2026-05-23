@@ -1,14 +1,15 @@
 export const SITE = {
-  name: 'Codevertex IT Solutions',
+  name: 'Codevertex Africa Limited',
   tagline: "Architecting Africa's Digital Renaissance",
   url: 'https://codevertexitsolutions.com',
   email: 'info@codevertexitsolutions.com',
-  phone1: '+254 743 793 901',
-  phone2: '+254 792 548 766',
-  whatsapp: 'https://wa.me/254743793901',
-  address: 'Pioneer House, 2nd Floor, Oginga Street, Kisumu, Kenya',
+  phone1: '+254 742 201 368',
+  phone2: '+254 743 793 901',
+  phone3: '+254 792 548 766',
+  whatsapp: 'https://wa.me/254742201368',
+  address: 'Pioneer House, Oginga-Odinga Road, Kisumu CBD, Kenya',
   socials: {
-    linkedin: 'https://linkedin.com/company/codevertex-it-solutions',
+    linkedin: 'https://linkedin.com/company/codevertex-africa',
     twitter: 'https://twitter.com/codevertexke',
   },
 };

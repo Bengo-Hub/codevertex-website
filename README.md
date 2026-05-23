@@ -1,6 +1,6 @@
 # Codevertex Website — Next.js 16.2
 
-Full-featured marketing website for Codevertex IT Solutions built with the **latest stable** versions of everything.
+Full-featured marketing website for Codevertex Africa Limited built with the **latest stable** versions of everything.
 
 ## Stack
 

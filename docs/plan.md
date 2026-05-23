@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Project:** Codevertex IT Solutions Marketing & Academy Website  
+**Project:** Codevertex Africa Limited Marketing & Academy Website  
 **Stack:** Next.js 16.2 (React 19), Tailwind CSS 4, PostgreSQL, TypeScript 6  
 **Domain:** https://codevertexitsolutions.com  
 **Namespace:** `codevertex-website` (K8s: `codevertex`)

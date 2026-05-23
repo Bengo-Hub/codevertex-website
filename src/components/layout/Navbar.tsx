@@ -107,10 +107,10 @@ export function Navbar() {
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
           {/* Logo */}
-          <Link href="/" className="shrink-0 group" aria-label="Codevertex IT Solutions">
+          <Link href="/" className="shrink-0 group" aria-label="Codevertex Africa Limited">
             <Image
               src="/images/logo.png"
-              alt="Codevertex IT Solutions"
+              alt="Codevertex Africa Limited"
               width={160}
               height={44}
               className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"

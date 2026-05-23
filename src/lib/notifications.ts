@@ -192,7 +192,7 @@ export async function sendContactFormReply(data: ContactFormData, requestId?: st
       message: data.message,
       service: data.service ?? '',
     },
-    `We received your message — Codevertex IT Solutions`,
+    `We received your message — Codevertex Africa Limited`,
     requestId
   );
 }

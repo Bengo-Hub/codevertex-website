@@ -84,7 +84,7 @@ const response = await anthropic.messages.stream({
 ### System Prompt Structure
 
 ```
-You are Vera, the AI assistant for Codevertex IT Solutions...
+You are Vera, the AI assistant for Codevertex Africa Limited...
 
 COMPANY:
 - Founded 2020, Kisumu, Kenya

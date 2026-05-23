@@ -16,7 +16,7 @@ const GALLERY = [
   {
     src: '/images/hub.jpg',
     caption: 'Our Pioneer House computer lab — Lenovo workstations, fibre internet, professional environment',
-    alt: 'Codevertex IT Solutions computer lab in Kisumu with Lenovo computers',
+    alt: 'Codevertex Africa Limited computer lab in Kisumu with Lenovo computers',
   },
   {
     src: '/images/students.jpg',
@@ -65,7 +65,7 @@ export function DigitikaHero() {
           <div className="flex flex-col">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border text-xs font-bold text-muted-foreground uppercase tracking-widest mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Digitika Academy — by Codevertex IT Solutions
+              Digitika Academy — by Codevertex Africa Limited
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-foreground tracking-tight leading-[1.03] mb-5">

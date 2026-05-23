@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       url: `https://codevertexitsolutions.com/digitika/${courseId}`,
-      siteName: 'Codevertex IT Solutions',
+      siteName: 'Codevertex Africa Limited',
       type: 'website',
       images: [
         {

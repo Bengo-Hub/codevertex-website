@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = { title: 'Careers', description: 'Join Codevertex IT Solutions and build Africa\'s digital future.' };
+export const metadata: Metadata = { title: 'Careers', description: 'Join Codevertex Africa Limited and build Africa\'s digital future.' };
 
 const JOBS = [
   { title: 'Senior Full-Stack Engineer', team: 'Engineering', location: 'Kisumu / Remote', type: 'Full-time', desc: 'Build and maintain scalable SaaS platforms. React, Node.js, PostgreSQL, Docker.' },

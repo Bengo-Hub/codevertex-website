@@ -1,4 +1,4 @@
-# TABLE OF CONTENTS
+﻿# TABLE OF CONTENTS
 
 [Architecting Africa’s Digital Renaissance	2](#architecting-africa’s-digital-renaissance)
 
@@ -32,7 +32,7 @@
 
 # Architecting Africa’s Digital Renaissance {#architecting-africa’s-digital-renaissance}
 
-**Codevertex IT Solutions** is a premier technology firm and innovation hub headquartered in Kisumu, Kenya. Established in 2020, we are a purpose-driven enterprise committed to closing the digital divide and shaping the future of African commerce and industry.
+**Codevertex Africa Limited** (formerly Codevertex IT Solutions) is a premier technology firm and innovation hub headquartered in Kisumu, Kenya. Established in 2020, we are a purpose-driven enterprise committed to closing the digital divide and shaping the future of African commerce and industry.
 
 ## Our Core Proposition {#our-core-proposition}
 

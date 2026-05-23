@@ -24,7 +24,7 @@ export function TrustSection() {
         <div className="relative rounded-2xl overflow-hidden h-80 border border-border">
           <Image
             src="/images/team.jpg"
-            alt="Codevertex IT Solutions team at an event, wearing company t-shirts"
+            alt="Codevertex Africa Limited team at an event, wearing company t-shirts"
             fill
             className="object-cover object-[center_50%]"
             sizes="(max-width: 1280px) 100vw, 1280px"
@@ -37,7 +37,7 @@ export function TrustSection() {
                 &ldquo;Built in Kisumu. Engineered for Africa. Designed for the world.&rdquo;
               </blockquote>
               <cite className="not-italic text-sm text-white/60 font-medium">
-                Codevertex IT Solutions — Pioneer House, Oginga Street, Kisumu
+                Codevertex Africa Limited — Pioneer House, Oginga Street, Kisumu
               </cite>
             </div>
           </div>

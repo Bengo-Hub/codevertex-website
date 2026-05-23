@@ -51,7 +51,7 @@ export default function AboutPage() {
             <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Who we are</p>
             <h2 className="text-3xl font-black text-foreground tracking-tight mb-6">Beyond software development</h2>
             <p className="text-muted-foreground leading-relaxed mb-4 text-base">
-              Codevertex IT Solutions is a premier technology firm and innovation hub headquartered in Kisumu, Kenya. We go beyond software development — we design and deploy integrated digital ecosystems.
+              Codevertex Africa Limited is a premier technology firm and innovation hub headquartered in Kisumu, Kenya. We go beyond software development — we design and deploy integrated digital ecosystems.
             </p>
             <p className="text-muted-foreground leading-relaxed text-base">
               By combining bespoke software engineering, advanced artificial intelligence, robust data analytics, and a high-calibre talent development pipeline, we enable organisations to evolve from legacy systems to agile, data-centric, high-growth operations.
