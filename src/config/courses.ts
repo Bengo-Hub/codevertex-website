@@ -384,7 +384,7 @@ export const COURSE_CATEGORIES: CourseCategory[] = [
     name: 'ICDL Certification',
     tagline: 'International Computer Driving Licence',
     description: 'Globally recognised ICT competency certification for professionals and corporate workforce development.',
-    color: '#EC4899',
+    color: '#9100B0',
     courses: [
       {
         id: 'icdl-l1',

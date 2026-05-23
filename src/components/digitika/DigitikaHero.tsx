@@ -37,7 +37,7 @@ const GALLERY = [
 
 const DISCIPLINES = [
   { name: 'Software Engineering', color: '#10B981', courses: 8, icon: '⌨️' },
-  { name: 'ICDL Certification', color: '#EC4899', courses: 4, icon: '🖥️' },
+  { name: 'ICDL Certification', color: '#9100B0', courses: 4, icon: '🖥️' },
   { name: 'Cisco Networking', color: '#0EA5E9', courses: 4, icon: '🌐' },
   { name: 'AI & Machine Learning', color: '#F59E0B', courses: 4, icon: '🤖' },
   { name: 'Data Analytics', color: '#4ade80', courses: 4, icon: '📊' },

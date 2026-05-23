@@ -111,7 +111,7 @@ export function PowerSuiteSection() {
             className="lg:col-span-3 flex flex-col"
           >
             {/* Product illustration */}
-            <div className="relative w-full h-64 overflow-hidden bg-[#0f1117] border-b border-border flex items-center justify-center">
+            <div className="relative w-full h-64 overflow-hidden bg-foreground dark:bg-card border-b border-border flex items-center justify-center">
               <Image
                 src={SUITE[active].img}
                 alt={SUITE[active].name}

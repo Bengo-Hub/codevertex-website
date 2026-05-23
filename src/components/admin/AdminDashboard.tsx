@@ -90,7 +90,7 @@ export function AdminDashboard() {
               label="Contact Enquiries"
               value={stats.contacts.total}
               icon={Mail}
-              color="text-pink-500"
+              color="text-primary"
             />
             <StatCard
               label="Overdue Installments"

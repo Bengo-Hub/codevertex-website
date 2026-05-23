@@ -56,7 +56,7 @@ const SLIDES = [
     product: 'Books',
     tag: 'Finance & Projects',
     img: '/images/illustrations/product-books.svg',
-    color: '#EC4899',
+    color: '#9100B0',
     href: 'https://books.codevertexitsolutions.com',
     highlights: ['Invoicing with M-Pesa & Paystack', 'Project tracking & team collab'],
   },

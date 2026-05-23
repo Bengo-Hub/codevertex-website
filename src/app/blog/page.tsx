@@ -66,12 +66,12 @@ const POSTS = [
 ];
 
 const CAT_COLORS: Record<string, string> = {
-  Product: 'bg-primary/10 text-primary border-primary/20',
-  Insights: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
-  Company: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-  Technical: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-  'Case Study': 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-  Academy: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+  Product:     'bg-primary/10 text-primary border-primary/20',
+  Insights:    'bg-primary/10 text-primary border-primary/20',
+  Company:     'bg-muted text-muted-foreground border-border',
+  Technical:   'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
+  'Case Study':'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  Academy:     'bg-primary/10 text-primary border-primary/20',
 };
 
 export default function BlogPage() {
