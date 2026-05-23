@@ -111,9 +111,9 @@ export function Navbar() {
             <Image
               src="/images/logo.png"
               alt="Codevertex Africa Limited"
-              width={160}
-              height={44}
-              className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"
+              width={180}
+              height={50}
+              className="h-11 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"
               priority
             />
           </Link>

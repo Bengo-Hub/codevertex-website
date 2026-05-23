@@ -51,8 +51,8 @@
   <text x="190" y="215" fill="#6e7681" font-family="sans-serif" font-size="7" text-anchor="middle">JavaScript</text>
 
   <rect x="250" y="156" width="100" height="60" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1"/>
-  <rect x="250" y="156" width="100" height="30" rx="6" fill="#8b5cf6" fill-opacity="0.2"/>
-  <text x="300" y="176" fill="#8b5cf6" font-family="sans-serif" font-size="18" text-anchor="middle">📝</text>
+  <rect x="250" y="156" width="100" height="30" rx="6" fill="#9100B0" fill-opacity="0.2"/>
+  <text x="300" y="176" fill="#9100B0" font-family="sans-serif" font-size="18" text-anchor="middle">📝</text>
   <text x="300" y="205" fill="#cdd9e5" font-family="sans-serif" font-size="8" text-anchor="middle">Blog</text>
   <text x="300" y="215" fill="#6e7681" font-family="sans-serif" font-size="7" text-anchor="middle">Responsive</text>
 
@@ -66,15 +66,15 @@
   <rect x="374" y="34" width="168" height="12" fill="#1c2333"/>
   <text x="430" y="36" fill="#6e7681" font-family="monospace" font-size="8">style.css</text>
 
-  <text x="384" y="60" fill="#c792ea" font-family="monospace" font-size="8">.hero {'{'}</text>
+  <text x="384" y="60" fill="#d070e8" font-family="monospace" font-size="8">.hero {'{'}</text>
   <text x="384" y="74" fill="#82aaff" font-family="monospace" font-size="8">  display:</text>
-  <text x="446" y="74" fill="#f78c6c" font-family="monospace" font-size="8">flex;</text>
+  <text x="446" y="74" fill="#9100B0" font-family="monospace" font-size="8">flex;</text>
   <text x="384" y="88" fill="#82aaff" font-family="monospace" font-size="8">  background:</text>
-  <text x="384" y="102" fill="#f78c6c" font-family="monospace" font-size="8">    linear-gradient(</text>
-  <text x="384" y="116" fill="#f78c6c" font-family="monospace" font-size="8">    #10B981,#0d1117);</text>
+  <text x="384" y="102" fill="#9100B0" font-family="monospace" font-size="8">    linear-gradient(</text>
+  <text x="384" y="116" fill="#9100B0" font-family="monospace" font-size="8">    #10B981,#0d1117);</text>
   <text x="384" y="130" fill="#10B981" font-family="monospace" font-size="8">  border-radius:</text>
   <text x="384" y="144" fill="#f97316" font-family="monospace" font-size="8">    12px;</text>
-  <text x="384" y="158" fill="#c792ea" font-family="monospace" font-size="8">{'}'}</text>
+  <text x="384" y="158" fill="#d070e8" font-family="monospace" font-size="8">{'}'}</text>
 
   <!-- Responsive device frames -->
   <text x="374" y="190" fill="#8b949e" font-family="sans-serif" font-size="8" font-weight="bold">RESPONSIVE ON ALL DEVICES</text>

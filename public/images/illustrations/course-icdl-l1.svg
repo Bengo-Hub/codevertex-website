@@ -5,17 +5,17 @@
       <stop offset="100%" stop-color="#0d1117"/>
     </linearGradient>
     <radialGradient id="glow" cx="40%" cy="40%" r="55%">
-      <stop offset="0%" stop-color="#EC4899" stop-opacity="0.1"/>
-      <stop offset="100%" stop-color="#EC4899" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#9100B0" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#9100B0" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="560" height="280" fill="url(#bg)"/>
   <rect width="560" height="280" fill="url(#glow)"/>
 
-  <text x="280" y="24" fill="#EC4899" font-family="sans-serif" font-size="10" text-anchor="middle" font-weight="bold" letter-spacing="2">ICDL LEVEL 1 — COMPUTER &amp; ONLINE ESSENTIALS</text>
+  <text x="280" y="24" fill="#9100B0" font-family="sans-serif" font-size="10" text-anchor="middle" font-weight="bold" letter-spacing="2">ICDL LEVEL 1 — COMPUTER &amp; ONLINE ESSENTIALS</text>
 
   <!-- Desktop computer mockup -->
-  <rect x="30" y="38" width="220" height="150" rx="8" fill="#161b22" stroke="#EC4899" stroke-opacity="0.3" stroke-width="1.5"/>
+  <rect x="30" y="38" width="220" height="150" rx="8" fill="#161b22" stroke="#9100B0" stroke-opacity="0.3" stroke-width="1.5"/>
   <!-- Screen bezel -->
   <rect x="30" y="38" width="220" height="22" rx="8" fill="#1c2333"/>
   <rect x="30" y="48" width="220" height="12" fill="#1c2333"/>
@@ -27,7 +27,7 @@
   <!-- File explorer content -->
   <rect x="30" y="60" width="55" height="128" fill="#0d1117"/>
   <!-- Sidebar items -->
-  <text x="36" y="78" fill="#EC4899" font-family="sans-serif" font-size="8.5">📁 Desktop</text>
+  <text x="36" y="78" fill="#9100B0" font-family="sans-serif" font-size="8.5">📁 Desktop</text>
   <text x="36" y="96" fill="#6e7681" font-family="sans-serif" font-size="8.5">📁 Documents</text>
   <text x="36" y="114" fill="#6e7681" font-family="sans-serif" font-size="8.5">📁 Downloads</text>
   <text x="36" y="132" fill="#6e7681" font-family="sans-serif" font-size="8.5">🖼 Pictures</text>
@@ -37,20 +37,20 @@
   <!-- File grid -->
   <rect x="85" y="60" width="165" height="128" fill="#161b22"/>
   <!-- File icons -->
-  <rect x="93" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#EC4899" stroke-opacity="0.3" stroke-width="1"/>
+  <rect x="93" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#9100B0" stroke-opacity="0.3" stroke-width="1"/>
   <text x="111" y="88" fill="#38bdf8" font-family="sans-serif" font-size="18" text-anchor="middle">📄</text>
   <text x="111" y="102" fill="#6e7681" font-family="sans-serif" font-size="7" text-anchor="middle">Resume.docx</text>
 
-  <rect x="137" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#EC4899" stroke-opacity="0.3" stroke-width="1"/>
+  <rect x="137" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#9100B0" stroke-opacity="0.3" stroke-width="1"/>
   <text x="155" y="88" fill="#10B981" font-family="sans-serif" font-size="18" text-anchor="middle">📊</text>
   <text x="155" y="102" fill="#6e7681" font-family="sans-serif" font-size="7" text-anchor="middle">Budget.xlsx</text>
 
-  <rect x="181" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#EC4899" stroke-opacity="0.3" stroke-width="1"/>
+  <rect x="181" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#9100B0" stroke-opacity="0.3" stroke-width="1"/>
   <text x="199" y="88" fill="#f59e0b" font-family="sans-serif" font-size="18" text-anchor="middle">📋</text>
   <text x="199" y="102" fill="#6e7681" font-family="sans-serif" font-size="7" text-anchor="middle">Report.pptx</text>
 
-  <rect x="225" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#EC4899" stroke-opacity="0.3" stroke-width="1"/>
-  <text x="243" y="88" fill="#8b5cf6" font-family="sans-serif" font-size="18" text-anchor="middle">📁</text>
+  <rect x="225" y="68" width="36" height="36" rx="4" fill="#0d1117" stroke="#9100B0" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="243" y="88" fill="#9100B0" font-family="sans-serif" font-size="18" text-anchor="middle">📁</text>
   <text x="243" y="102" fill="#6e7681" font-family="sans-serif" font-size="7" text-anchor="middle">Projects/</text>
 
   <!-- Status bar at bottom -->
@@ -81,7 +81,7 @@
 
   <!-- Right: Internet & Email -->
   <rect x="296" y="38" width="246" height="112" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
-  <text x="308" y="60" fill="#EC4899" font-family="sans-serif" font-size="10" font-weight="bold">🌐 Internet Safety</text>
+  <text x="308" y="60" fill="#9100B0" font-family="sans-serif" font-size="10" font-weight="bold">🌐 Internet Safety</text>
 
   <!-- Browser URL with lock -->
   <rect x="308" y="66" width="222" height="22" rx="4" fill="#0d1117" stroke="#10B981" stroke-opacity="0.4" stroke-width="1"/>
@@ -97,7 +97,7 @@
   <rect x="296" y="158" width="246" height="100" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
   <rect x="296" y="158" width="246" height="24" rx="8" fill="#1c2333"/>
   <rect x="296" y="170" width="246" height="12" fill="#1c2333"/>
-  <text x="308" y="174" fill="#EC4899" font-family="sans-serif" font-size="9" font-weight="bold">✉ Professional Email</text>
+  <text x="308" y="174" fill="#9100B0" font-family="sans-serif" font-size="9" font-weight="bold">✉ Professional Email</text>
 
   <text x="308" y="196" fill="#8b949e" font-family="monospace" font-size="8.5">From: student@digitika.ac.ke</text>
   <text x="308" y="210" fill="#8b949e" font-family="monospace" font-size="8.5">To: manager@company.co.ke</text>
@@ -106,6 +106,6 @@
   <text x="460" y="250" fill="#10B981" font-family="sans-serif" font-size="8" text-anchor="end">Send →</text>
 
   <!-- Cert badge -->
-  <rect x="296" y="262" width="246" height="14" rx="4" fill="#EC4899" fill-opacity="0.1" stroke="#EC4899" stroke-opacity="0.3" stroke-width="1"/>
-  <text x="419" y="272" fill="#EC4899" font-family="sans-serif" font-size="8.5" text-anchor="middle" font-weight="bold">ICDL Globally Recognised · Kenyan Public Service Accepted</text>
+  <rect x="296" y="262" width="246" height="14" rx="4" fill="#9100B0" fill-opacity="0.1" stroke="#9100B0" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="419" y="272" fill="#9100B0" font-family="sans-serif" font-size="8.5" text-anchor="middle" font-weight="bold">ICDL Globally Recognised · Kenyan Public Service Accepted</text>
 </svg>

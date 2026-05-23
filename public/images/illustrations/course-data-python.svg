@@ -24,20 +24,20 @@
   <!-- Cell 1: Import -->
   <rect x="30" y="70" width="245" height="36" rx="4" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
   <text x="36" y="82" fill="#6e7681" font-family="monospace" font-size="7.5">In [1]:</text>
-  <text x="70" y="82" fill="#c792ea" font-family="monospace" font-size="8">import</text>
-  <text x="102" y="82" fill="#f78c6c" font-family="monospace" font-size="8">pandas</text>
-  <text x="142" y="82" fill="#c792ea" font-family="monospace" font-size="8">as</text>
+  <text x="70" y="82" fill="#d070e8" font-family="monospace" font-size="8">import</text>
+  <text x="102" y="82" fill="#9100B0" font-family="monospace" font-size="8">pandas</text>
+  <text x="142" y="82" fill="#d070e8" font-family="monospace" font-size="8">as</text>
   <text x="156" y="82" fill="#82aaff" font-family="monospace" font-size="8">pd</text>
-  <text x="70" y="96" fill="#c792ea" font-family="monospace" font-size="8">import</text>
-  <text x="102" y="96" fill="#f78c6c" font-family="monospace" font-size="8">matplotlib.pyplot</text>
-  <text x="222" y="96" fill="#c792ea" font-family="monospace" font-size="8">as</text>
+  <text x="70" y="96" fill="#d070e8" font-family="monospace" font-size="8">import</text>
+  <text x="102" y="96" fill="#9100B0" font-family="monospace" font-size="8">matplotlib.pyplot</text>
+  <text x="222" y="96" fill="#d070e8" font-family="monospace" font-size="8">as</text>
   <text x="237" y="96" fill="#82aaff" font-family="monospace" font-size="8">plt</text>
 
   <!-- Cell 2: Load data -->
   <rect x="30" y="112" width="245" height="24" rx="4" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
   <text x="36" y="124" fill="#6e7681" font-family="monospace" font-size="7.5">In [2]:</text>
   <text x="70" y="124" fill="#82aaff" font-family="monospace" font-size="8">df = pd.read_csv(</text>
-  <text x="195" y="124" fill="#f78c6c" font-family="monospace" font-size="8">'sales.csv'</text>
+  <text x="195" y="124" fill="#9100B0" font-family="monospace" font-size="8">'sales.csv'</text>
   <text x="246" y="124" fill="#82aaff" font-family="monospace" font-size="8">)</text>
 
   <!-- Cell 3: DataFrame output -->
@@ -60,10 +60,10 @@
   <rect x="30" y="204" width="245" height="36" rx="4" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
   <text x="36" y="216" fill="#6e7681" font-family="monospace" font-size="7.5">In [5]:</text>
   <text x="70" y="216" fill="#82aaff" font-family="monospace" font-size="8">df.groupby(</text>
-  <text x="150" y="216" fill="#f78c6c" font-family="monospace" font-size="8">'Region'</text>
+  <text x="150" y="216" fill="#9100B0" font-family="monospace" font-size="8">'Region'</text>
   <text x="200" y="216" fill="#82aaff" font-family="monospace" font-size="8">)</text>
   <text x="70" y="228" fill="#10B981" font-family="monospace" font-size="8">  [</text>
-  <text x="84" y="228" fill="#f78c6c" font-family="monospace" font-size="8">'Sales'</text>
+  <text x="84" y="228" fill="#9100B0" font-family="monospace" font-size="8">'Sales'</text>
   <text x="120" y="228" fill="#10B981" font-family="monospace" font-size="8">].sum().plot.bar()</text>
   <text x="70" y="240" fill="#F59E0B" font-family="monospace" font-size="8">plt.show()</text>
 

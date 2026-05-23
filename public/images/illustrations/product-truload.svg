@@ -46,27 +46,27 @@
   <!-- ═══════════════════════════════════════════════ -->
   <rect x="200" y="0" width="200" height="140" fill="#0d1220"/>
   <!-- Weighbridge platform -->
-  <rect x="210" y="100" width="180" height="14" rx="3" fill="#1e2d5e" stroke="#6c47ff" stroke-width="1.5"/>
+  <rect x="210" y="100" width="180" height="14" rx="3" fill="#1e2d5e" stroke="#9100B0" stroke-width="1.5"/>
   <!-- Deck divisions (multideck) -->
-  <line x1="270" y1="100" x2="270" y2="114" stroke="#6c47ff" stroke-width="1" stroke-dasharray="2 2"/>
-  <line x1="330" y1="100" x2="330" y2="114" stroke="#6c47ff" stroke-width="1" stroke-dasharray="2 2"/>
-  <text x="240" y="110" font-family="monospace" font-size="5" fill="#6c47ff" text-anchor="middle">D1</text>
-  <text x="300" y="110" font-family="monospace" font-size="5" fill="#6c47ff" text-anchor="middle">D2</text>
-  <text x="360" y="110" font-family="monospace" font-size="5" fill="#6c47ff" text-anchor="middle">D3</text>
+  <line x1="270" y1="100" x2="270" y2="114" stroke="#9100B0" stroke-width="1" stroke-dasharray="2 2"/>
+  <line x1="330" y1="100" x2="330" y2="114" stroke="#9100B0" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="240" y="110" font-family="monospace" font-size="5" fill="#9100B0" text-anchor="middle">D1</text>
+  <text x="300" y="110" font-family="monospace" font-size="5" fill="#9100B0" text-anchor="middle">D2</text>
+  <text x="360" y="110" font-family="monospace" font-size="5" fill="#9100B0" text-anchor="middle">D3</text>
   <!-- Big truck on weighbridge -->
   <rect x="220" y="65" width="140" height="38" rx="4" fill="#1e2d5e" stroke="#253168" stroke-width="1"/>
-  <rect x="338" y="56" width="50" height="47" rx="5" fill="#253168" stroke="#6c47ff" stroke-width="0.8"/>
-  <rect x="344" y="62" width="36" height="24" rx="3" fill="#6c47ff" opacity="0.2"/>
+  <rect x="338" y="56" width="50" height="47" rx="5" fill="#253168" stroke="#9100B0" stroke-width="0.8"/>
+  <rect x="344" y="62" width="36" height="24" rx="3" fill="#9100B0" opacity="0.2"/>
   <!-- Truck wheels on each deck -->
-  <circle cx="245" cy="107" r="8" fill="#111420" stroke="#6c47ff" stroke-width="1.5"/>
+  <circle cx="245" cy="107" r="8" fill="#111420" stroke="#9100B0" stroke-width="1.5"/>
   <circle cx="245" cy="107" r="4" fill="#1e2540"/>
-  <circle cx="300" cy="107" r="8" fill="#111420" stroke="#6c47ff" stroke-width="1.5"/>
+  <circle cx="300" cy="107" r="8" fill="#111420" stroke="#9100B0" stroke-width="1.5"/>
   <circle cx="300" cy="107" r="4" fill="#1e2540"/>
-  <circle cx="355" cy="107" r="8" fill="#111420" stroke="#6c47ff" stroke-width="1.5"/>
+  <circle cx="355" cy="107" r="8" fill="#111420" stroke="#9100B0" stroke-width="1.5"/>
   <circle cx="355" cy="107" r="4" fill="#1e2540"/>
   <!-- Dashboard panel -->
   <rect x="208" y="14" width="90" height="52" rx="6" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
-  <text x="253" y="28" font-family="monospace" font-size="6" fill="#6c47ff" text-anchor="middle">MULTIDECK</text>
+  <text x="253" y="28" font-family="monospace" font-size="6" fill="#9100B0" text-anchor="middle">MULTIDECK</text>
   <rect x="218" y="32" width="70" height="1" fill="#1e2d4e"/>
   <text x="218" y="44" font-family="monospace" font-size="5" fill="#8892b0">Deck 1</text>
   <text x="278" y="44" font-family="monospace" font-size="6" fill="#4ade80" text-anchor="end">9.1t</text>
@@ -78,11 +78,11 @@
   <rect x="310" y="14" width="80" height="36" rx="6" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
   <rect x="320" y="22" width="40" height="20" rx="3" fill="#1e2d4e"/>
   <circle cx="340" cy="32" r="7" fill="#253168"/>
-  <circle cx="340" cy="32" r="4" fill="#6c47ff" opacity="0.4"/>
-  <rect x="358" y="28" width="10" height="8" rx="2" fill="#1e2d4e" stroke="#6c47ff" stroke-width="0.8"/>
+  <circle cx="340" cy="32" r="4" fill="#9100B0" opacity="0.4"/>
+  <rect x="358" y="28" width="10" height="8" rx="2" fill="#1e2d4e" stroke="#9100B0" stroke-width="0.8"/>
   <text x="350" y="56" font-family="monospace" font-size="5" fill="#8892b0" text-anchor="middle">ANPR</text>
   <!-- Label -->
-  <text x="300" y="128" font-family="sans-serif" font-size="7" font-weight="bold" fill="#6c47ff" text-anchor="middle">STATIC MULTIDECK</text>
+  <text x="300" y="128" font-family="sans-serif" font-size="7" font-weight="bold" fill="#9100B0" text-anchor="middle">STATIC MULTIDECK</text>
   <text x="300" y="137" font-family="sans-serif" font-size="5" fill="#8892b0" text-anchor="middle">ZM / Cardinal / 1310 · TCP/Serial</text>
 
   <!-- ═══════════════════════════════════════════════ -->
@@ -153,9 +153,9 @@
   <text x="360" y="164" font-family="monospace" font-size="5" fill="#8892b0" text-anchor="middle">ANALYTICS</text>
   <rect x="336" y="168" width="48" height="1" fill="#1e2d4e"/>
   <!-- Mini bar chart -->
-  <rect x="336" y="220" width="6" height="24" rx="2" fill="#6c47ff" opacity="0.5"/>
-  <rect x="346" y="210" width="6" height="34" rx="2" fill="#6c47ff" opacity="0.6"/>
-  <rect x="356" y="200" width="6" height="44" rx="2" fill="#6c47ff" opacity="0.8"/>
+  <rect x="336" y="220" width="6" height="24" rx="2" fill="#9100B0" opacity="0.5"/>
+  <rect x="346" y="210" width="6" height="34" rx="2" fill="#9100B0" opacity="0.6"/>
+  <rect x="356" y="200" width="6" height="44" rx="2" fill="#9100B0" opacity="0.8"/>
   <rect x="366" y="195" width="6" height="49" rx="2" fill="#4ade80"/>
   <rect x="336" y="244" width="36" height="1" fill="#1e2d4e"/>
   <text x="360" y="254" font-family="monospace" font-size="4" fill="#8892b0" text-anchor="middle">Daily vol.</text>

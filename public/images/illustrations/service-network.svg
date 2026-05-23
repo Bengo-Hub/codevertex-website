@@ -23,11 +23,11 @@
   <circle cx="175" cy="98" r="4" fill="#38bdf8" opacity="0.7"/>
 
   <!-- Router node (top) -->
-  <circle cx="280" cy="48" r="22" fill="#1a1f2e" stroke="#6c47ff" stroke-width="1.5"/>
-  <text x="280" y="43" text-anchor="middle" font-family="monospace" font-size="8" fill="#6c47ff">Router</text>
+  <circle cx="280" cy="48" r="22" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <text x="280" y="43" text-anchor="middle" font-family="monospace" font-size="8" fill="#9100B0">Router</text>
   <text x="280" y="54" text-anchor="middle" font-family="monospace" font-size="7" fill="#8892b0">MikroTik</text>
-  <line x1="280" y1="70" x2="280" y2="94" stroke="#6c47ff" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <circle cx="280" cy="80" r="3.5" fill="#6c47ff" opacity="0.7"/>
+  <line x1="280" y1="70" x2="280" y2="94" stroke="#9100B0" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <circle cx="280" cy="80" r="3.5" fill="#9100B0" opacity="0.7"/>
 
   <!-- Camera node (top-right) -->
   <circle cx="460" cy="70" r="28" fill="#1a1f2e" stroke="#4ade80" stroke-width="1.5"/>
@@ -37,11 +37,11 @@
   <circle cx="375" cy="98" r="4" fill="#4ade80" opacity="0.7"/>
 
   <!-- Mobile tablet node (bottom-left) -->
-  <circle cx="100" cy="200" r="28" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
-  <text x="100" y="195" text-anchor="middle" font-family="monospace" font-size="8" fill="#a855f7">Mobile</text>
+  <circle cx="100" cy="200" r="28" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <text x="100" y="195" text-anchor="middle" font-family="monospace" font-size="8" fill="#9100B0">Mobile</text>
   <text x="100" y="206" text-anchor="middle" font-family="monospace" font-size="7" fill="#8892b0">Tablet</text>
-  <line x1="125" y1="186" x2="248" y2="150" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <circle cx="185" cy="168" r="4" fill="#a855f7" opacity="0.7"/>
+  <line x1="125" y1="186" x2="248" y2="150" stroke="#9100B0" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <circle cx="185" cy="168" r="4" fill="#9100B0" opacity="0.7"/>
 
   <!-- ISP subscribers (bottom) -->
   <circle cx="280" cy="218" r="22" fill="#1a1f2e" stroke="#38bdf8" stroke-width="1.5"/>
@@ -66,8 +66,8 @@
   <text x="74" y="249" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#38bdf8" font-weight="bold">Zero-Touch ISP</text>
   <text x="74" y="259" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Auto provisioning</text>
 
-  <rect x="134" y="240" width="100" height="22" rx="6" fill="#6c47ff10" stroke="#6c47ff30" stroke-width="1"/>
-  <text x="184" y="249" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#6c47ff" font-weight="bold">TruLoad IoT</text>
+  <rect x="134" y="240" width="100" height="22" rx="6" fill="#9100B010" stroke="#9100B030" stroke-width="1"/>
+  <text x="184" y="249" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#9100B0" font-weight="bold">TruLoad IoT</text>
   <text x="184" y="259" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Tamper-proof axle data</text>
 
   <rect x="244" y="240" width="100" height="22" rx="6" fill="#4ade8010" stroke="#4ade8030" stroke-width="1"/>
@@ -78,8 +78,8 @@
   <text x="404" y="249" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#f59e0b" font-weight="bold">Real-time Sync</text>
   <text x="404" y="259" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Hardware to cloud</text>
 
-  <rect x="454" y="240" width="82" height="22" rx="6" fill="#a855f710" stroke="#a855f730" stroke-width="1"/>
-  <text x="495" y="249" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#a855f7" font-weight="bold">Mobile PWA</text>
+  <rect x="454" y="240" width="82" height="22" rx="6" fill="#9100B010" stroke="#9100B030" stroke-width="1"/>
+  <text x="495" y="249" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#9100B0" font-weight="bold">Mobile PWA</text>
   <text x="495" y="259" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Field enforcement</text>
 
   <text x="280" y="276" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#f59e0b" font-weight="bold" letter-spacing="2">NETWORK · HARDWARE · AUTOMATIONS</text>

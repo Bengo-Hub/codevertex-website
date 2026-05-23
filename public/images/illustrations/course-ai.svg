@@ -2,37 +2,37 @@
   <rect width="400" height="280" rx="16" fill="#0f0826"/>
   <!-- Neural network nodes -->
   <!-- Input layer -->
-  <circle cx="70" cy="80" r="18" fill="#1e1b4b" stroke="#7c3aed" stroke-width="2"/>
-  <circle cx="70" cy="140" r="18" fill="#1e1b4b" stroke="#7c3aed" stroke-width="2"/>
-  <circle cx="70" cy="200" r="18" fill="#1e1b4b" stroke="#7c3aed" stroke-width="2"/>
+  <circle cx="70" cy="80" r="18" fill="#1e1b4b" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="70" cy="140" r="18" fill="#1e1b4b" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="70" cy="200" r="18" fill="#1e1b4b" stroke="#9100B0" stroke-width="2"/>
   <!-- Hidden layer 1 -->
-  <circle cx="170" cy="60" r="18" fill="#2e1065" stroke="#a855f7" stroke-width="2"/>
-  <circle cx="170" cy="110" r="18" fill="#2e1065" stroke="#a855f7" stroke-width="2"/>
-  <circle cx="170" cy="160" r="18" fill="#2e1065" stroke="#a855f7" stroke-width="2"/>
-  <circle cx="170" cy="210" r="18" fill="#2e1065" stroke="#a855f7" stroke-width="2"/>
+  <circle cx="170" cy="60" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="170" cy="110" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="170" cy="160" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="170" cy="210" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
   <!-- Hidden layer 2 -->
-  <circle cx="270" cy="80" r="18" fill="#2e1065" stroke="#ec4899" stroke-width="2"/>
-  <circle cx="270" cy="140" r="18" fill="#2e1065" stroke="#ec4899" stroke-width="2"/>
-  <circle cx="270" cy="200" r="18" fill="#2e1065" stroke="#ec4899" stroke-width="2"/>
+  <circle cx="270" cy="80" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="270" cy="140" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="270" cy="200" r="18" fill="#2e1065" stroke="#9100B0" stroke-width="2"/>
   <!-- Output -->
-  <circle cx="360" cy="140" r="22" fill="#4c1d95" stroke="#a855f7" stroke-width="2.5"/>
+  <circle cx="360" cy="140" r="22" fill="#4c1d95" stroke="#9100B0" stroke-width="2.5"/>
   <text x="360" y="145" text-anchor="middle" font-family="monospace" font-size="10" fill="#e9d5ff">AI</text>
 
   <!-- Connections (partial — visually representative) -->
-  <line x1="88" y1="80" x2="152" y2="65" stroke="#7c3aed" stroke-width="1" opacity="0.5"/>
-  <line x1="88" y1="80" x2="152" y2="112" stroke="#7c3aed" stroke-width="1" opacity="0.5"/>
-  <line x1="88" y1="140" x2="152" y2="112" stroke="#7c3aed" stroke-width="1" opacity="0.5"/>
-  <line x1="88" y1="140" x2="152" y2="160" stroke="#7c3aed" stroke-width="1" opacity="0.5"/>
-  <line x1="88" y1="200" x2="152" y2="160" stroke="#7c3aed" stroke-width="1" opacity="0.5"/>
-  <line x1="88" y1="200" x2="152" y2="210" stroke="#7c3aed" stroke-width="1" opacity="0.5"/>
-  <line x1="188" y1="60" x2="252" y2="82" stroke="#a855f7" stroke-width="1" opacity="0.5"/>
-  <line x1="188" y1="110" x2="252" y2="82" stroke="#a855f7" stroke-width="1" opacity="0.5"/>
-  <line x1="188" y1="110" x2="252" y2="140" stroke="#a855f7" stroke-width="1" opacity="0.5"/>
-  <line x1="188" y1="160" x2="252" y2="140" stroke="#a855f7" stroke-width="1" opacity="0.5"/>
-  <line x1="188" y1="210" x2="252" y2="200" stroke="#a855f7" stroke-width="1" opacity="0.5"/>
-  <line x1="288" y1="80" x2="338" y2="140" stroke="#ec4899" stroke-width="1.5" opacity="0.7"/>
-  <line x1="288" y1="140" x2="338" y2="140" stroke="#ec4899" stroke-width="1.5" opacity="0.7"/>
-  <line x1="288" y1="200" x2="338" y2="140" stroke="#ec4899" stroke-width="1.5" opacity="0.7"/>
+  <line x1="88" y1="80" x2="152" y2="65" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="88" y1="80" x2="152" y2="112" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="88" y1="140" x2="152" y2="112" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="88" y1="140" x2="152" y2="160" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="88" y1="200" x2="152" y2="160" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="88" y1="200" x2="152" y2="210" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="188" y1="60" x2="252" y2="82" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="188" y1="110" x2="252" y2="82" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="188" y1="110" x2="252" y2="140" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="188" y1="160" x2="252" y2="140" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="188" y1="210" x2="252" y2="200" stroke="#9100B0" stroke-width="1" opacity="0.5"/>
+  <line x1="288" y1="80" x2="338" y2="140" stroke="#9100B0" stroke-width="1.5" opacity="0.7"/>
+  <line x1="288" y1="140" x2="338" y2="140" stroke="#9100B0" stroke-width="1.5" opacity="0.7"/>
+  <line x1="288" y1="200" x2="338" y2="140" stroke="#9100B0" stroke-width="1.5" opacity="0.7"/>
 
   <!-- Label -->
   <text x="200" y="262" text-anchor="middle" font-family="monospace" font-size="13" fill="#6b21a8">AI · ML · LLMs · GenAI</text>

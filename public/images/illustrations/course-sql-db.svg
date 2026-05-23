@@ -22,26 +22,26 @@
 
   <text x="32" y="80" fill="#637777" font-family="monospace" font-size="9">-- Find top customers by revenue</text>
 
-  <text x="32" y="98" fill="#c792ea" font-family="monospace" font-size="9">SELECT</text>
+  <text x="32" y="98" fill="#d070e8" font-family="monospace" font-size="9">SELECT</text>
   <text x="32" y="114" fill="#82aaff" font-family="monospace" font-size="9">  c.name,</text>
   <text x="32" y="128" fill="#82aaff" font-family="monospace" font-size="9">  c.region,</text>
   <text x="32" y="142" fill="#82aaff" font-family="monospace" font-size="9">  SUM(o.amount)</text>
-  <text x="32" y="156" fill="#c792ea" font-family="monospace" font-size="9">    AS</text>
+  <text x="32" y="156" fill="#d070e8" font-family="monospace" font-size="9">    AS</text>
   <text x="67" y="156" fill="#10B981" font-family="monospace" font-size="9">total_revenue,</text>
   <text x="32" y="170" fill="#82aaff" font-family="monospace" font-size="9">  COUNT(o.id)</text>
-  <text x="32" y="184" fill="#c792ea" font-family="monospace" font-size="9">    AS</text>
+  <text x="32" y="184" fill="#d070e8" font-family="monospace" font-size="9">    AS</text>
   <text x="67" y="184" fill="#10B981" font-family="monospace" font-size="9">order_count</text>
 
-  <text x="32" y="202" fill="#c792ea" font-family="monospace" font-size="9">FROM</text>
+  <text x="32" y="202" fill="#d070e8" font-family="monospace" font-size="9">FROM</text>
   <text x="68" y="202" fill="#82aaff" font-family="monospace" font-size="9">customers c</text>
-  <text x="32" y="216" fill="#c792ea" font-family="monospace" font-size="9">JOIN</text>
+  <text x="32" y="216" fill="#d070e8" font-family="monospace" font-size="9">JOIN</text>
   <text x="64" y="216" fill="#82aaff" font-family="monospace" font-size="9">orders o</text>
-  <text x="64" y="230" fill="#c792ea" font-family="monospace" font-size="9">ON</text>
+  <text x="64" y="230" fill="#d070e8" font-family="monospace" font-size="9">ON</text>
   <text x="82" y="230" fill="#82aaff" font-family="monospace" font-size="9">c.id = o.customer_id</text>
 
-  <text x="32" y="248" fill="#c792ea" font-family="monospace" font-size="9">GROUP BY</text>
+  <text x="32" y="248" fill="#d070e8" font-family="monospace" font-size="9">GROUP BY</text>
   <text x="86" y="248" fill="#82aaff" font-family="monospace" font-size="9">c.name, c.region</text>
-  <text x="32" y="258" fill="#c792ea" font-family="monospace" font-size="9">HAVING</text>
+  <text x="32" y="258" fill="#d070e8" font-family="monospace" font-size="9">HAVING</text>
   <text x="80" y="258" fill="#f59e0b" font-family="monospace" font-size="9">total_revenue &gt; 100000</text>
 
   <!-- ER Diagram right panel -->

@@ -45,17 +45,17 @@
   <text x="295" y="58" fill="#10B981" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">game.py</text>
 
   <text x="232" y="86" fill="#637777" font-family="monospace" font-size="9"># Create a fun game!</text>
-  <text x="232" y="102" fill="#c792ea" font-family="monospace" font-size="9">import</text>
-  <text x="272" y="102" fill="#f78c6c" font-family="monospace" font-size="9">turtle</text>
-  <text x="232" y="118" fill="#c792ea" font-family="monospace" font-size="9">import</text>
-  <text x="272" y="118" fill="#f78c6c" font-family="monospace" font-size="9">random</text>
+  <text x="232" y="102" fill="#d070e8" font-family="monospace" font-size="9">import</text>
+  <text x="272" y="102" fill="#9100B0" font-family="monospace" font-size="9">turtle</text>
+  <text x="232" y="118" fill="#d070e8" font-family="monospace" font-size="9">import</text>
+  <text x="272" y="118" fill="#9100B0" font-family="monospace" font-size="9">random</text>
 
   <text x="232" y="136" fill="#82aaff" font-family="monospace" font-size="9">t = turtle.Turtle()</text>
   <text x="232" y="152" fill="#82aaff" font-family="monospace" font-size="9">t.speed(</text>
   <text x="292" y="152" fill="#f97316" font-family="monospace" font-size="9">10</text>
   <text x="302" y="152" fill="#82aaff" font-family="monospace" font-size="9">)</text>
 
-  <text x="232" y="170" fill="#c792ea" font-family="monospace" font-size="9">for</text>
+  <text x="232" y="170" fill="#d070e8" font-family="monospace" font-size="9">for</text>
   <text x="254" y="170" fill="#cdd9e5" font-family="monospace" font-size="9">i in range(</text>
   <text x="332" y="170" fill="#f97316" font-family="monospace" font-size="9">100</text>
   <text x="352" y="170" fill="#cdd9e5" font-family="monospace" font-size="9">):</text>

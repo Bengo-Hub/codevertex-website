@@ -60,8 +60,8 @@
   <polygon points="428,73 436,77 428,81" fill="#38bdf8" fill-opacity="0.5"/>
 
   <!-- Step 5: K8s Deploy -->
-  <rect x="436" y="42" width="104" height="70" rx="8" fill="#161b22" stroke="#8b5cf6" stroke-opacity="0.4" stroke-width="1.5"/>
-  <text x="488" y="64" fill="#8b5cf6" font-family="sans-serif" font-size="18" text-anchor="middle">☸</text>
+  <rect x="436" y="42" width="104" height="70" rx="8" fill="#161b22" stroke="#9100B0" stroke-opacity="0.4" stroke-width="1.5"/>
+  <text x="488" y="64" fill="#9100B0" font-family="sans-serif" font-size="18" text-anchor="middle">☸</text>
   <text x="488" y="82" fill="#e6edf3" font-family="sans-serif" font-size="10" text-anchor="middle" font-weight="bold">Kubernetes</text>
   <text x="488" y="96" fill="#6e7681" font-family="sans-serif" font-size="8" text-anchor="middle">Deploy pods</text>
   <text x="488" y="106" fill="#3fb950" font-family="sans-serif" font-size="8" text-anchor="middle">Live ✓</text>
@@ -88,8 +88,8 @@
   <text x="383" y="170" fill="#f59e0b" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">postgres-db</text>
   <text x="383" y="184" fill="#6e7681" font-family="monospace" font-size="8" text-anchor="middle">PVC · 10GB</text>
 
-  <rect x="441" y="156" width="94" height="36" rx="5" fill="#161b22" stroke="#8b5cf6" stroke-opacity="0.4" stroke-width="1"/>
-  <text x="488" y="170" fill="#8b5cf6" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">redis-cache</text>
+  <rect x="441" y="156" width="94" height="36" rx="5" fill="#161b22" stroke="#9100B0" stroke-opacity="0.4" stroke-width="1"/>
+  <text x="488" y="170" fill="#9100B0" font-family="monospace" font-size="9" text-anchor="middle" font-weight="bold">redis-cache</text>
   <text x="488" y="184" fill="#6e7681" font-family="monospace" font-size="8" text-anchor="middle">cluster · 512MB</text>
 
   <!-- Tech strip -->

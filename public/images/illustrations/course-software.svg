@@ -7,15 +7,15 @@
   <circle cx="88" cy="58" r="7" fill="#f59e0b"/>
   <circle cx="108" cy="58" r="7" fill="#22c55e"/>
   <!-- Code lines -->
-  <rect x="60" y="84" width="60" height="10" rx="5" fill="#a855f7"/>
+  <rect x="60" y="84" width="60" height="10" rx="5" fill="#9100B0"/>
   <rect x="130" y="84" width="100" height="10" rx="5" fill="#10b981"/>
   <rect x="80" y="106" width="80" height="10" rx="5" fill="#3b82f6"/>
   <rect x="170" y="106" width="50" height="10" rx="5" fill="#f59e0b"/>
-  <rect x="60" y="128" width="40" height="10" rx="5" fill="#a855f7"/>
+  <rect x="60" y="128" width="40" height="10" rx="5" fill="#9100B0"/>
   <rect x="110" y="128" width="120" height="10" rx="5" fill="#10b981"/>
   <rect x="80" y="150" width="80" height="10" rx="5" fill="#3b82f6"/>
   <rect x="170" y="150" width="60" height="10" rx="5" fill="#ef4444"/>
-  <rect x="60" y="172" width="40" height="10" rx="5" fill="#a855f7"/>
+  <rect x="60" y="172" width="40" height="10" rx="5" fill="#9100B0"/>
   <rect x="110" y="172" width="90" height="10" rx="5" fill="#f59e0b"/>
   <!-- Cursor blink -->
   <rect x="210" y="172" width="3" height="10" rx="1" fill="#ffffff" opacity="0.8"/>

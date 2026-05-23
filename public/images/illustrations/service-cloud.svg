@@ -62,14 +62,14 @@
   <text x="200" y="107" font-family="monospace" font-size="8" fill="#c9d1d9">*.codevertexitsolutions.com</text>
 
   <!-- Security panel (center) -->
-  <rect x="168" y="132" width="220" height="100" rx="8" fill="#151b2a" stroke="#6c47ff" stroke-width="1.5"/>
-  <text x="278" y="152" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#6c47ff" font-weight="bold">Security and Compliance</text>
+  <rect x="168" y="132" width="220" height="100" rx="8" fill="#151b2a" stroke="#9100B0" stroke-width="1.5"/>
+  <text x="278" y="152" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#9100B0" font-weight="bold">Security and Compliance</text>
   <!-- Shield icon -->
-  <path d="M278 164 L266 170 L266 184 Q266 194 278 198 Q290 194 290 184 L290 170 Z" fill="#6c47ff20" stroke="#6c47ff" stroke-width="1.5"/>
-  <text x="278" y="186" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#6c47ff">✓</text>
+  <path d="M278 164 L266 170 L266 184 Q266 194 278 198 Q290 194 290 184 L290 170 Z" fill="#9100B020" stroke="#9100B0" stroke-width="1.5"/>
+  <text x="278" y="186" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#9100B0">✓</text>
   <!-- Security badges -->
-  <rect x="178" y="202" width="72" height="18" rx="5" fill="#6c47ff15" stroke="#6c47ff30" stroke-width="1"/>
-  <text x="214" y="214" text-anchor="middle" font-family="monospace" font-size="7" fill="#6c47ff">OAuth 2.0</text>
+  <rect x="178" y="202" width="72" height="18" rx="5" fill="#9100B015" stroke="#9100B030" stroke-width="1"/>
+  <text x="214" y="214" text-anchor="middle" font-family="monospace" font-size="7" fill="#9100B0">OAuth 2.0</text>
   <rect x="256" y="202" width="72" height="18" rx="5" fill="#4ade8015" stroke="#4ade8030" stroke-width="1"/>
   <text x="292" y="214" text-anchor="middle" font-family="monospace" font-size="7" fill="#4ade80">AES-256</text>
   <rect x="334" y="202" width="48" height="18" rx="5" fill="#38bdf815" stroke="#38bdf830" stroke-width="1"/>
@@ -86,19 +86,19 @@
 
   <!-- CDN / Region nodes -->
   <rect x="408" y="132" width="128" height="100" rx="8" fill="#151b2a" stroke="#1e2640" stroke-width="1.5"/>
-  <text x="472" y="152" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#a855f7" font-weight="bold">Managed CDN</text>
-  <circle cx="450" cy="178" r="12" fill="#a855f720" stroke="#a855f7" stroke-width="1.5"/>
-  <text x="450" y="182" text-anchor="middle" font-family="monospace" font-size="7" fill="#a855f7">KE</text>
-  <circle cx="488" cy="178" r="12" fill="#a855f720" stroke="#a855f7" stroke-width="1.5"/>
-  <text x="488" y="182" text-anchor="middle" font-family="monospace" font-size="7" fill="#a855f7">NG</text>
-  <line x1="462" y1="178" x2="476" y2="178" stroke="#a855f760" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="472" y="152" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#9100B0" font-weight="bold">Managed CDN</text>
+  <circle cx="450" cy="178" r="12" fill="#9100B020" stroke="#9100B0" stroke-width="1.5"/>
+  <text x="450" y="182" text-anchor="middle" font-family="monospace" font-size="7" fill="#9100B0">KE</text>
+  <circle cx="488" cy="178" r="12" fill="#9100B020" stroke="#9100B0" stroke-width="1.5"/>
+  <text x="488" y="182" text-anchor="middle" font-family="monospace" font-size="7" fill="#9100B0">NG</text>
+  <line x1="462" y1="178" x2="476" y2="178" stroke="#9100B060" stroke-width="1.5" stroke-dasharray="3,2"/>
   <text x="469" y="206" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Multi-region</text>
   <text x="469" y="218" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Failover ready</text>
 
   <!-- Connection lines -->
   <line x1="144" y1="140" x2="168" y2="140" stroke="#4ade8040" stroke-width="1" stroke-dasharray="3,2"/>
   <line x1="388" y1="80" x2="408" y2="80" stroke="#f59e0b40" stroke-width="1" stroke-dasharray="3,2"/>
-  <line x1="388" y1="180" x2="408" y2="180" stroke="#a855f740" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="388" y1="180" x2="408" y2="180" stroke="#9100B040" stroke-width="1" stroke-dasharray="3,2"/>
 
   <text x="280" y="250" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#4ade80" font-weight="bold" letter-spacing="1">SECURE · RESILIENT · MANAGED CLOUD INFRASTRUCTURE</text>
   <text x="280" y="266" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#8892b0">.co.ke · .com · .africa · SSL · WAF · Disaster Recovery</text>

@@ -39,7 +39,7 @@
   <!-- Node 5 - bottom center (captive portal) -->
   <rect x="155" y="220" width="90" height="42" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
   <text x="200" y="236" font-family="monospace" font-size="7" fill="#8892b0" text-anchor="middle">CAPTIVE PORTAL</text>
-  <text x="200" y="250" font-family="monospace" font-size="7" fill="#6c47ff" text-anchor="middle">Login · Voucher</text>
+  <text x="200" y="250" font-family="monospace" font-size="7" fill="#9100B0" text-anchor="middle">Login · Voucher</text>
   <!-- Stats panel bottom -->
   <rect x="130" y="20" width="140" height="36" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
   <text x="200" y="34" font-family="monospace" font-size="8" fill="#38bdf8" text-anchor="middle">ISP BILLING SYSTEM</text>

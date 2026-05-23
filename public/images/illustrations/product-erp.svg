@@ -2,14 +2,14 @@
   <rect width="400" height="280" rx="16" fill="#0f1117"/>
   <!-- Top nav bar -->
   <rect x="20" y="20" width="360" height="36" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
-  <circle cx="40" cy="38" r="6" fill="#6c47ff" opacity="0.8"/>
+  <circle cx="40" cy="38" r="6" fill="#9100B0" opacity="0.8"/>
   <rect x="55" y="32" width="60" height="12" rx="3" fill="#1e2d4e"/>
-  <rect x="280" y="30" width="80" height="16" rx="8" fill="#6c47ff" opacity="0.2"/>
-  <rect x="280" y="30" width="80" height="16" rx="8" stroke="#6c47ff" stroke-width="1"/>
-  <text x="320" y="41" font-family="sans-serif" font-size="8" fill="#6c47ff" text-anchor="middle">+ New Record</text>
+  <rect x="280" y="30" width="80" height="16" rx="8" fill="#9100B0" opacity="0.2"/>
+  <rect x="280" y="30" width="80" height="16" rx="8" stroke="#9100B0" stroke-width="1"/>
+  <text x="320" y="41" font-family="sans-serif" font-size="8" fill="#9100B0" text-anchor="middle">+ New Record</text>
   <!-- Sidebar -->
   <rect x="20" y="64" width="60" height="196" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
-  <circle cx="50" cy="86" r="8" fill="#6c47ff" opacity="0.3"/>
+  <circle cx="50" cy="86" r="8" fill="#9100B0" opacity="0.3"/>
   <rect x="34" y="100" width="32" height="6" rx="3" fill="#1e2d4e"/>
   <circle cx="50" cy="122" r="8" fill="#1e2d4e"/>
   <rect x="34" y="136" width="32" height="6" rx="3" fill="#1e2d4e"/>
@@ -30,7 +30,7 @@
 
   <rect x="250" y="64" width="72" height="54" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
   <text x="286" y="82" font-family="sans-serif" font-size="7" fill="#8892b0" text-anchor="middle">Employees</text>
-  <text x="286" y="100" font-family="sans-serif" font-size="12" font-weight="bold" fill="#6c47ff" text-anchor="middle">247</text>
+  <text x="286" y="100" font-family="sans-serif" font-size="12" font-weight="bold" fill="#9100B0" text-anchor="middle">247</text>
   <text x="286" y="112" font-family="sans-serif" font-size="6" fill="#4ade80" text-anchor="middle">+8 this mo</text>
 
   <rect x="330" y="64" width="50" height="54" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
@@ -42,12 +42,12 @@
   <rect x="90" y="126" width="170" height="90" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
   <text x="100" y="142" font-family="sans-serif" font-size="7" fill="#8892b0">Monthly Revenue (KES)</text>
   <!-- Bar chart bars -->
-  <rect x="102" y="190" width="14" height="20" rx="2" fill="#6c47ff" opacity="0.5"/>
-  <rect x="120" y="175" width="14" height="35" rx="2" fill="#6c47ff" opacity="0.6"/>
-  <rect x="138" y="165" width="14" height="45" rx="2" fill="#6c47ff" opacity="0.7"/>
-  <rect x="156" y="155" width="14" height="55" rx="2" fill="#6c47ff" opacity="0.8"/>
-  <rect x="174" y="160" width="14" height="50" rx="2" fill="#6c47ff" opacity="0.7"/>
-  <rect x="192" y="148" width="14" height="62" rx="2" fill="#6c47ff"/>
+  <rect x="102" y="190" width="14" height="20" rx="2" fill="#9100B0" opacity="0.5"/>
+  <rect x="120" y="175" width="14" height="35" rx="2" fill="#9100B0" opacity="0.6"/>
+  <rect x="138" y="165" width="14" height="45" rx="2" fill="#9100B0" opacity="0.7"/>
+  <rect x="156" y="155" width="14" height="55" rx="2" fill="#9100B0" opacity="0.8"/>
+  <rect x="174" y="160" width="14" height="50" rx="2" fill="#9100B0" opacity="0.7"/>
+  <rect x="192" y="148" width="14" height="62" rx="2" fill="#9100B0"/>
   <rect x="210" y="145" width="14" height="65" rx="2" fill="#4ade80" opacity="0.8"/>
   <rect x="228" y="138" width="14" height="72" rx="2" fill="#4ade80"/>
   <!-- Month labels -->
@@ -73,7 +73,7 @@
   <text x="355" y="194" font-family="sans-serif" font-size="7" fill="#4ade80" text-anchor="end">+8,750</text>
   <!-- Modules strip -->
   <rect x="90" y="224" width="290" height="36" rx="8" fill="#141928" stroke="#1e2d4e" stroke-width="1"/>
-  <text x="110" y="238" font-family="sans-serif" font-size="7" fill="#6c47ff">Finance</text>
+  <text x="110" y="238" font-family="sans-serif" font-size="7" fill="#9100B0">Finance</text>
   <rect x="128" y="230" width="1" height="20" fill="#2d3a5e"/>
   <text x="148" y="238" font-family="sans-serif" font-size="7" fill="#8892b0">HR</text>
   <rect x="162" y="230" width="1" height="20" fill="#2d3a5e"/>

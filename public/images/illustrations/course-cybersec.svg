@@ -40,7 +40,7 @@
 
   <text x="30" y="222" fill="#10B981" font-family="monospace" font-size="10">$ msfconsole</text>
   <text x="30" y="236" fill="#6e7681" font-family="monospace" font-size="9">msf6 &gt; use exploit/multi</text>
-  <text x="30" y="250" fill="#c792ea" font-family="monospace" font-size="9">Ethical Hacking Lab ✓</text>
+  <text x="30" y="250" fill="#d070e8" font-family="monospace" font-size="9">Ethical Hacking Lab ✓</text>
 
   <!-- Right panel: Shield + Network -->
   <rect x="306" y="18" width="236" height="244" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
@@ -64,8 +64,8 @@
   <text x="324" y="209" fill="#f59e0b" font-family="monospace" font-size="9" font-weight="bold">VPN TUNNEL</text>
   <text x="510" y="209" fill="#3fb950" font-family="monospace" font-size="9" text-anchor="end">✓ Active</text>
 
-  <rect x="316" y="222" width="216" height="22" rx="5" fill="#8b5cf6" fill-opacity="0.08" stroke="#8b5cf6" stroke-opacity="0.25" stroke-width="1"/>
-  <text x="324" y="237" fill="#8b5cf6" font-family="monospace" font-size="9" font-weight="bold">AES-256 ENCRYPTION</text>
+  <rect x="316" y="222" width="216" height="22" rx="5" fill="#9100B0" fill-opacity="0.08" stroke="#9100B0" stroke-opacity="0.25" stroke-width="1"/>
+  <text x="324" y="237" fill="#9100B0" font-family="monospace" font-size="9" font-weight="bold">AES-256 ENCRYPTION</text>
   <text x="510" y="237" fill="#3fb950" font-family="monospace" font-size="9" text-anchor="end">✓ On</text>
 
   <text x="316" y="256" fill="#6e7681" font-family="sans-serif" font-size="8.5">Kali Linux · OWASP · Metasploit · Wireshark</text>

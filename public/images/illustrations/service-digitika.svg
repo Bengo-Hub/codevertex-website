@@ -11,24 +11,24 @@
   <line x1="448" y1="0" x2="448" y2="280" stroke="#1a1f2e" stroke-width="1"/>
 
   <!-- Screen / monitor -->
-  <rect x="30" y="32" width="280" height="196" rx="10" fill="#151b2a" stroke="#6c47ff" stroke-width="1.5"/>
+  <rect x="30" y="32" width="280" height="196" rx="10" fill="#151b2a" stroke="#9100B0" stroke-width="1.5"/>
   <rect x="30" y="32" width="280" height="32" rx="10" fill="#1e2640"/>
   <rect x="30" y="56" width="280" height="8" fill="#1e2640"/>
   <circle cx="48" cy="48" r="5" fill="#ff5f57"/>
   <circle cx="64" cy="48" r="5" fill="#febc2e"/>
   <circle cx="80" cy="48" r="5" fill="#28c840"/>
-  <text x="165" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#6c47ff" font-weight="bold">Digitika Academy — LMS</text>
+  <text x="165" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#9100B0" font-weight="bold">Digitika Academy — LMS</text>
   <!-- Browser bar -->
   <rect x="44" y="70" width="200" height="14" rx="7" fill="#0f1117"/>
-  <text x="144" y="81" text-anchor="middle" font-family="monospace" font-size="8" fill="#6c47ff80">lms.digitika.io</text>
+  <text x="144" y="81" text-anchor="middle" font-family="monospace" font-size="8" fill="#9100B080">lms.digitika.io</text>
 
   <!-- Course cards in browser -->
-  <rect x="44" y="96" width="80" height="58" rx="6" fill="#1a1f2e" stroke="#6c47ff40" stroke-width="1"/>
-  <rect x="44" y="96" width="80" height="22" rx="6" fill="#6c47ff30"/>
-  <rect x="44" y="110" width="80" height="8" fill="#6c47ff30"/>
-  <text x="84" y="107" text-anchor="middle" font-family="monospace" font-size="7" fill="#6c47ff">Software Dev</text>
+  <rect x="44" y="96" width="80" height="58" rx="6" fill="#1a1f2e" stroke="#9100B040" stroke-width="1"/>
+  <rect x="44" y="96" width="80" height="22" rx="6" fill="#9100B030"/>
+  <rect x="44" y="110" width="80" height="8" fill="#9100B030"/>
+  <text x="84" y="107" text-anchor="middle" font-family="monospace" font-size="7" fill="#9100B0">Software Dev</text>
   <text x="84" y="125" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">8 modules · 3mo</text>
-  <rect x="52" y="132" width="64" height="14" rx="7" fill="#6c47ff"/>
+  <rect x="52" y="132" width="64" height="14" rx="7" fill="#9100B0"/>
   <text x="84" y="142" text-anchor="middle" font-family="sans-serif" font-size="7" fill="white" font-weight="bold">Enroll</text>
 
   <rect x="132" y="96" width="80" height="58" rx="6" fill="#1a1f2e" stroke="#38bdf840" stroke-width="1"/>
@@ -39,19 +39,19 @@
   <rect x="140" y="132" width="64" height="14" rx="7" fill="#38bdf8"/>
   <text x="172" y="142" text-anchor="middle" font-family="sans-serif" font-size="7" fill="white" font-weight="bold">Enroll</text>
 
-  <rect x="220" y="96" width="80" height="58" rx="6" fill="#1a1f2e" stroke="#a855f740" stroke-width="1"/>
-  <rect x="220" y="96" width="80" height="22" rx="6" fill="#a855f730"/>
-  <rect x="220" y="110" width="80" height="8" fill="#a855f730"/>
-  <text x="260" y="107" text-anchor="middle" font-family="monospace" font-size="7" fill="#a855f7">AI and ML</text>
+  <rect x="220" y="96" width="80" height="58" rx="6" fill="#1a1f2e" stroke="#9100B040" stroke-width="1"/>
+  <rect x="220" y="96" width="80" height="22" rx="6" fill="#9100B030"/>
+  <rect x="220" y="110" width="80" height="8" fill="#9100B030"/>
+  <text x="260" y="107" text-anchor="middle" font-family="monospace" font-size="7" fill="#9100B0">AI and ML</text>
   <text x="260" y="125" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">4 modules · 8wk</text>
-  <rect x="228" y="132" width="64" height="14" rx="7" fill="#a855f7"/>
+  <rect x="228" y="132" width="64" height="14" rx="7" fill="#9100B0"/>
   <text x="260" y="142" text-anchor="middle" font-family="sans-serif" font-size="7" fill="white" font-weight="bold">Enroll</text>
 
   <!-- Progress bars -->
   <text x="44" y="173" font-family="sans-serif" font-size="8" fill="#8892b0">Your progress</text>
   <rect x="44" y="178" width="196" height="6" rx="3" fill="#1e2640"/>
-  <rect x="44" y="178" width="130" height="6" rx="3" fill="#6c47ff"/>
-  <text x="248" y="184" font-family="monospace" font-size="7" fill="#6c47ff">66%</text>
+  <rect x="44" y="178" width="130" height="6" rx="3" fill="#9100B0"/>
+  <text x="248" y="184" font-family="monospace" font-size="7" fill="#9100B0">66%</text>
 
   <rect x="44" y="190" width="196" height="6" rx="3" fill="#1e2640"/>
   <rect x="44" y="190" width="100" height="6" rx="3" fill="#38bdf8"/>
@@ -70,8 +70,8 @@
   <text x="430" y="56" text-anchor="middle" font-family="sans-serif" font-size="11" fill="white" font-weight="bold">Academy Stats</text>
 
   <!-- Stat circles -->
-  <circle cx="380" cy="100" r="36" fill="none" stroke="#6c47ff" stroke-width="3"/>
-  <circle cx="380" cy="100" r="36" fill="none" stroke="#6c47ff20" stroke-width="8"/>
+  <circle cx="380" cy="100" r="36" fill="none" stroke="#9100B0" stroke-width="3"/>
+  <circle cx="380" cy="100" r="36" fill="none" stroke="#9100B020" stroke-width="8"/>
   <text x="380" y="96" text-anchor="middle" font-family="sans-serif" font-size="16" fill="white" font-weight="bold">200+</text>
   <text x="380" y="110" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#8892b0">Staff trained</text>
 
@@ -81,16 +81,16 @@
   <text x="480" y="110" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#8892b0">Certified</text>
 
   <!-- Disciplines list -->
-  <text x="346" y="155" font-family="sans-serif" font-size="9" fill="#6c47ff" font-weight="bold">DISCIPLINES</text>
-  <rect x="346" y="162" width="168" height="14" rx="4" fill="#6c47ff15"/>
+  <text x="346" y="155" font-family="sans-serif" font-size="9" fill="#9100B0" font-weight="bold">DISCIPLINES</text>
+  <rect x="346" y="162" width="168" height="14" rx="4" fill="#9100B015"/>
   <text x="354" y="172" font-family="sans-serif" font-size="8" fill="#c9d1d9">⌨  Software Engineering</text>
   <rect x="346" y="180" width="168" height="14" rx="4" fill="#38bdf815"/>
   <text x="354" y="190" font-family="sans-serif" font-size="8" fill="#c9d1d9">🖥  ICDL Certification</text>
   <rect x="346" y="198" width="168" height="14" rx="4" fill="#f59e0b15"/>
   <text x="354" y="208" font-family="sans-serif" font-size="8" fill="#c9d1d9">🌐  Cisco CCNA Networking</text>
-  <rect x="346" y="216" width="168" height="14" rx="4" fill="#a855f715"/>
+  <rect x="346" y="216" width="168" height="14" rx="4" fill="#9100B015"/>
   <text x="354" y="226" font-family="sans-serif" font-size="8" fill="#c9d1d9">🤖  AI and Machine Learning</text>
 
   <!-- Label -->
-  <text x="280" y="268" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#6c47ff" font-weight="bold" letter-spacing="2">DIGITIKA ACADEMY · LEARN · INNOVATE · DISRUPT</text>
+  <text x="280" y="268" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#9100B0" font-weight="bold" letter-spacing="2">DIGITIKA ACADEMY · LEARN · INNOVATE · DISRUPT</text>
 </svg>

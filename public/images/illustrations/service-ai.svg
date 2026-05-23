@@ -10,65 +10,65 @@
 
   <!-- Neural network (left) -->
   <!-- Input layer -->
-  <circle cx="60" cy="80" r="10" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
-  <circle cx="60" cy="115" r="10" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
-  <circle cx="60" cy="150" r="10" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
-  <circle cx="60" cy="185" r="10" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
-  <circle cx="60" cy="220" r="10" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
+  <circle cx="60" cy="80" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="60" cy="115" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="60" cy="150" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="60" cy="185" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="60" cy="220" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
   <text x="60" y="48" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Input</text>
 
   <!-- Hidden layer 1 -->
-  <circle cx="130" cy="93" r="10" fill="#1a1f2e" stroke="#6c47ff" stroke-width="1.5"/>
-  <circle cx="130" cy="130" r="10" fill="#1a1f2e" stroke="#6c47ff" stroke-width="1.5"/>
-  <circle cx="130" cy="167" r="10" fill="#1a1f2e" stroke="#6c47ff" stroke-width="1.5"/>
-  <circle cx="130" cy="204" r="10" fill="#1a1f2e" stroke="#6c47ff" stroke-width="1.5"/>
+  <circle cx="130" cy="93" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="130" cy="130" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="130" cy="167" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
+  <circle cx="130" cy="204" r="10" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
 
   <!-- Hidden layer 2 -->
-  <circle cx="200" cy="107" r="10" fill="#6c47ff30" stroke="#6c47ff" stroke-width="2"/>
-  <circle cx="200" cy="150" r="10" fill="#6c47ff30" stroke="#6c47ff" stroke-width="2"/>
-  <circle cx="200" cy="193" r="10" fill="#6c47ff30" stroke="#6c47ff" stroke-width="2"/>
+  <circle cx="200" cy="107" r="10" fill="#9100B030" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="200" cy="150" r="10" fill="#9100B030" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="200" cy="193" r="10" fill="#9100B030" stroke="#9100B0" stroke-width="2"/>
 
   <!-- Output layer -->
-  <circle cx="270" cy="130" r="12" fill="#a855f7" stroke="#a855f7" stroke-width="2"/>
-  <circle cx="270" cy="170" r="12" fill="#1a1f2e" stroke="#a855f7" stroke-width="1.5"/>
+  <circle cx="270" cy="130" r="12" fill="#9100B0" stroke="#9100B0" stroke-width="2"/>
+  <circle cx="270" cy="170" r="12" fill="#1a1f2e" stroke="#9100B0" stroke-width="1.5"/>
 
   <!-- Connections input->h1 -->
-  <line x1="70" y1="80" x2="120" y2="93" stroke="#a855f720" stroke-width="1"/>
-  <line x1="70" y1="80" x2="120" y2="130" stroke="#a855f720" stroke-width="1"/>
-  <line x1="70" y1="115" x2="120" y2="93" stroke="#a855f730" stroke-width="1"/>
-  <line x1="70" y1="115" x2="120" y2="130" stroke="#a855f730" stroke-width="1"/>
-  <line x1="70" y1="150" x2="120" y2="130" stroke="#a855f730" stroke-width="1"/>
-  <line x1="70" y1="150" x2="120" y2="167" stroke="#a855f730" stroke-width="1"/>
-  <line x1="70" y1="185" x2="120" y2="167" stroke="#a855f720" stroke-width="1"/>
-  <line x1="70" y1="185" x2="120" y2="204" stroke="#a855f720" stroke-width="1"/>
-  <line x1="70" y1="220" x2="120" y2="204" stroke="#a855f720" stroke-width="1"/>
+  <line x1="70" y1="80" x2="120" y2="93" stroke="#9100B020" stroke-width="1"/>
+  <line x1="70" y1="80" x2="120" y2="130" stroke="#9100B020" stroke-width="1"/>
+  <line x1="70" y1="115" x2="120" y2="93" stroke="#9100B030" stroke-width="1"/>
+  <line x1="70" y1="115" x2="120" y2="130" stroke="#9100B030" stroke-width="1"/>
+  <line x1="70" y1="150" x2="120" y2="130" stroke="#9100B030" stroke-width="1"/>
+  <line x1="70" y1="150" x2="120" y2="167" stroke="#9100B030" stroke-width="1"/>
+  <line x1="70" y1="185" x2="120" y2="167" stroke="#9100B020" stroke-width="1"/>
+  <line x1="70" y1="185" x2="120" y2="204" stroke="#9100B020" stroke-width="1"/>
+  <line x1="70" y1="220" x2="120" y2="204" stroke="#9100B020" stroke-width="1"/>
   <!-- h1->h2 -->
-  <line x1="140" y1="93" x2="190" y2="107" stroke="#6c47ff40" stroke-width="1"/>
-  <line x1="140" y1="93" x2="190" y2="150" stroke="#6c47ff30" stroke-width="1"/>
-  <line x1="140" y1="130" x2="190" y2="107" stroke="#6c47ff40" stroke-width="1"/>
-  <line x1="140" y1="130" x2="190" y2="150" stroke="#6c47ff50" stroke-width="1.5"/>
-  <line x1="140" y1="167" x2="190" y2="150" stroke="#6c47ff50" stroke-width="1.5"/>
-  <line x1="140" y1="167" x2="190" y2="193" stroke="#6c47ff40" stroke-width="1"/>
-  <line x1="140" y1="204" x2="190" y2="193" stroke="#6c47ff30" stroke-width="1"/>
+  <line x1="140" y1="93" x2="190" y2="107" stroke="#9100B040" stroke-width="1"/>
+  <line x1="140" y1="93" x2="190" y2="150" stroke="#9100B030" stroke-width="1"/>
+  <line x1="140" y1="130" x2="190" y2="107" stroke="#9100B040" stroke-width="1"/>
+  <line x1="140" y1="130" x2="190" y2="150" stroke="#9100B050" stroke-width="1.5"/>
+  <line x1="140" y1="167" x2="190" y2="150" stroke="#9100B050" stroke-width="1.5"/>
+  <line x1="140" y1="167" x2="190" y2="193" stroke="#9100B040" stroke-width="1"/>
+  <line x1="140" y1="204" x2="190" y2="193" stroke="#9100B030" stroke-width="1"/>
   <!-- h2->output -->
-  <line x1="210" y1="107" x2="258" y2="130" stroke="#a855f760" stroke-width="1.5"/>
-  <line x1="210" y1="150" x2="258" y2="130" stroke="#a855f780" stroke-width="2"/>
-  <line x1="210" y1="150" x2="258" y2="170" stroke="#a855f760" stroke-width="1.5"/>
-  <line x1="210" y1="193" x2="258" y2="170" stroke="#a855f760" stroke-width="1.5"/>
+  <line x1="210" y1="107" x2="258" y2="130" stroke="#9100B060" stroke-width="1.5"/>
+  <line x1="210" y1="150" x2="258" y2="130" stroke="#9100B080" stroke-width="2"/>
+  <line x1="210" y1="150" x2="258" y2="170" stroke="#9100B060" stroke-width="1.5"/>
+  <line x1="210" y1="193" x2="258" y2="170" stroke="#9100B060" stroke-width="1.5"/>
 
   <text x="130" y="48" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Hidden</text>
   <text x="200" y="48" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Hidden</text>
   <text x="270" y="48" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Output</text>
 
   <!-- AI output labels -->
-  <text x="287" y="134" font-family="monospace" font-size="7" fill="#a855f7" font-weight="bold">Prediction</text>
+  <text x="287" y="134" font-family="monospace" font-size="7" fill="#9100B0" font-weight="bold">Prediction</text>
   <text x="287" y="174" font-family="monospace" font-size="7" fill="#8892b0">Anomaly</text>
 
   <!-- Right panel: BI Dashboard -->
   <rect x="320" y="24" width="216" height="208" rx="10" fill="#151b2a" stroke="#1e2640" stroke-width="1.5"/>
   <rect x="320" y="24" width="216" height="28" rx="10" fill="#1e2640"/>
   <rect x="320" y="44" width="216" height="8" fill="#1e2640"/>
-  <text x="428" y="42" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#a855f7" font-weight="bold">BI Analytics Dashboard</text>
+  <text x="428" y="42" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#9100B0" font-weight="bold">BI Analytics Dashboard</text>
 
   <!-- KPI cards -->
   <rect x="330" y="60" width="92" height="42" rx="6" fill="#1e2640"/>
@@ -84,19 +84,19 @@
   <!-- Bar chart -->
   <text x="336" y="118" font-family="sans-serif" font-size="7" fill="#8892b0">Monthly Trend (AI Forecast)</text>
   <!-- Bars -->
-  <rect x="334" y="150" width="14" height="30" rx="2" fill="#6c47ff60"/>
-  <rect x="352" y="138" width="14" height="42" rx="2" fill="#6c47ff80"/>
-  <rect x="370" y="142" width="14" height="38" rx="2" fill="#6c47ff80"/>
-  <rect x="388" y="128" width="14" height="52" rx="2" fill="#a855f7"/>
-  <rect x="406" y="134" width="14" height="46" rx="2" fill="#a855f7"/>
-  <rect x="424" y="122" width="14" height="58" rx="2" fill="#a855f7"/>
+  <rect x="334" y="150" width="14" height="30" rx="2" fill="#9100B060"/>
+  <rect x="352" y="138" width="14" height="42" rx="2" fill="#9100B080"/>
+  <rect x="370" y="142" width="14" height="38" rx="2" fill="#9100B080"/>
+  <rect x="388" y="128" width="14" height="52" rx="2" fill="#9100B0"/>
+  <rect x="406" y="134" width="14" height="46" rx="2" fill="#9100B0"/>
+  <rect x="424" y="122" width="14" height="58" rx="2" fill="#9100B0"/>
   <!-- Forecast dotted -->
-  <rect x="442" y="118" width="14" height="62" rx="2" fill="#a855f740" stroke="#a855f760" stroke-width="1" stroke-dasharray="2,2"/>
-  <rect x="460" y="110" width="14" height="70" rx="2" fill="#a855f740" stroke="#a855f760" stroke-width="1" stroke-dasharray="2,2"/>
-  <rect x="478" y="105" width="14" height="75" rx="2" fill="#a855f740" stroke="#a855f760" stroke-width="1" stroke-dasharray="2,2"/>
-  <rect x="496" y="100" width="14" height="80" rx="2" fill="#a855f740" stroke="#a855f760" stroke-width="1" stroke-dasharray="2,2"/>
+  <rect x="442" y="118" width="14" height="62" rx="2" fill="#9100B040" stroke="#9100B060" stroke-width="1" stroke-dasharray="2,2"/>
+  <rect x="460" y="110" width="14" height="70" rx="2" fill="#9100B040" stroke="#9100B060" stroke-width="1" stroke-dasharray="2,2"/>
+  <rect x="478" y="105" width="14" height="75" rx="2" fill="#9100B040" stroke="#9100B060" stroke-width="1" stroke-dasharray="2,2"/>
+  <rect x="496" y="100" width="14" height="80" rx="2" fill="#9100B040" stroke="#9100B060" stroke-width="1" stroke-dasharray="2,2"/>
   <line x1="330" y1="180" x2="520" y2="180" stroke="#1e2640" stroke-width="1"/>
-  <text x="444" y="190" font-family="sans-serif" font-size="7" fill="#a855f7">AI Forecast --</text>
+  <text x="444" y="190" font-family="sans-serif" font-size="7" fill="#9100B0">AI Forecast --</text>
 
   <!-- Sentiment badge -->
   <rect x="330" y="196" width="96" height="22" rx="6" fill="#4ade8010" stroke="#4ade8030" stroke-width="1"/>
@@ -108,11 +108,11 @@
   <text x="482" y="215" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">+23% next qtr</text>
 
   <!-- Bottom labels -->
-  <text x="60" y="250" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#a855f7" font-weight="bold">Neural Network</text>
+  <text x="60" y="250" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#9100B0" font-weight="bold">Neural Network</text>
   <text x="60" y="262" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Predictive AI</text>
 
-  <text x="428" y="250" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#a855f7" font-weight="bold">Business Intelligence</text>
+  <text x="428" y="250" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#9100B0" font-weight="bold">Business Intelligence</text>
   <text x="428" y="262" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#8892b0">Power BI · Superset · Custom</text>
 
-  <text x="280" y="276" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#a855f7" font-weight="bold" letter-spacing="2">ARTIFICIAL INTELLIGENCE AND ADVANCED ANALYTICS</text>
+  <text x="280" y="276" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#9100B0" font-weight="bold" letter-spacing="2">ARTIFICIAL INTELLIGENCE AND ADVANCED ANALYTICS</text>
 </svg>
