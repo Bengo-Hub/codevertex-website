@@ -6,7 +6,7 @@ import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
 
 const TREASURY_API_URL =
-  process.env.TREASURY_API_URL ?? 'https://treasury.codevertexitsolutions.com';
+  process.env.TREASURY_API_URL ?? 'https://booksapi.codevertexitsolutions.com';
 const TREASURY_TENANT =
   process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex';
 const SITE_URL =
