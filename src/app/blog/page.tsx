@@ -61,7 +61,7 @@ const POSTS = [
     date: 'Nov 2024',
     excerpt: 'Data analytics, cloud engineering, AI/ML, full-stack web dev, and cybersecurity dominate employer demand.',
     readTime: '5 min',
-    cover: '/images/illustrations/course-software.svg',
+    cover: '/images/courses/data-python.jpg',
   },
 ];
 

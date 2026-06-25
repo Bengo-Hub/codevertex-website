@@ -81,10 +81,16 @@ export const COHORTS: CohortSeed[] = [
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
   {
-    courseId: 'icdl-l45', name: 'ICDL L4&5 — August 2026',
+    courseId: 'icdl-l4', name: 'ICDL L4 — August 2026',
     startDate: d('2026-08-04'), endDate: addWeeks(d('2026-08-04'), 8),
     ...regWindow(d('2026-08-04')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
+  },
+  {
+    courseId: 'icdl-l5', name: 'ICDL L5 — September 2026',
+    startDate: d('2026-09-08'), endDate: addWeeks(d('2026-09-08'), 8),
+    ...regWindow(d('2026-09-08')),
+    registrationExtDays: 0, maxSlots: 15, status: 'open',
   },
 
   // ── Software Engineering ──────────────────────────────────────────────────

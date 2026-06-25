@@ -1,6 +1,6 @@
 /**
  * Digitika Academy — Course seed data
- * Cover images: /public/images/illustrations/course-*.svg
+ * Cover images: /public/images/courses/*.jpg (real photos, Unsplash License — free, no watermark)
  * Installment plans: imported from src/config/courses.ts (COURSE_CATEGORIES)
  */
 
@@ -50,6 +50,7 @@ export interface CourseSeed {
 // ---------------------------------------------------------------------------
 export const DEPRECATED_COURSE_IDS = [
   'icdl-core', 'icdl-advanced', 'icdl-professional', 'icdl-digital-citizen',
+  'icdl-l45', 'icdl-citizen', // replaced by the Levels 1–5 progression (icdl-l4 / icdl-l5)
   'scratch-python', 'web-design-teens', 'game-dev', 'devops-cloud', 'cybersecurity',
   'ccna-exam-prep', 'ai-for-business',
   'data-powerbi', 'data-sql', 'data-advanced',
@@ -57,7 +58,7 @@ export const DEPRECATED_COURSE_IDS = [
 
 // ---------------------------------------------------------------------------
 // Course catalog — IDs MUST match src/config/courses.ts
-// Cover images use /images/illustrations/course-*.svg (560×280 dark-theme SVGs)
+// Cover images use /images/courses/<id>.jpg (real photos, Unsplash License)
 // ---------------------------------------------------------------------------
 export const COURSES: CourseSeed[] = [
 
@@ -75,7 +76,7 @@ export const COURSES: CourseSeed[] = [
     level: 'beginner',
     featured: true,
     sortOrder: 1,
-    coverImage: '/images/illustrations/course-code-starter.svg',
+    coverImage: '/images/courses/code-starter.jpg',
     audience: 'Adults (complete beginners welcome)',
     description:
       "The ultimate beginner-to-employable bootcamp. 10 weeks, 2 ICDL certifications, 3+ GitHub projects, and a career roadmap — in a hybrid Kisumu + Zoom format.",
@@ -117,7 +118,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 2,
-    coverImage: '/images/illustrations/course-fullstack.svg',
+    coverImage: '/images/courses/fullstack.jpg',
     audience: 'Adults',
     description:
       'Build modern web applications from frontend to backend with real-world projects and production-ready code.',
@@ -149,7 +150,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 3,
-    coverImage: '/images/illustrations/course-mobile-dev.svg',
+    coverImage: '/images/courses/mobile-dev.jpg',
     audience: 'Adults',
     description: 'Cross-platform mobile app development for Android and iOS with React Native & Flutter.',
     longDescription:
@@ -179,7 +180,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 4,
-    coverImage: '/images/illustrations/course-devops.svg',
+    coverImage: '/images/courses/devops.jpg',
     audience: 'Adults',
     description: 'Modern DevOps practices: CI/CD, containerisation, Kubernetes, and cloud-native architecture.',
     longDescription:
@@ -209,7 +210,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 5,
-    coverImage: '/images/illustrations/course-cybersec.svg',
+    coverImage: '/images/courses/cybersec.jpg',
     audience: 'Adults',
     description:
       'Foundations of information security, ethical hacking, and compliance for the modern digital landscape.',
@@ -240,7 +241,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 6,
-    coverImage: '/images/illustrations/course-kids-scratch.svg',
+    coverImage: '/images/courses/kids-scratch.jpg',
     audience: 'Kids (Age 8–13)',
     description: 'Fun, project-based coding for kids aged 8–13. Build games, animations, and interactive stories.',
     longDescription:
@@ -269,7 +270,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 7,
-    coverImage: '/images/illustrations/course-teens-web.svg',
+    coverImage: '/images/courses/teens-web.jpg',
     audience: 'Teens (Age 13–17)',
     description: 'Teens aged 13–17 build their own websites and web apps using real industry tools.',
     longDescription:
@@ -292,7 +293,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 8,
-    coverImage: '/images/illustrations/course-kids-games.svg',
+    coverImage: '/images/courses/kids-games.jpg',
     audience: 'Kids (Age 10–16)',
     description: 'Create fun 2D games using Pygame and Unity basics in a hands-on studio environment.',
     longDescription:
@@ -310,35 +311,37 @@ export const COURSES: CourseSeed[] = [
     stack: 'Python (Pygame), Unity (C# basics)',
   },
 
-  // ── ICDL ──────────────────────────────────────────────────────────────────
-  // Pricing: L1=20k | L2=22k | L3=26k | L4&5=28k | Citizen=6.5k
+  // ── ICDL (Levels 1–5 progression) ───────────────────────────────────────────
+  // Pricing: L1=15k | L2=20k | L3=24k | L4=28k | L5=32k
   {
     id: 'icdl-l1',
     categoryId: 'icdl',
-    name: 'ICDL Level 1 — Computer & Online Essentials',
+    name: 'ICDL Level 1 — Digital Literacy Foundation',
     shortName: 'ICDL Level 1',
     slug: 'icdl-l1',
     duration: '4 weeks',
     mode: 'In-person / Online',
-    price: 20000,
+    price: 15000,
     currency: 'KES',
     level: 'beginner',
     sortOrder: 1,
-    coverImage: '/images/illustrations/course-icdl-l1.svg',
+    coverImage: '/images/courses/icdl-l1.jpg',
+    stack: 'ICDL Modules: Computer & Online Essentials (intro), Digital Citizen, Digital Citizen Plus, Tablet Essentials',
     description:
-      'Computer fundamentals, file management, internet safety, email and digital communication basics. Globally recognised and required for Kenyan public service roles.',
+      'Foundational digital literacy for absolute beginners — using computers and devices safely, online communication, and being a confident digital citizen. Globally recognised entry point to the ICDL pathway.',
     longDescription:
-      'The entry-level ICDL qualification covering how computers work, file and folder management, safe internet use, professional email etiquette, and basic digital communication. Internationally recognised and required for Kenyan public service roles.',
+      'The entry tier of the ICDL pathway, built on the ICDL Digital Citizen programme. Designed for complete beginners, it removes computer anxiety and covers using computers, tablets and smartphones, basic file management, safe and effective internet use, email and online communication, social media literacy, and staying safe with mobile money and e-commerce.',
     outcomes: [
-      'Computer fundamentals',
-      'File and folder management',
-      'Internet & web browsing',
-      'Email professionalism',
-      'Online safety basics',
-      'Digital communication',
+      'Using computers, tablets & smartphones',
+      'Files, folders & basic operations',
+      'Safe & effective internet use',
+      'Email & online communication',
+      'Social media literacy',
+      'Mobile money & e-commerce safety',
+      'Digital well-being',
     ],
-    prerequisites: ['Basic ability to use a computer or smartphone'],
-    careerPaths: ['Office Administrator', 'Data Entry Clerk', 'Customer Service Agent'],
+    prerequisites: ['No prior experience required', 'Willingness to learn'],
+    careerPaths: ['First-time computer user', 'Foundation for all further digital qualifications', 'Everyday workplace readiness'],
     includes: [
       '4 weeks instruction',
       'Official ICDL exam voucher',
@@ -349,29 +352,30 @@ export const COURSES: CourseSeed[] = [
   {
     id: 'icdl-l2',
     categoryId: 'icdl',
-    name: 'ICDL Level 2 — Document Production & Presentations',
+    name: 'ICDL Level 2 — Core Workplace Essentials',
     shortName: 'ICDL Level 2',
     slug: 'icdl-l2',
     duration: '4 weeks',
     mode: 'In-person / Online',
-    price: 22000,
+    price: 20000,
     currency: 'KES',
     level: 'beginner',
     sortOrder: 2,
-    coverImage: '/images/illustrations/course-icdl-l2.svg',
-    description: 'Word processing, professional document formatting, and creating compelling presentations.',
+    coverImage: '/images/courses/icdl-l2.jpg',
+    stack: 'ICDL Modules: Computer & Online Essentials, Documents, Application Essentials, Information & Collaboration Essentials',
+    description: 'Everyday workplace computing: operating systems, file management, word-processed documents, online collaboration and information handling.',
     longDescription:
-      'Build professional document production skills using Microsoft Word and PowerPoint. Learn to create formatted reports, business letters, branded templates, and engaging slideshows used in professional environments.',
+      'Level 2 establishes the core skills every modern workplace expects, drawing on the ICDL Core and Digital Student essentials. Learners master operating systems and file management, produce professional word-processed documents, work effectively online, and collaborate and share information using digital tools.',
     outcomes: [
-      'Word processing (MS Word)',
-      'Document formatting & styles',
-      'Headers, footers & tables',
-      'PowerPoint presentations',
-      'Visual design basics',
-      'Mail merge',
+      'Operating system & file management',
+      'Word processing & document production',
+      'Web browsing & online search',
+      'Email & online collaboration',
+      'Information & data handling',
+      'Working effectively online',
     ],
-    prerequisites: ['ICDL Level 1 or basic computer skills'],
-    careerPaths: ['Administrative Assistant', 'Secretary', 'Office Manager', 'HR Assistant'],
+    prerequisites: ['ICDL Level 1 or basic computer familiarity'],
+    careerPaths: ['Office Administrator', 'Data Entry Clerk', 'Customer Service Agent', 'Receptionist'],
     includes: [
       '4 weeks instruction',
       'Official ICDL exam voucher',
@@ -382,29 +386,30 @@ export const COURSES: CourseSeed[] = [
   {
     id: 'icdl-l3',
     categoryId: 'icdl',
-    name: 'ICDL Level 3 — Spreadsheets & Data Management',
+    name: 'ICDL Level 3 — Productivity & Standard Office',
     shortName: 'ICDL Level 3',
     slug: 'icdl-l3',
     duration: '5 weeks',
     mode: 'In-person / Online',
-    price: 26000,
+    price: 24000,
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 3,
-    coverImage: '/images/illustrations/course-icdl-l3.svg',
-    description: 'Excel spreadsheets, formulas, data analysis, charts, and database fundamentals.',
+    coverImage: '/images/courses/icdl-l3.jpg',
+    stack: 'ICDL Modules: Spreadsheets, Presentation, Using Databases, Image Editing, Cyber Security, AI Essentials',
+    description: 'The classic office toolkit plus modern essentials: spreadsheets, presentations, databases, image editing, cyber security and AI essentials.',
     longDescription:
-      'Master Microsoft Excel and database fundamentals. Learn to build spreadsheet models with formulas and functions, create charts and pivot tables, and understand how databases store and retrieve information — skills valued across all industries.',
+      'Level 3 delivers the productivity skills most Kenyan employers associate with "the ICDL course", upgraded for today. Learners build spreadsheet models with formulas, charts and pivot tables, design compelling presentations, work with databases and edit images — and add the modern essentials of cyber security and responsible use of AI tools.',
     outcomes: [
-      'Excel formulas & functions',
-      'Data sorting & filtering',
-      'Charts & pivot tables',
-      'Database concepts',
-      'Data validation',
-      'Spreadsheet modelling',
+      'Spreadsheets: formulas, charts & pivot tables',
+      'Presentations & visual communication',
+      'Database fundamentals',
+      'Image editing for print & web',
+      'Cyber security awareness',
+      'AI Essentials & responsible AI use',
     ],
-    prerequisites: ['ICDL Level 2 or equivalent document skills'],
-    careerPaths: ['Finance Assistant', 'Data Entry Analyst', 'Accounts Clerk', 'Operations Coordinator'],
+    prerequisites: ['ICDL Level 2 or equivalent productivity skills'],
+    careerPaths: ['Finance Assistant', 'Data Entry Analyst', 'Accounts Clerk', 'Operations Coordinator', 'Office Manager'],
     includes: [
       '5 weeks instruction',
       'Official ICDL exam voucher',
@@ -413,67 +418,75 @@ export const COURSES: CourseSeed[] = [
     ],
   },
   {
-    id: 'icdl-l45',
+    id: 'icdl-l4',
     categoryId: 'icdl',
-    name: 'ICDL Levels 4 & 5 — Advanced Professional Skills',
-    shortName: 'ICDL Levels 4 & 5',
-    slug: 'icdl-l45',
+    name: 'ICDL Level 4 — Advanced Professional Skills',
+    shortName: 'ICDL Level 4',
+    slug: 'icdl-l4',
     duration: '8 weeks',
     mode: 'Hybrid',
     price: 28000,
     currency: 'KES',
     level: 'advanced',
     sortOrder: 4,
-    coverImage: '/images/illustrations/course-icdl-l45.svg',
+    coverImage: '/images/courses/icdl-l4.jpg',
+    stack: 'ICDL Modules: Advanced Documents/Spreadsheets/Presentation, Data Analytics, Project Planning, Teamwork, Digital Marketing, E-Commerce, Data Protection',
     description:
-      'Advanced Excel, database design, IT security, project planning and computational thinking.',
+      'Advanced productivity and applied business skills: advanced Word/Excel/PowerPoint, data analytics, project planning, digital marketing, e-commerce and data protection.',
     longDescription:
-      'The advanced tier of ICDL covering complex spreadsheet modelling, relational database design, IT security for business, digital project planning, and computational thinking — the skills that differentiate IT professionals and managers.',
+      'Level 4 maps to the ICDL Professional programme for technology-dependent roles. It covers advanced document, spreadsheet and presentation techniques, hands-on data analytics and visualisation, project planning, teamwork on collaboration platforms, digital marketing, e-commerce, and managing personal data in line with data-protection (GDPR-style) requirements.',
     outcomes: [
-      'Advanced Excel & DAX',
-      'Database design & SQL basics',
-      'IT security & compliance',
-      'Project planning tools',
-      'Computational thinking',
-      'Digital project management',
+      'Advanced Documents, Spreadsheets & Presentation',
+      'Data analytics & visualisation',
+      'Project planning & delivery',
+      'Teamwork & collaboration platforms',
+      'Digital marketing campaigns',
+      'E-commerce fundamentals',
+      'Data protection & compliance',
     ],
     prerequisites: ['ICDL Level 3 or strong general computer skills'],
-    careerPaths: ['IT Officer', 'Project Manager', 'Systems Analyst', 'Finance Manager', 'Technical Administrator'],
+    careerPaths: ['IT Officer', 'Project Manager', 'Systems Analyst', 'Finance Manager', 'Marketing Officer'],
     includes: [
       '8 weeks instruction',
       '2 ICDL exam vouchers',
       'Project toolkit',
-      'ICDL Levels 4 & 5 certificate',
+      'ICDL Level 4 certificate',
     ],
   },
   {
-    id: 'icdl-citizen',
+    id: 'icdl-l5',
     categoryId: 'icdl',
-    name: 'ICDL Digital Citizen',
-    shortName: 'Digital Citizen',
-    slug: 'icdl-digital-citizen',
-    duration: '4 weeks',
-    mode: 'Online',
-    price: 6500,
+    name: 'ICDL Level 5 — Specialist & Emerging Technologies',
+    shortName: 'ICDL Level 5',
+    slug: 'icdl-l5',
+    duration: '8 weeks',
+    mode: 'Hybrid',
+    price: 32000,
     currency: 'KES',
-    level: 'beginner',
+    level: 'advanced',
     sortOrder: 5,
-    coverImage: '/images/illustrations/course-icdl-citizen.svg',
+    coverImage: '/images/courses/icdl-l5.jpg',
+    stack: 'ICDL Modules: Coding Principles, Cloud Computing, Big Data, Blockchain, Internet of Things, 3D Design',
     description:
-      'Foundational digital literacy for navigating the modern digital economy safely and confidently.',
+      'The specialist tier: coding principles, cloud computing, big data, blockchain, the Internet of Things and 3D design — the emerging technologies shaping the future of work.',
     longDescription:
-      'Designed for individuals new to digital technology, this course covers safe internet use, social media literacy, online communication, e-commerce, mobile banking, and protecting personal data online.',
+      'Level 5 is the highest ICDL Professional tier, equipping learners with specialist and emerging-technology competencies. It covers computational thinking and coding principles, cloud computing, big data concepts, blockchain, the Internet of Things (IoT), and 3D design with computer-aided design tools — the differentiators for IT professionals and innovators.',
     outcomes: [
-      'Online safety',
-      'Social media literacy',
-      'Online communication',
-      'Digital well-being',
-      'E-commerce basics',
-      'Mobile money safety',
+      'Coding principles & computational thinking',
+      'Cloud computing concepts',
+      'Big data fundamentals',
+      'Blockchain technology',
+      'Internet of Things (IoT)',
+      '3D design with CAD tools',
     ],
-    prerequisites: ['Basic smartphone or tablet usage'],
-    careerPaths: ['Essential skills for all working adults', 'Foundation for further digital qualifications'],
-    includes: ['4 weeks online content', 'ICDL Digital Citizen certificate', 'Online exam'],
+    prerequisites: ['ICDL Level 4 or equivalent advanced ICT skills'],
+    careerPaths: ['Technical Administrator', 'Cloud/IoT Specialist', 'Innovation Lead', 'Pathway to software & data engineering'],
+    includes: [
+      '8 weeks instruction',
+      '2 ICDL exam vouchers',
+      'Emerging-tech lab access',
+      'ICDL Level 5 certificate',
+    ],
   },
 
   // ── CCNA ──────────────────────────────────────────────────────────────────
@@ -489,7 +502,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 1,
-    coverImage: '/images/illustrations/course-ccna-1.svg',
+    coverImage: '/images/courses/ccna-1.jpg',
     description:
       'OSI model, TCP/IP, IPv4/IPv6 addressing, Ethernet fundamentals, and Cisco IOS basics.',
     longDescription:
@@ -519,7 +532,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 2,
-    coverImage: '/images/illustrations/course-ccna-2.svg',
+    coverImage: '/images/courses/ccna-2.jpg',
     description:
       'VLANs, inter-VLAN routing, STP, EtherChannel, OSPF, DHCP, NAT, and wireless LANs.',
     longDescription:
@@ -549,7 +562,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'advanced',
     sortOrder: 3,
-    coverImage: '/images/illustrations/course-ccna-3.svg',
+    coverImage: '/images/courses/ccna-3.jpg',
     description:
       'WAN technologies, network security, QoS, and network automation with Python and REST APIs.',
     longDescription:
@@ -578,7 +591,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'advanced',
     sortOrder: 4,
-    coverImage: '/images/illustrations/course-ccna-cert.svg',
+    coverImage: '/images/courses/ccna-cert.jpg',
     description:
       'Intensive exam preparation for the Cisco CCNA 200-301 certification. Practice exams, lab simulations, and targeted topic review.',
     outcomes: [
@@ -606,7 +619,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 1,
-    coverImage: '/images/illustrations/course-ai-fundamentals.svg',
+    coverImage: '/images/courses/ai-fundamentals.jpg',
     description:
       'No-code introduction to artificial intelligence. Understand how AI and ML work, and use AI tools to improve your productivity and career.',
     longDescription:
@@ -633,7 +646,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 2,
-    coverImage: '/images/illustrations/course-ml-python.svg',
+    coverImage: '/images/courses/ml-python.jpg',
     description:
       'Build and deploy machine learning models with Python, scikit-learn, and TensorFlow. From data preprocessing to model evaluation and deployment.',
     longDescription:
@@ -662,7 +675,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'advanced',
     sortOrder: 3,
-    coverImage: '/images/illustrations/course-genai-llm.svg',
+    coverImage: '/images/courses/genai-llm.jpg',
     description:
       'Deep-dive into LLMs, RAG pipelines, fine-tuning, and building production AI applications with the Anthropic and OpenAI APIs.',
     longDescription:
@@ -690,7 +703,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 4,
-    coverImage: '/images/illustrations/course-ai-business.svg',
+    coverImage: '/images/courses/ai-business.jpg',
     description:
       "Designed for executives and managers who want to understand AI's impact on their industry and lead digital transformation initiatives confidently.",
     longDescription:
@@ -719,7 +732,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'intermediate',
     sortOrder: 1,
-    coverImage: '/images/illustrations/course-data-python.svg',
+    coverImage: '/images/courses/data-python.jpg',
     description:
       'Master data wrangling, visualisation, and statistical analysis with Python, pandas, and matplotlib. Build a data portfolio employers will love.',
     longDescription:
@@ -747,7 +760,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 2,
-    coverImage: '/images/illustrations/course-power-bi.svg',
+    coverImage: '/images/courses/power-bi.jpg',
     description:
       'Build interactive dashboards and reports with Microsoft Power BI. Connect to live data sources and automate executive reporting.',
     longDescription:
@@ -775,7 +788,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'beginner',
     sortOrder: 3,
-    coverImage: '/images/illustrations/course-sql-db.svg',
+    coverImage: '/images/courses/sql-db.jpg',
     description:
       'Learn to query, join, and aggregate data from relational databases using SQL. Essential for every data analyst and backend developer.',
     longDescription:
@@ -803,7 +816,7 @@ export const COURSES: CourseSeed[] = [
     currency: 'KES',
     level: 'advanced',
     sortOrder: 4,
-    coverImage: '/images/illustrations/course-advanced-analytics.svg',
+    coverImage: '/images/courses/advanced-analytics.jpg',
     description:
       'Combine statistical modelling, A/B testing, and data storytelling to turn raw data into decisions. Ideal for analysts ready to step up to senior roles.',
     longDescription:
