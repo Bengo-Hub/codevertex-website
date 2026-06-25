@@ -1,15 +1,17 @@
 import { COURSE_CATEGORIES } from '@/config/courses';
 import { type DbCourse } from '@/types/course';
+import { prisma } from '@/lib/db';
 import { CourseCard } from './CourseCard';
 
 async function fetchCourses(): Promise<DbCourse[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/courses`, {
-      next: { revalidate: 60 },
+    // Query the DB directly (server component) rather than self-fetching /api/courses.
+    // The self-fetch failed during the CI build and rendered an empty catalog.
+    const courses = await prisma.course.findMany({
+      where: { isActive: true },
+      orderBy: [{ categoryId: 'asc' }, { sortOrder: 'asc' }],
     });
-    if (!res.ok) throw new Error('Failed to fetch courses');
-    return res.json();
+    return courses as unknown as DbCourse[];
   } catch {
     return [];
   }

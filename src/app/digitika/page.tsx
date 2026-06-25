@@ -5,6 +5,10 @@ import { LifeAtDigitika } from '@/components/digitika/LifeAtDigitika';
 import { TestimonialsSection } from '@/components/digitika/TestimonialsSection';
 import { CourseCatalog } from '@/components/digitika/CourseCatalog';
 
+// Render at request time so the catalog reads courses from the DB on the running
+// pod, rather than baking an empty list at build time.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Digitika Academy — Tech Education',
   description: 'Industry-aligned certification programmes in software engineering, AI, networking, data analytics, and ICDL. Enroll from Kisumu or online.',

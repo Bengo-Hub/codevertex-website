@@ -1,35 +1,33 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { COURSE_CATEGORIES, findCourse } from '@/config/courses';
+import { findCourse } from '@/config/courses';
 import { type DbCourse } from '@/types/course';
+import { prisma } from '@/lib/db';
 import { CourseDetailClient } from '@/components/digitika/CourseDetailClient';
+
+// Rendered per-request so course data comes straight from the DB on the running
+// pod (where Postgres is reachable). Avoids the previous build-time self-fetch to
+// /api/courses, which baked stale 404s when the CI build couldn't reach the API.
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ courseId: string }>;
 }
 
-async function fetchCourse(courseId: string): Promise<DbCourse | null> {
+async function getCourse(courseId: string): Promise<DbCourse | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/courses/${courseId}`, {
-      next: { revalidate: 60 },
+    const course = await prisma.course.findFirst({
+      where: { id: courseId, isActive: true },
     });
-    if (!res.ok) return null;
-    return res.json();
+    return (course as unknown as DbCourse) ?? null;
   } catch {
     return null;
   }
 }
 
-export async function generateStaticParams() {
-  return COURSE_CATEGORIES.flatMap(cat =>
-    cat.courses.map(course => ({ courseId: course.id }))
-  );
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { courseId } = await params;
-  const dbCourse = await fetchCourse(courseId);
+  const dbCourse = await getCourse(courseId);
   if (!dbCourse) return { title: 'Course Not Found' };
 
   const found = findCourse(courseId);
@@ -71,7 +69,7 @@ export default async function CourseDetailPage({ params }: Props) {
   const { courseId } = await params;
 
   // Fetch live DB data (name, price, installmentPlans, etc.)
-  const dbCourse = await fetchCourse(courseId);
+  const dbCourse = await getCourse(courseId);
   if (!dbCourse) notFound();
 
   // Get static supplemental data (curriculum, testimonials, alumni) from config
