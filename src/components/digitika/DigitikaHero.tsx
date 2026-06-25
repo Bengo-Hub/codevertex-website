@@ -92,10 +92,13 @@ export function DigitikaHero() {
             </div>
 
             <div className="flex flex-wrap gap-3 mb-10">
+              {/* Plain <a> (not next/link): App Router intercepts hash-only Link
+                  clicks and updates the URL without scrolling. A native anchor
+                  scrolls reliably to the course catalog below. */}
               <Button asChild size="lg">
-                <Link href="#software">
+                <a href="#software">
                   Browse courses <ArrowRight className="h-4 w-4" />
-                </Link>
+                </a>
               </Button>
               <Button variant="outline" asChild size="lg">
                 <Link href="/contact">Corporate training</Link>

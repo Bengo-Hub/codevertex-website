@@ -33,7 +33,7 @@ export async function CourseCatalog() {
           const courses = coursesByCategory.get(cat.id) ?? [];
           if (courses.length === 0) return null;
           return (
-            <div key={cat.id} id={cat.id}>
+            <div key={cat.id} id={cat.id} className="scroll-mt-24">
               <div className="mb-8">
                 <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: cat.color }}>
                   {cat.tagline}
