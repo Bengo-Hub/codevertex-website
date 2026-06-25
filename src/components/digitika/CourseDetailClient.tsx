@@ -20,6 +20,8 @@ interface CohortInfo {
   name: string;
   startDate: string;
   endDate: string | null;
+  registrationFrom: string | null;
+  registrationOpen: boolean;
   maxSlots: number;
   enrolledCount: number;
   availableSlots: number;
@@ -74,7 +76,9 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
       .then((r) => r.json())
       .then((data: CohortInfo[]) => {
         setCohorts(data);
-        const first = data.find((c) => !c.isFull);
+        // Pre-select the first cohort that is actually enrollable (open for
+        // registration and not full).
+        const first = data.find((c) => c.registrationOpen && !c.isFull);
         if (first) setSelectedCohortId(first.id);
       })
       .catch(() => setCohorts([]))
@@ -100,9 +104,21 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
   const level = LEVEL_CONFIG[course.level] ?? LEVEL_CONFIG.beginner;
 
   const hasActiveCohorts = cohorts.length > 0;
-  const allCohortsFull = hasActiveCohorts && cohorts.every((c) => c.isFull);
+  const openCohorts = cohorts.filter((c) => c.registrationOpen);
+  const enrollableCohorts = openCohorts.filter((c) => !c.isFull);
+  // Cohorts exist, but registration for none of them has opened yet (all upcoming).
+  const noneOpenYet = hasActiveCohorts && openCohorts.length === 0;
+  // Registration is open for some cohort(s), but every open one is fully booked.
+  const allCohortsFull = openCohorts.length > 0 && enrollableCohorts.length === 0;
   const selectedCohort = cohorts.find((c) => c.id === selectedCohortId) ?? null;
-  const canEnroll = hasActiveCohorts && !allCohortsFull && selectedCohort && !selectedCohort.isFull;
+  const canEnroll = !!selectedCohort && selectedCohort.registrationOpen && !selectedCohort.isFull;
+  // Earliest date registration opens, for the "opens soon" message.
+  const nextOpensAt = noneOpenYet
+    ? cohorts
+        .map((c) => c.registrationFrom)
+        .filter((d): d is string => !!d)
+        .sort()[0] ?? null
+    : null;
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -561,15 +577,17 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                     <div className="mb-4">
                       <p className="text-xs font-semibold text-muted-foreground mb-2">Select cohort</p>
                       <div className="space-y-2">
-                        {cohorts.map((c) => (
+                        {cohorts.map((c) => {
+                          const selectable = c.registrationOpen && !c.isFull;
+                          return (
                           <button
                             key={c.id}
                             type="button"
-                            disabled={c.isFull}
-                            onClick={() => !c.isFull && setSelectedCohortId(c.id)}
+                            disabled={!selectable}
+                            onClick={() => selectable && setSelectedCohortId(c.id)}
                             className={cn(
                               'w-full text-left p-3 rounded-xl border-2 transition-all text-sm',
-                              c.isFull
+                              !selectable
                                 ? 'border-border bg-secondary/40 opacity-60 cursor-not-allowed'
                                 : selectedCohortId === c.id
                                 ? 'border-primary bg-primary/5'
@@ -578,7 +596,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                {!c.isFull && (
+                                {selectable && (
                                   <div className={cn('w-3.5 h-3.5 rounded-full border-2 shrink-0', selectedCohortId === c.id ? 'border-primary bg-primary' : 'border-border')} />
                                 )}
                                 <span className="font-semibold text-foreground text-xs leading-snug">
@@ -587,12 +605,19 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                               </div>
                               {c.isFull ? (
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold">Full</span>
+                              ) : !c.registrationOpen ? (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold">
+                                  {c.registrationFrom
+                                    ? `Opens ${new Date(c.registrationFrom).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+                                    : 'Opening soon'}
+                                </span>
                               ) : (
                                 <span className="text-[10px] text-muted-foreground">{c.availableSlots} slot{c.availableSlots !== 1 ? 's' : ''} left</span>
                               )}
                             </div>
                           </button>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -602,6 +627,17 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                       <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
                         No upcoming cohorts are currently open. <a href="https://wa.me/254743793901" className="font-bold underline">Contact us</a> to get notified when the next cohort launches.
+                      </p>
+                    </div>
+                  )}
+
+                  {!cohortsLoading && noneOpenYet && (
+                    <div className="mb-4 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                        Registration for the next cohort
+                        {nextOpensAt ? ` opens ${new Date(nextOpensAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ' opens soon'}.
+                        {' '}<a href="https://wa.me/254743793901" className="font-bold underline">Contact us</a> to reserve your spot early.
                       </p>
                     </div>
                   )}
@@ -625,9 +661,13 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                       ? 'Loading…'
                       : !hasActiveCohorts
                       ? 'No Open Cohorts'
+                      : noneOpenYet
+                      ? 'Registration Opens Soon'
                       : allCohortsFull
                       ? 'All Cohorts Full'
-                      : 'Apply Now'}
+                      : canEnroll
+                      ? 'Apply Now'
+                      : 'Select a Cohort'}
                     {canEnroll && <ArrowRight className="h-4 w-4" />}
                   </Button>
 

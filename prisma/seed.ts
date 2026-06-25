@@ -49,17 +49,19 @@ async function main() {
   // ── Cohorts ───────────────────────────────────────────────────────────────
   console.log(`\n📅 Seeding ${COHORTS.length} cohorts...`);
   for (const cohort of COHORTS) {
+    // A cohort is uniquely identified by (courseId, startDate) — names no longer
+    // carry a month/year, so multiple intakes of the same course share a name.
     const existing = await prisma.cohort.findFirst({
-      where: { name: cohort.name, courseId: cohort.courseId },
+      where: { courseId: cohort.courseId, startDate: cohort.startDate },
     });
     if (!existing) {
       await prisma.cohort.create({ data: cohort });
-      console.log(`  ✓ Created: ${cohort.name}`);
+      console.log(`  ✓ Created: ${cohort.name} (${cohort.startDate.toISOString().slice(0, 10)})`);
     } else {
       await prisma.cohort.update({
         where: { id: existing.id },
         data: {
-          startDate: cohort.startDate,
+          name: cohort.name,
           endDate: cohort.endDate,
           registrationFrom: cohort.registrationFrom,
           registrationUntil: cohort.registrationUntil,
@@ -68,7 +70,7 @@ async function main() {
           status: cohort.status,
         },
       });
-      console.log(`  ↺ Updated: ${cohort.name}`);
+      console.log(`  ↺ Updated: ${cohort.name} (${cohort.startDate.toISOString().slice(0, 10)})`);
     }
   }
 

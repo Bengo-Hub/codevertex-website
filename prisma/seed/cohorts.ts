@@ -40,54 +40,58 @@ function regWindow(startDate: Date): { registrationFrom: Date; registrationUntil
   };
 }
 
+// Cohort `name` carries no month/year — it is just the course label. Scheduling
+// (dates, intakes, status) is managed by admins via the backend; the start date
+// is what learners see on the course detail page. Cohorts are keyed by
+// (courseId, startDate) on seed, so a course can have multiple intakes.
 export const COHORTS: CohortSeed[] = [
   // ── Code-Starter ─────────────────────────────────────────────────────────
   {
-    courseId: 'code-starter', name: 'Code-Starter — May 2026',
+    courseId: 'code-starter', name: 'Code-Starter',
     startDate: d('2026-05-19'), endDate: addWeeks(d('2026-05-19'), 10),
     ...regWindow(d('2026-05-19')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
   {
-    courseId: 'code-starter', name: 'Code-Starter — August 2026',
+    courseId: 'code-starter', name: 'Code-Starter',
     startDate: d('2026-08-04'), endDate: addWeeks(d('2026-08-04'), 10),
     ...regWindow(d('2026-08-04')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
 
-  // ── ICDL ──────────────────────────────────────────────────────────────────
+  // ── ICDL (Levels 1–5) ───────────────────────────────────────────────────
   {
-    courseId: 'icdl-l1', name: 'ICDL L1 — June 2026',
+    courseId: 'icdl-l1', name: 'ICDL Level 1',
     startDate: d('2026-06-02'), endDate: addWeeks(d('2026-06-02'), 4),
     ...regWindow(d('2026-06-02')),
     registrationExtDays: 0, maxSlots: 25, status: 'open',
   },
   {
-    courseId: 'icdl-l1', name: 'ICDL L1 — July 2026',
+    courseId: 'icdl-l1', name: 'ICDL Level 1',
     startDate: d('2026-07-07'), endDate: addWeeks(d('2026-07-07'), 4),
     ...regWindow(d('2026-07-07')),
     registrationExtDays: 0, maxSlots: 25, status: 'open',
   },
   {
-    courseId: 'icdl-l2', name: 'ICDL L2 — June 2026',
+    courseId: 'icdl-l2', name: 'ICDL Level 2',
     startDate: d('2026-06-02'), endDate: addWeeks(d('2026-06-02'), 4),
     ...regWindow(d('2026-06-02')),
     registrationExtDays: 0, maxSlots: 25, status: 'open',
   },
   {
-    courseId: 'icdl-l3', name: 'ICDL L3 — July 2026',
+    courseId: 'icdl-l3', name: 'ICDL Level 3',
     startDate: d('2026-07-07'), endDate: addWeeks(d('2026-07-07'), 5),
     ...regWindow(d('2026-07-07')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
   {
-    courseId: 'icdl-l4', name: 'ICDL L4 — August 2026',
+    courseId: 'icdl-l4', name: 'ICDL Level 4',
     startDate: d('2026-08-04'), endDate: addWeeks(d('2026-08-04'), 8),
     ...regWindow(d('2026-08-04')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
   {
-    courseId: 'icdl-l5', name: 'ICDL L5 — September 2026',
+    courseId: 'icdl-l5', name: 'ICDL Level 5',
     startDate: d('2026-09-08'), endDate: addWeeks(d('2026-09-08'), 8),
     ...regWindow(d('2026-09-08')),
     registrationExtDays: 0, maxSlots: 15, status: 'open',
@@ -95,19 +99,19 @@ export const COHORTS: CohortSeed[] = [
 
   // ── Software Engineering ──────────────────────────────────────────────────
   {
-    courseId: 'fullstack', name: 'Full-Stack — June 2026',
+    courseId: 'fullstack', name: 'Full-Stack Web Development',
     startDate: d('2026-06-09'), endDate: addWeeks(d('2026-06-09'), 12),
     ...regWindow(d('2026-06-09')),
     registrationExtDays: 0, maxSlots: 15, status: 'open',
   },
   {
-    courseId: 'kids-scratch', name: 'Kids Coding — August 2026',
+    courseId: 'kids-scratch', name: 'Coding for Kids',
     startDate: d('2026-08-03'), endDate: addWeeks(d('2026-08-03'), 8),
     ...regWindow(d('2026-08-03')),
     registrationExtDays: 0, maxSlots: 15, status: 'open',
   },
   {
-    courseId: 'cybersec', name: 'Cybersecurity — June 2026',
+    courseId: 'cybersec', name: 'Cybersecurity Fundamentals',
     startDate: d('2026-06-23'), endDate: addWeeks(d('2026-06-23'), 6),
     ...regWindow(d('2026-06-23')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
@@ -115,13 +119,13 @@ export const COHORTS: CohortSeed[] = [
 
   // ── CCNA ──────────────────────────────────────────────────────────────────
   {
-    courseId: 'ccna-1', name: 'CCNA Part 1 — May 2026',
+    courseId: 'ccna-1', name: 'CCNA v7 Part 1',
     startDate: d('2026-05-26'), endDate: addWeeks(d('2026-05-26'), 8),
     ...regWindow(d('2026-05-26')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
   {
-    courseId: 'ccna-2', name: 'CCNA Part 2 — July 2026',
+    courseId: 'ccna-2', name: 'CCNA v7 Part 2',
     startDate: d('2026-07-20'), endDate: addWeeks(d('2026-07-20'), 8),
     ...regWindow(d('2026-07-20')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
@@ -129,13 +133,13 @@ export const COHORTS: CohortSeed[] = [
 
   // ── AI & Data ─────────────────────────────────────────────────────────────
   {
-    courseId: 'ai-fundamentals', name: 'AI Fundamentals — June 2026',
+    courseId: 'ai-fundamentals', name: 'AI Fundamentals',
     startDate: d('2026-06-16'), endDate: addWeeks(d('2026-06-16'), 6),
     ...regWindow(d('2026-06-16')),
     registrationExtDays: 0, maxSlots: 30, status: 'open',
   },
   {
-    courseId: 'data-python', name: 'Data Analytics — July 2026',
+    courseId: 'data-python', name: 'Data Analytics with Python',
     startDate: d('2026-07-14'), endDate: addWeeks(d('2026-07-14'), 10),
     ...regWindow(d('2026-07-14')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',

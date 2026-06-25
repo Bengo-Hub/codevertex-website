@@ -25,30 +25,38 @@ export async function GET(
   });
 
   const now = new Date();
-  const result = cohorts.map((c) => {
-    const effectiveDeadline = c.registrationUntil
-      ? new Date(c.registrationUntil.getTime() + c.registrationExtDays * 86_400_000)
-      : null;
-    const registrationOpen =
-      (!c.registrationFrom || now >= c.registrationFrom) &&
-      (!effectiveDeadline || now <= effectiveDeadline);
+  const result = cohorts
+    .map((c) => {
+      const effectiveDeadline = c.registrationUntil
+        ? new Date(c.registrationUntil.getTime() + c.registrationExtDays * 86_400_000)
+        : null;
+      // Registration is gated only when the admin sets a window; an open cohort with
+      // no dates is immediately enrollable.
+      const registrationStarted = !c.registrationFrom || now >= c.registrationFrom;
+      const registrationClosed = !!effectiveDeadline && now > effectiveDeadline;
+      const registrationOpen = registrationStarted && !registrationClosed;
+      const enrolledCount = c._count.enrollments;
 
-    return {
-      id: c.id.toString(),
-      name: c.name,
-      startDate: c.startDate.toISOString(),
-      endDate: c.endDate?.toISOString() ?? null,
-      registrationFrom: c.registrationFrom?.toISOString() ?? null,
-      registrationUntil: c.registrationUntil?.toISOString() ?? null,
-      registrationExtDays: c.registrationExtDays,
-      effectiveDeadline: effectiveDeadline?.toISOString() ?? null,
-      registrationOpen,
-      maxSlots: c.maxSlots,
-      enrolledCount: c._count.enrollments,
-      availableSlots: Math.max(0, c.maxSlots - c._count.enrollments),
-      isFull: c._count.enrollments >= c.maxSlots,
-    };
-  });
+      return {
+        id: c.id.toString(),
+        name: c.name,
+        startDate: c.startDate.toISOString(),
+        endDate: c.endDate?.toISOString() ?? null,
+        registrationFrom: c.registrationFrom?.toISOString() ?? null,
+        registrationUntil: c.registrationUntil?.toISOString() ?? null,
+        registrationExtDays: c.registrationExtDays,
+        effectiveDeadline: effectiveDeadline?.toISOString() ?? null,
+        registrationOpen,
+        registrationClosed,
+        maxSlots: c.maxSlots,
+        enrolledCount,
+        availableSlots: Math.max(0, c.maxSlots - enrolledCount),
+        isFull: enrolledCount >= c.maxSlots,
+      };
+    })
+    // Drop cohorts whose registration window has already closed — they can't be
+    // enrolled in, so showing them would only dead-end the learner at submit.
+    .filter((c) => !c.registrationClosed);
 
   return NextResponse.json(result, {
     headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60' },

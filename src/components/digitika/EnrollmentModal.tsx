@@ -70,6 +70,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
   const [selectedCC, setSelectedCC] = useState(COUNTRY_CODES[0]);
   const [ageError, setAgeError] = useState('');
+  const [enrollError, setEnrollError] = useState('');
 
   // Discount code state
   const [discountInput, setDiscountInput] = useState('');
@@ -165,6 +166,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
     const rawData = getValues();
     const data = { ...rawData, phone: `${selectedCC.code}${rawData.phone.replace(/^0/, '').replace(/[\s\-()]/g, '')}` };
     setSubmitting(true);
+    setEnrollError('');
     try {
       const dueDates = computeDueDates(selectedPlan);
       const installments = scaledPayments.map((p, i) => ({
@@ -197,7 +199,20 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
         }),
       });
 
-      const result = await res.json();
+      const result = await res.json().catch(() => ({}));
+
+      // Enrollment was rejected (e.g. cohort filled up, registration window closed,
+      // or validation failed). Surface the reason and DO NOT send the learner to pay
+      // for an enrollment that was never created.
+      if (!res.ok) {
+        const msg =
+          typeof result?.error === 'string'
+            ? result.error
+            : 'We couldn’t complete your enrollment. Please review your details and try again.';
+        setEnrollError(msg);
+        return;
+      }
+
       const invoiceRef = result.invoiceRef ?? `DGT-${course.id}-${Date.now()}`;
 
       // Build treasury redirect URL. When the enrollment API pre-created a treasury intent
@@ -226,20 +241,9 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
       window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
       setStep(3);
     } catch {
-      // non-blocking — proceed to step 3 so user can still pay
-      const params = new URLSearchParams({
-        amount: String(firstPayment),
-        tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
-        reference_id: `DGT-${course.id}-${Date.now()}`,
-        reference_type: 'digitika_enrollment',
-        currency: course.currency,
-        description: `Digitika — ${course.name}`,
-        redirect_url: `${window.location.origin}/digitika/success`,
-        button_text: 'View My Enrollment',
-        gateways: 'paystack,mpesa',
-      });
-      window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
-      setStep(3);
+      // Network/unexpected error — the enrollment likely did not persist, so do not
+      // send the learner to pay against a non-existent enrollment. Let them retry.
+      setEnrollError('Something went wrong while submitting your enrollment. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -468,6 +472,12 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                   )}
                   {isInstallment && ` Remaining ${formatCurrency(discountedTotal - firstPayment, course.currency)} will be billed in ${selectedPlan.payments.length - 1} future installment(s).`}
                 </div>
+
+                {enrollError && (
+                  <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
+                    {enrollError}
+                  </div>
+                )}
 
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setStep(1)} className="flex-1">← Back</Button>
