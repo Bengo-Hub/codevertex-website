@@ -40,11 +40,27 @@ function regWindow(startDate: Date): { registrationFrom: Date; registrationUntil
   };
 }
 
-// Cohort `name` carries no month/year — it is just the course label. Scheduling
-// (dates, intakes, status) is managed by admins via the backend; the start date
-// is what learners see on the course detail page. Cohorts are keyed by
-// (courseId, startDate) on seed, so a course can have multiple intakes.
-export const COHORTS: CohortSeed[] = [
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+/**
+ * Cohort name = course label + a month/year slice derived from the start date.
+ * Deriving the suffix (rather than hardcoding it) keeps the name in sync with the
+ * actual start date and guarantees intakes of the same course never collide.
+ * UTC getters are used so the date string parses identically regardless of TZ.
+ */
+function withMonthYear(base: string, startDate: Date): string {
+  return `${base} — ${MONTHS[startDate.getUTCMonth()]} ${startDate.getUTCFullYear()}`;
+}
+
+// Each entry's `name` is the bare course label; the month/year slice is appended
+// from the start date below (see withMonthYear). Scheduling (dates, intakes,
+// status) is managed by admins via the backend; the start date is what learners
+// see on the course detail page. Cohorts are keyed by (courseId, startDate) on
+// seed, so a course can have multiple intakes.
+const RAW_COHORTS: CohortSeed[] = [
   // ── Code-Starter ─────────────────────────────────────────────────────────
   {
     courseId: 'code-starter', name: 'Code-Starter',
@@ -145,3 +161,10 @@ export const COHORTS: CohortSeed[] = [
     registrationExtDays: 0, maxSlots: 20, status: 'open',
   },
 ];
+
+// Final seed list — each cohort name gets its month/year slice derived from the
+// start date so names stay unique and consistent with the schedule.
+export const COHORTS: CohortSeed[] = RAW_COHORTS.map((c) => ({
+  ...c,
+  name: withMonthYear(c.name, c.startDate),
+}));
