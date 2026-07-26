@@ -90,8 +90,8 @@ log_info "Building Docker image"
 # NEXT_PUBLIC_* must be baked at build time for Next.js
 DOCKER_BUILDKIT=1 docker build . -t "${IMAGE_REPO}:${GIT_COMMIT_ID}" \
   --build-arg NEXT_PUBLIC_TREASURY_TENANT="${NEXT_PUBLIC_TREASURY_TENANT:-codevertex}" \
-  --build-arg NEXT_PUBLIC_SSO_URL="${NEXT_PUBLIC_SSO_URL:-https://accounts.codevertexitsolutions.com}" \
-  --build-arg NEXT_PUBLIC_TREASURY_PAY_URL="${NEXT_PUBLIC_TREASURY_PAY_URL:-https://books.codevertexitsolutions.com/pay}"
+  --build-arg NEXT_PUBLIC_SSO_URL="${NEXT_PUBLIC_SSO_URL:-https://accounts.codevertexafrica.com}" \
+  --build-arg NEXT_PUBLIC_TREASURY_PAY_URL="${NEXT_PUBLIC_TREASURY_PAY_URL:-https://books.codevertexafrica.com/pay}"
 log_success "Docker build complete: ${IMAGE_REPO}:${GIT_COMMIT_ID}"
 
 if [[ ${DEPLOY} != "true" ]]; then

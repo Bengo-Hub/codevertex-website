@@ -220,7 +220,7 @@ model BlogPost {
 }
 
 // ---------------------------------------------------------------------------
-// Site users — SSO-synced users who log in via accounts.codevertexitsolutions.com
+// Site users — SSO-synced users who log in via accounts.codevertexafrica.com
 // ---------------------------------------------------------------------------
 model SiteUser {
   id          String    @id

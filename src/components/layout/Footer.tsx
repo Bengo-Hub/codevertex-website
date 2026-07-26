@@ -4,14 +4,14 @@ import { SITE, NAV_LINKS, SSO_URL } from '@/lib/constants';
 import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
 
 const PRODUCT_LINKS = [
-  { label: 'Ordering', href: 'https://ordersapp.codevertexitsolutions.com' },
-  { label: 'POS', href: 'https://pos.codevertexitsolutions.com' },
-  { label: 'Books & Treasury', href: 'https://books.codevertexitsolutions.com' },
-  { label: 'MarketFlow CRM', href: 'https://marketflow.codevertexitsolutions.com' },
-  { label: 'ISP Billing', href: 'https://ispbilling.codevertexitsolutions.com' },
-  { label: 'TruLoad', href: 'https://truload.codevertexitsolutions.com' },
-  { label: 'Analytics', href: 'https://superset.codevertexitsolutions.com' },
-  { label: 'Notifications', href: 'https://notifications.codevertexitsolutions.com' },
+  { label: 'Ordering', href: 'https://ordering.codevertexafrica.com' },
+  { label: 'POS', href: 'https://pos.codevertexafrica.com' },
+  { label: 'Books & Treasury', href: 'https://books.codevertexafrica.com' },
+  { label: 'MarketFlow CRM', href: 'https://marketflow.codevertexafrica.com' },
+  { label: 'ISP Billing', href: 'https://ispbilling.codevertexafrica.com' },
+  { label: 'TruLoad', href: 'https://truload.codevertexafrica.com' },
+  { label: 'Analytics', href: 'https://superset.codevertexafrica.com' },
+  { label: 'Notifications', href: 'https://notifications.codevertexafrica.com' },
 ];
 
 const LEGAL_LINKS = [
