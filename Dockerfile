@@ -20,8 +20,8 @@ RUN pnpm exec prisma generate
 
 # NEXT_PUBLIC_* are baked at build time — must be passed as build args
 ARG NEXT_PUBLIC_TREASURY_TENANT=codevertex
-ARG NEXT_PUBLIC_SSO_URL=https://accounts.codevertexitsolutions.com
-ARG NEXT_PUBLIC_TREASURY_PAY_URL=https://books.codevertexitsolutions.com/pay
+ARG NEXT_PUBLIC_SSO_URL=https://accounts.codevertexafrica.com
+ARG NEXT_PUBLIC_TREASURY_PAY_URL=https://books.codevertexafrica.com/pay
 ENV NEXT_PUBLIC_TREASURY_TENANT=$NEXT_PUBLIC_TREASURY_TENANT
 ENV NEXT_PUBLIC_SSO_URL=$NEXT_PUBLIC_SSO_URL
 ENV NEXT_PUBLIC_TREASURY_PAY_URL=$NEXT_PUBLIC_TREASURY_PAY_URL

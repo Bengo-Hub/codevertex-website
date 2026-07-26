@@ -303,7 +303,7 @@ jobs:
             exit 0
           fi
 
-          for HOST in codevertexitsolutions.com www.codevertexitsolutions.com; do
+          for HOST in codevertexafrica.com www.codevertexafrica.com; do
             echo "Checking https://$HOST/healthz ..."
             if curl -sk --max-time 10 "https://$HOST/healthz" | grep -qi "ok"; then
               echo "Health OK for $HOST"
