@@ -4,7 +4,7 @@
 
 **Project:** Codevertex Africa Limited Marketing & Academy Website  
 **Stack:** Next.js 16.2 (React 19), Tailwind CSS 4, PostgreSQL, TypeScript 6  
-**Domain:** https://codevertexitsolutions.com  
+**Domain:** https://codevertexafrica.com  
 **Namespace:** `codevertex-website` (K8s: `codevertex`)
 
 ---
@@ -58,7 +58,7 @@
 - **Tables:** `contact_submissions`, `enrollments`, `leads`
 
 ### Payments
-- **Gateway:** Codevertex Treasury (books.codevertexitsolutions.com)
+- **Gateway:** Codevertex Treasury (books.codevertexafrica.com)
 - **Methods:** M-Pesa, Paystack
 - **Pattern:** Redirect to treasury pay page with amount + tenant params
 
@@ -125,4 +125,4 @@ codevertex-website/
 - **PostgreSQL raw client** — `pg` preferred over Prisma for minimal dependencies; migrate in Sprint 8
 - **Standalone output** — `next build` with `output: 'standalone'` for minimal Docker image
 - **Image hosting** — all images served from `/public/images/`; external images via Next.js remotePatterns
-- **Auth** — no login wall on marketing site; SSO link goes to `accounts.codevertexitsolutions.com`
+- **Auth** — no login wall on marketing site; SSO link goes to `accounts.codevertexafrica.com`

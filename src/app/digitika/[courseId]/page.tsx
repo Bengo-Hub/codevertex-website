@@ -41,12 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `https://codevertexitsolutions.com/digitika/${courseId}`,
+      url: `https://codevertexafrica.com/digitika/${courseId}`,
       siteName: 'Codevertex Africa Limited',
       type: 'website',
       images: [
         {
-          url: 'https://codevertexitsolutions.com/images/students.jpg',
+          url: 'https://codevertexafrica.com/images/students.jpg',
           width: 1200,
           height: 630,
           alt: dbCourse.name,

@@ -1,8 +1,8 @@
 export const SITE = {
   name: 'Codevertex Africa Limited',
   tagline: "Architecting Africa's Digital Renaissance",
-  url: 'https://codevertexitsolutions.com',
-  email: 'info@codevertexitsolutions.com',
+  url: 'https://codevertexafrica.com',
+  email: 'info@codevertexafrica.com',
   phone1: '+254 742 201 368',
   phone2: '+254 743 793 901',
   phone3: '+254 792 548 766',
@@ -15,11 +15,11 @@ export const SITE = {
 };
 
 export const TREASURY = {
-  payUrl: 'https://books.codevertexitsolutions.com/pay',
+  payUrl: 'https://books.codevertexafrica.com/pay',
   tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
 };
 
-export const SSO_URL = 'https://accounts.codevertexitsolutions.com';
+export const SSO_URL = 'https://accounts.codevertexafrica.com';
 
 export const NAV_LINKS = [
   { label: 'Services', href: '/services' },

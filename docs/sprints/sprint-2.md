@@ -22,7 +22,7 @@
 - [x] `CourseCard` — expandable card with mode, duration, price, outcomes, tech stack
 - [x] `EnrollmentModal` — 3-step wizard (personal info → review → payment)
 - [x] `POST /api/enrollments` — saves to DB, returns 201
-- [x] Treasury redirect flow: `books.codevertexitsolutions.com/pay?amount=...&tenant=...`
+- [x] Treasury redirect flow: `books.codevertexafrica.com/pay?amount=...&tenant=...`
 - [x] `digitika/page.tsx` — metadata + page composition
 
 ## Course Categories

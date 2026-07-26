@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**.codevertexitsolutions.com' },
+      { protocol: 'https', hostname: '**.codevertexafrica.com' },
     ],
   },
 

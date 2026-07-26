@@ -39,7 +39,7 @@ window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
 ```env
 NEXT_PUBLIC_TREASURY_TENANT=codevertex
 # Treasury pay URL is hardcoded in lib/constants.ts:
-# TREASURY.payUrl = 'https://books.codevertexitsolutions.com/pay'
+# TREASURY.payUrl = 'https://books.codevertexafrica.com/pay'
 ```
 
 ### Webhook Handler (Future — Sprint 8)
@@ -96,7 +96,7 @@ COURSES:
 
 CONTACT:
 - WhatsApp: +254 743 793 901
-- Email: info@codevertexitsolutions.com
+- Email: info@codevertexafrica.com
 - Address: Pioneer House, 2nd Floor, Kisumu
 
 ESCALATION:
@@ -127,7 +127,7 @@ The marketing website does **not** enforce authentication. It links to the SSO p
 
 ```typescript
 // lib/constants.ts
-export const SSO_URL = 'https://accounts.codevertexitsolutions.com';
+export const SSO_URL = 'https://accounts.codevertexafrica.com';
 ```
 
 ```tsx
@@ -142,9 +142,9 @@ For a future "Student Portal" or "Client Dashboard" on this domain:
 **Token Validation Pattern:**
 ```typescript
 // Reuse auth-service JWKS validation pattern from other services
-const JWKS_URL = 'https://sso.codevertexitsolutions.com/api/v1/.well-known/jwks.json';
+const JWKS_URL = 'https://sso.codevertexafrica.com/api/v1/.well-known/jwks.json';
 const AUTH_AUDIENCE = 'codevertex';
-const AUTH_ISSUER = 'https://sso.codevertexitsolutions.com';
+const AUTH_ISSUER = 'https://sso.codevertexafrica.com';
 ```
 
 **Middleware (planned):**
@@ -235,7 +235,7 @@ On successful enrollment, send confirmation email via notifications-api:
 
 ```typescript
 // S2S call to notifications-api
-await fetch('https://notificationsapi.codevertexitsolutions.com/api/v1/s2s/email', {
+await fetch('https://notificationsapi.codevertexafrica.com/api/v1/s2s/email', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

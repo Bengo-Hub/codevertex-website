@@ -62,7 +62,7 @@ export default function CareersPage() {
               <p className="text-sm text-muted-foreground">Send us your CV and a short note about what you'd like to build.</p>
             </div>
             <Button variant="outline" asChild className="shrink-0">
-              <a href="mailto:careers@codevertexitsolutions.com">Open application →</a>
+              <a href="mailto:careers@codevertexafrica.com">Open application →</a>
             </Button>
           </div>
         </div>

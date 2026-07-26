@@ -58,7 +58,7 @@ We go beyond software development; we design and deploy integrated digital ecosy
 | **Postal Address** | P.O. Box 49, 40100 – Kisumu, Kenya |
 | **Primary Phone** | +254 742 201 368 |
 | **Email** | codevertexitsolutions@gmail.com |
-| **Website** | https://codevertexitsolutions.com |
+| **Website** | https://codevertexafrica.com |
 
 ## Leadership & Founders {#leadership-&-founders}
 
@@ -161,10 +161,10 @@ At the heart of our portfolio lies the **Codevertex Single Sign-On (SSO) Identit
 
 **Pioneer House, Oginga-Odinga Road, Kisumu CBD, Kisumu East District, Kenya**
 
-**Email: info@codevertexitsolutions.com**
+**Email: info@codevertexafrica.com**
 
 **Phone: \+254 742 201 368 | \+254 743 793 901 | \+254 792 548 766**
 
-**Website: [https://codevertexitsolutions.com](https://codevertexitsolutions.com)**
+**Website: [https://codevertexafrica.com](https://codevertexafrica.com)**
 
 **Company No: PVT-VQ1OEVB3 | KRA PIN: P052543168K**

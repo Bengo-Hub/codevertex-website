@@ -1,7 +1,7 @@
 // Auth-service API: authorize URL, token exchange, profile, logout.
-// API is at sso.codevertexitsolutions.com; accounts UI at accounts.codevertexitsolutions.com.
+// API is at sso.codevertexafrica.com; accounts UI at accounts.codevertexafrica.com.
 
-const SSO_API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://sso.codevertexitsolutions.com';
+const SSO_API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://sso.codevertexafrica.com';
 const SSO_CLIENT_ID = process.env.NEXT_PUBLIC_SSO_CLIENT_ID || 'codevertex-website';
 
 export interface TokenExchangeParams {
@@ -24,7 +24,7 @@ export function buildAuthorizeUrl(codeChallenge: string, state: string, redirect
 
 export function buildLogoutUrl(): string {
   const url = new URL('/api/v1/auth/logout', SSO_API_URL);
-  url.searchParams.set('post_logout_redirect_uri', process.env.NEXT_PUBLIC_SSO_URL || 'https://accounts.codevertexitsolutions.com');
+  url.searchParams.set('post_logout_redirect_uri', process.env.NEXT_PUBLIC_SSO_URL || 'https://accounts.codevertexafrica.com');
   return url.toString();
 }
 

@@ -26,12 +26,12 @@ export const metadata: Metadata = {
   description:
     "Architecting Africa's Digital Renaissance. Enterprise software, AI, cloud infrastructure, and Digitika Academy talent development from Kisumu, Kenya.",
   keywords: ['Codevertex', 'IT Solutions', 'Kenya', 'Africa', 'Software Development', 'AI', 'Cloud', 'Digitika'],
-  authors: [{ name: 'Codevertex Africa Limited', url: 'https://codevertexitsolutions.com' }],
-  metadataBase: new URL('https://codevertexitsolutions.com'),
+  authors: [{ name: 'Codevertex Africa Limited', url: 'https://codevertexafrica.com' }],
+  metadataBase: new URL('https://codevertexafrica.com'),
   openGraph: {
     type: 'website',
     locale: 'en_KE',
-    url: 'https://codevertexitsolutions.com',
+    url: 'https://codevertexafrica.com',
     siteName: 'Codevertex Africa Limited',
     title: "Codevertex Africa Limited — Architecting Africa's Digital Renaissance",
     description:
@@ -70,11 +70,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
           async
-          src="https://marketflow.codevertexitsolutions.com/widget/chat.js"
+          src="https://marketflow.codevertexafrica.com/widget/chat.js"
           data-tenant="codevertex"
           data-mode="platform"
           data-business-type="codevertex"
-          data-api-url="https://marketflowai.codevertexitsolutions.com"
+          data-api-url="https://marketflowai.codevertexafrica.com"
           data-primary-color="#9100B0"
           data-accent-color="#b800e0"
           data-widget-title="Vera"

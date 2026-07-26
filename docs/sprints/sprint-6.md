@@ -32,7 +32,7 @@
 | Setting | Value |
 |---------|-------|
 | Namespace | `codevertex` |
-| Domain | `codevertexitsolutions.com` |
+| Domain | `codevertexafrica.com` |
 | Image | `docker.io/codevertex/codevertex-website` |
 | Replicas | 1 base, autoscale 1–2 |
 | Port | 3000 (Next.js) |
@@ -47,7 +47,7 @@ Sensitive vars come from `codevertex-website-secrets` K8s secret:
 
 Public vars set directly in `values.yaml`:
 - `NEXT_PUBLIC_TREASURY_TENANT=codevertex`
-- `NEXT_PUBLIC_SSO_URL=https://accounts.codevertexitsolutions.com`
+- `NEXT_PUBLIC_SSO_URL=https://accounts.codevertexafrica.com`
 
 ## Notes
 
