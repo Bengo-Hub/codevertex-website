@@ -129,7 +129,7 @@ Key breaking changes to be aware of:
 Follows the Codevertex treasury invoice-first pattern:
 
 1. User fills enrollment form → `POST /api/enrollments` saves record with `payment_status: pending`
-2. Browser opens `https://books.codevertexitsolutions.com/pay?amount=...&tenant=...&gateways=paystack,mpesa`
+2. Browser opens `https://books.codevertexafrica.com/pay?amount=...&tenant=...&gateways=paystack,mpesa`
 3. User pays via Paystack or M-Pesa on the shared treasury pay page
 4. Treasury webhook updates `payment_status` to `succeeded`
 

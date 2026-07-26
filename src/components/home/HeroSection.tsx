@@ -21,7 +21,7 @@ const SLIDES = [
     tag: 'Business Operations',
     img: '/images/illustrations/product-erp.svg',
     color: '#0EA5E9',
-    href: 'https://erp.codevertexitsolutions.com',
+    href: 'https://erp.codevertexafrica.com',
     highlights: ['Finance, HR & Procurement unified', 'Real-time multi-tenant sync'],
   },
   {
@@ -30,7 +30,7 @@ const SLIDES = [
     tag: 'Transport & Logistics',
     img: '/images/illustrations/product-truload.svg',
     color: '#38bdf8',
-    href: 'https://truload.codevertexitsolutions.com',
+    href: 'https://truload.codevertexafrica.com',
     highlights: ['Mobile & static weighing', 'IoT enforcement + commercial tickets'],
   },
   {
@@ -39,7 +39,7 @@ const SLIDES = [
     tag: 'Retail & Hospitality',
     img: '/images/illustrations/product-pos.svg',
     color: '#f59e0b',
-    href: 'https://pos.codevertexitsolutions.com',
+    href: 'https://pos.codevertexafrica.com',
     highlights: ['M-Pesa & card, offline-capable', 'Multi-location inventory'],
   },
   {
@@ -48,7 +48,7 @@ const SLIDES = [
     tag: 'Telecommunications',
     img: '/images/illustrations/product-isp.svg',
     color: '#4ade80',
-    href: 'https://ispbilling.codevertexitsolutions.com',
+    href: 'https://ispbilling.codevertexafrica.com',
     highlights: ['Zero-touch subscriber provisioning', 'Captive portal + auto-billing'],
   },
   {
@@ -57,7 +57,7 @@ const SLIDES = [
     tag: 'Finance & Projects',
     img: '/images/illustrations/product-books.svg',
     color: '#9100B0',
-    href: 'https://books.codevertexitsolutions.com',
+    href: 'https://books.codevertexafrica.com',
     highlights: ['Invoicing with M-Pesa & Paystack', 'Project tracking & team collab'],
   },
   {

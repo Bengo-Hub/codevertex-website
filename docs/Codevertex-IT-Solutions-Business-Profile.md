@@ -127,9 +127,9 @@ At the heart of our portfolio lies the **Codevertex Single Sign-On (SSO) Identit
 
 **Pioneer House, 2nd Floor; Oginga Street, Kisumu, Kenya**
 
-**Email: info@codevertexitsolutions.com**
+**Email: info@codevertexafrica.com**
 
 **Phone: \+254 743 793 901 | \+254 792 548766**
 
-**Website:[https://codevertexitsolutions.com](https://codevertexitsolutions.com)**
+**Website:[https://codevertexafrica.com](https://codevertexafrica.com)**
 

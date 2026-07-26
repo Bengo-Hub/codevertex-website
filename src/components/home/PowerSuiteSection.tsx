@@ -13,7 +13,7 @@ const SUITE = [
     name: 'ERP',
     tag: 'Business Operations',
     desc: 'Unified finance, HR, procurement and CRM in one modular platform. Designed for African corporates and SMEs.',
-    href: 'https://erp.codevertexitsolutions.com',
+    href: 'https://erp.codevertexafrica.com',
     img: '/images/illustrations/product-erp.svg',
   },
   {
@@ -21,7 +21,7 @@ const SUITE = [
     name: 'TruLoad',
     tag: 'Transport & Logistics',
     desc: 'IoT axle-load monitoring with tamper-proof data, camera integration, and automated compliance reporting.',
-    href: 'https://truload.codevertexitsolutions.com',
+    href: 'https://truload.codevertexafrica.com',
     img: '/images/illustrations/product-truload.svg',
   },
   {
@@ -29,7 +29,7 @@ const SUITE = [
     name: 'POS',
     tag: 'Retail & Hospitality',
     desc: 'Offline-capable point-of-sale with inventory intelligence, multi-location support, and M-Pesa integration.',
-    href: 'https://pos.codevertexitsolutions.com',
+    href: 'https://pos.codevertexafrica.com',
     img: '/images/illustrations/product-pos.svg',
   },
   {
@@ -37,7 +37,7 @@ const SUITE = [
     name: 'ISP Billing',
     tag: 'Telecommunications',
     desc: 'Zero-touch provisioning, subscriber billing, captive portal management and payment reconciliation.',
-    href: 'https://ispbilling.codevertexitsolutions.com',
+    href: 'https://ispbilling.codevertexafrica.com',
     img: '/images/illustrations/product-isp.svg',
   },
   {
@@ -45,7 +45,7 @@ const SUITE = [
     name: 'Books',
     tag: 'Finance & Projects',
     desc: 'Invoicing, Paystack and M-Pesa payments, project tracking, and collaborative team workflows.',
-    href: 'https://books.codevertexitsolutions.com',
+    href: 'https://books.codevertexafrica.com',
     img: '/images/illustrations/product-books.svg',
   },
   {

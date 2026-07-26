@@ -6,11 +6,11 @@ import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
 
 const TREASURY_API_URL =
-  process.env.TREASURY_API_URL ?? 'https://booksapi.codevertexitsolutions.com';
+  process.env.TREASURY_API_URL ?? 'https://booksapi.codevertexafrica.com';
 const TREASURY_TENANT =
   process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex';
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexitsolutions.com';
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
 
 // Pre-create a treasury payment intent so the success URL goes directly to our
 // /digitika/success page (bypasses treasury-ui's own success page wrapper).

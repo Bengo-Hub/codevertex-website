@@ -709,4 +709,4 @@ export function getFirstInstallmentAmount(course: Course, planLabel?: string): n
   return plan?.payments[0]?.amount ?? course.price;
 }
 
-export const TREASURY_PAY_URL = 'https://books.codevertexitsolutions.com/pay';
+export const TREASURY_PAY_URL = 'https://books.codevertexafrica.com/pay';

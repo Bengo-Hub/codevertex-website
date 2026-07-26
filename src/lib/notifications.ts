@@ -4,10 +4,10 @@
 // Tenant is resolved from the service key (codevertex tenant).
 
 const NOTIFICATIONS_URL =
-  process.env.NOTIFICATIONS_API_URL ?? 'https://notificationsapi.codevertexitsolutions.com';
+  process.env.NOTIFICATIONS_API_URL ?? 'https://notificationsapi.codevertexafrica.com';
 const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
 const TENANT = 'codevertex';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://codevertexitsolutions.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://codevertexafrica.com';
 
 export interface EnrollmentConfirmationData {
   studentName: string;

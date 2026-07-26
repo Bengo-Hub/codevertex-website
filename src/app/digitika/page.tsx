@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Digitika Academy | Codevertex Africa Limited',
     description: "Closing Africa's digital skills gap. Courses in coding, AI, networking, and data analytics.",
-    url: 'https://codevertexitsolutions.com/digitika',
+    url: 'https://codevertexafrica.com/digitika',
   },
 };
 

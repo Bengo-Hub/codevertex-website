@@ -695,7 +695,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                 <p className="text-xs font-bold text-foreground mb-2">Share this course</p>
                 <div className="flex gap-2 flex-wrap">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(`Check out this course: ${course.name} at Digitika Academy — https://codevertexitsolutions.com/digitika/${course.id}`)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(`Check out this course: ${course.name} at Digitika Academy — https://codevertexafrica.com/digitika/${course.id}`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex-1 text-center px-3 py-2 rounded-lg bg-[#25D366] text-white text-xs font-bold hover:opacity-90 transition-opacity"

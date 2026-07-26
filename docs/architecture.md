@@ -4,7 +4,7 @@
 
 ```
                     ┌─────────────────────────────────────────┐
-                    │         codevertexitsolutions.com         │
+                    │         codevertexafrica.com         │
                     │         (codevertex-website)             │
                     │         Next.js 16.2 / React 19          │
                     └─────────────────┬───────────────────────┘
@@ -252,7 +252,7 @@ data: [DONE]
 ```
 Namespace: codevertex
 Service: codevertex-website (ClusterIP :3000)
-Ingress: nginx → codevertexitsolutions.com (TLS: letsencrypt-prod)
+Ingress: nginx → codevertexafrica.com (TLS: letsencrypt-prod)
 Image: docker.io/codevertex/codevertex-website:<git-sha>
 Replicas: 1 (autoscale 1–2)
 Resources: 50m CPU / 128Mi RAM (requests), 200m / 256Mi (limits)

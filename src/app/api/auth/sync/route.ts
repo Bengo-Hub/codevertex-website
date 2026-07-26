@@ -2,7 +2,7 @@
  * POST /api/auth/sync
  *
  * Called by marketflow-ai or any backend service via S2S (X-API-Key) after a user
- * authenticates via the Codevertex SSO (accounts.codevertexitsolutions.com).
+ * authenticates via the Codevertex SSO (accounts.codevertexafrica.com).
  * Creates or updates a SiteUser record so the website knows about the logged-in user.
  *
  * Auth: X-API-Key: INTERNAL_SERVICE_KEY
