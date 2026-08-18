@@ -164,7 +164,7 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     color: '#f59e0b',
     img: '/images/illustrations/service-network.svg',
     features: ['IoT sensor and camera integration', 'Axle-load monitoring hardware (TruLoad)', 'Zero-touch router provisioning', 'Captive portal authentication', 'Real-time hardware-to-cloud sync', 'Automated compliance reporting'],
-    cta: { label: 'Get a quote', href: '/contact' },
+    cta: { label: 'See all integrations', href: '/integrations' },
   },
   {
     id: 'ai',
