@@ -56,66 +56,59 @@ Reference: Treasury webhook signature verification pattern from `ordering-servic
 
 ---
 
-## 2. Anthropic Claude API (Vera Chatbot)
+## 2. Vera Chatbot (marketflow-ai widget)
 
-### Configuration
+**Superseded architecture note:** this section previously described a direct Anthropic API call
+from a `/api/chat/route.ts` handler in this repo. That route no longer exists — Vera has since
+moved to a standalone, embeddable widget backed by its own service (`marketflow-ai`), shared
+across every Codevertex property, not something this repo calls directly. Documenting the
+current shape below.
 
-```typescript
-// /api/chat/route.ts
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+### Embedding
 
-const response = await anthropic.messages.stream({
-  model: 'claude-haiku-4-5-20251001',
-  max_tokens: 1024,
-  system: VERA_SYSTEM_PROMPT,
-  messages: userMessages,
-});
+```tsx
+// src/app/layout.tsx
+<script
+  async
+  src="https://marketflow.codevertexafrica.com/widget/chat.js"
+  data-tenant="codevertex"
+  data-mode="platform"
+  data-business-type="codevertex"
+  data-api-url="https://marketflowai.codevertexafrica.com"
+  data-primary-color="#9100B0"
+  data-accent-color="#b800e0"
+  data-widget-title="Vera"
+  data-whatsapp="254743793901"
+  data-phone="+254743793901"
+/>
 ```
 
-### Model Selection
+The widget script (served by `marketflow-ui`) renders the chat bubble/panel client-side and talks
+directly to `marketflowai.codevertexafrica.com` (the `marketflow-ai` backend) — this website never
+proxies or calls an LLM API itself.
 
-| Use Case | Model | Reason |
-|----------|-------|--------|
-| Vera chatbot | `claude-haiku-4-5-20251001` | Fast response, low cost per token |
-| Future: content generation | `claude-sonnet-4-6` | Better quality for marketing copy |
+### Backend (marketflow-ai)
 
-### System Prompt Structure
+A Go service, not a Next.js API route. LLM calls are Groq-primary (OpenAI-compatible endpoint),
+with Claude and a local Ollama model as configured fallbacks:
 
-```
-You are Vera, the AI assistant for Codevertex Africa Limited...
+| Role | Model | Provider |
+|---|---|---|
+| Main response generation | `llama-3.3-70b-versatile` | Groq |
+| Intent routing / classification | `llama-3.1-8b-instant` | Groq |
+| Fallback | `claude-haiku-4-5-20251001` | Anthropic |
 
-COMPANY:
-- Founded 2020, Kisumu, Kenya
-- Products: Power Suite (ERP, POS, TruLoad, ISP Billing, Notifications, Books)
-- Academy: Digitika (ICDL, CCNA, AI, Software Engineering, Data Analytics)
+It runs a tool-calling agent loop (not a single system-prompt completion) — tools include, among
+others, requesting a platform integration (eTIMS and beyond) on the visitor's behalf, which files
+an `IntegrationRequest` in auth-api and notifies the platform team via the same Slack/email
+pipeline used elsewhere in the fleet. See `marketflow-ai/internal/agent/tools/` and
+`marketflow-ai/internal/ai/router.go` for the current tool/intent set — this doc intentionally
+doesn't duplicate that list since it changes independently of this website.
 
-COURSES:
-[Full course list with prices and durations]
+### Escalation
 
-CONTACT:
-- WhatsApp: +254 743 793 901
-- Email: info@codevertexafrica.com
-- Address: Pioneer House, 2nd Floor, Kisumu
-
-ESCALATION:
-When user wants to speak to human, direct to WhatsApp.
-```
-
-### Cost Optimisation (Planned Sprint 8)
-
-Add prompt caching with `cache_control: { type: "ephemeral" }` on the system prompt block:
-```typescript
-system: [
-  {
-    type: "text",
-    text: VERA_SYSTEM_PROMPT,
-    cache_control: { type: "ephemeral" }
-  }
-]
-```
-Expected cache hit rate: ~80% (system prompt rarely changes)
+When a visitor wants a human, the agent directs them to WhatsApp — `data-whatsapp`/`data-phone`
+above are exactly the contact details it escalates to.
 
 ---
 
