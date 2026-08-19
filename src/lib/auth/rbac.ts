@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ADMIN_BYPASS_ROLES } from '@/lib/digitika-rbac-catalog';
+import { extractProfileName, extractProfileAvatar } from '@/lib/auth/sso-profile';
 
 export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://sso.codevertexafrica.com';
 const PLATFORM_TENANT_SLUG = 'codevertex';
@@ -82,9 +83,8 @@ export async function resolveDigitikaSession(req: NextRequest): Promise<Digitika
   const isPlatformOwner = Boolean(profile.is_platform_owner);
   const isBypass = isPlatformOwner || globalRoles.some((r) => ADMIN_BYPASS_ROLES.has(r));
 
-  const profileObj = (profile.profile ?? {}) as Record<string, unknown>;
-  const fullName = (profile.fullName ?? profile.full_name ?? profileObj.full_name ?? profileObj.fullName ?? null) as string | null;
-  const avatarUrl = (profile.avatar_url ?? profileObj.avatar_url ?? null) as string | null;
+  const fullName = extractProfileName(profile.profile);
+  const avatarUrl = extractProfileAvatar(profile.profile);
   const tenantId = (profile.tenant_id ?? profile.primary_tenant_id ?? null) as string | null;
   const tenantSlug = (profile.tenant_slug ?? null) as string | null;
 

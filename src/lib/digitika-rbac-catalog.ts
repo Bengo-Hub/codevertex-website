@@ -31,7 +31,7 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
   { key: 'installments', label: 'Installments' },
   { key: 'discounts', label: 'Discounts' },
   { key: 'users', label: 'Users' },
-  { key: 'roles', label: 'Roles & Permissions' },
+  { key: 'roles', label: 'Roles' },
 ];
 
 // dashboard is view-only (a landing/stats page — nothing to "manage" on it directly)

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw, ShieldCheck, CloudDownload, UserPlus, Copy, Check } from 'lucide-react';
+import { Search, RefreshCw, ShieldCheck, CloudDownload, UserPlus, Copy, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
@@ -110,6 +110,26 @@ export function UsersPage() {
     }
   }
 
+  async function handleDelete(row: SiteUserRow) {
+    if (!confirm(
+      `Permanently remove ${row.email} from the Digitika Users roster?\n\n` +
+      `This deletes their local record and any panel-role grant. It does NOT delete their ` +
+      `underlying SSO account — auth-api has no hard-delete for that. If they log in again, ` +
+      `they'll reappear here with no Digitika role assigned.`
+    )) return;
+    setSavingId(row.id);
+    try {
+      const res = await authedFetch(`/api/admin/users/${row.id}`, { method: 'DELETE' });
+      if (!res.ok && res.status !== 204) throw new Error((await res.json()).error || 'Failed to delete');
+      toast.success('User removed from the roster');
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete');
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   async function handleRoleChange(row: SiteUserRow, digitikaRoleCode: string | null) {
     setSavingId(row.id);
     try {
@@ -189,6 +209,20 @@ export function UsersPage() {
         </span>
       ),
     },
+    ...(canManage ? [{
+      key: 'actions',
+      header: '',
+      render: (row: SiteUserRow) => (
+        <button
+          onClick={() => handleDelete(row)}
+          disabled={savingId === row.id}
+          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50"
+          title="Remove from Digitika roster"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ),
+    } as Column<SiteUserRow>] : []),
   ];
 
   return (

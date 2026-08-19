@@ -1,8 +1,8 @@
 import {
   LayoutDashboard, BookOpen, GraduationCap, MessageSquare, Mail,
-  Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck,
+  Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound,
 } from 'lucide-react';
-import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
+import { DIGITIKA_MODULES, digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 export interface AdminNavItem {
   label: string;
@@ -12,20 +12,36 @@ export interface AdminNavItem {
   permission: string;
 }
 
+// href/icon per module key — DIGITIKA_MODULES (src/lib/digitika-rbac-catalog.ts) is the
+// single source of truth for WHICH modules exist and their permission codes; this map only
+// adds the UI-specific bits (route + icon) so the two never drift out of sync.
+const MODULE_UI: Record<string, { href: string; icon: typeof LayoutDashboard; exact?: boolean }> = {
+  dashboard: { href: '/admin', icon: LayoutDashboard, exact: true },
+  enrollments: { href: '/admin/enrollments', icon: BookOpen },
+  students: { href: '/admin/students', icon: GraduationCap },
+  leads: { href: '/admin/leads', icon: MessageSquare },
+  contacts: { href: '/admin/contacts', icon: Mail },
+  courses: { href: '/admin/courses', icon: Library },
+  cohorts: { href: '/admin/cohorts', icon: Calendar },
+  installments: { href: '/admin/installments', icon: CreditCard },
+  discounts: { href: '/admin/discounts', icon: BadgePercent },
+  users: { href: '/admin/users', icon: Users },
+  roles: { href: '/admin/roles', icon: ShieldCheck },
+};
+
 // Single source of truth for the sidebar AND for gating direct URL navigation
 // (admin/layout.tsx) — every module maps to its own `digitika.<module>.view` code.
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, exact: true, permission: digitikaPerm('dashboard', 'view') },
-  { label: 'Enrollments', href: '/admin/enrollments', icon: BookOpen, permission: digitikaPerm('enrollments', 'view') },
-  { label: 'Students', href: '/admin/students', icon: GraduationCap, permission: digitikaPerm('students', 'view') },
-  { label: 'Leads', href: '/admin/leads', icon: MessageSquare, permission: digitikaPerm('leads', 'view') },
-  { label: 'Contacts', href: '/admin/contacts', icon: Mail, permission: digitikaPerm('contacts', 'view') },
-  { label: 'Courses', href: '/admin/courses', icon: Library, permission: digitikaPerm('courses', 'view') },
-  { label: 'Cohorts', href: '/admin/cohorts', icon: Calendar, permission: digitikaPerm('cohorts', 'view') },
-  { label: 'Installments', href: '/admin/installments', icon: CreditCard, permission: digitikaPerm('installments', 'view') },
-  { label: 'Discounts', href: '/admin/discounts', icon: BadgePercent, permission: digitikaPerm('discounts', 'view') },
-  { label: 'Users', href: '/admin/users', icon: Users, permission: digitikaPerm('users', 'view') },
-  { label: 'Roles', href: '/admin/roles', icon: ShieldCheck, permission: digitikaPerm('roles', 'view') },
+  ...DIGITIKA_MODULES.map((mod) => ({
+    label: mod.label,
+    href: MODULE_UI[mod.key].href,
+    icon: MODULE_UI[mod.key].icon,
+    exact: MODULE_UI[mod.key].exact,
+    permission: digitikaPerm(mod.key, 'view'),
+  })),
+  // Permissions is a read-only catalog view, not its own module/action pair — it shares
+  // the "roles" module's view permission (same administrative area as Roles).
+  { label: 'Permissions', href: '/admin/permissions', icon: KeyRound, permission: digitikaPerm('roles', 'view') },
 ];
 
 /** Longest-prefix match — returns the permission code guarding a given admin pathname. */

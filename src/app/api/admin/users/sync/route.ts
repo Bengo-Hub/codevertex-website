@@ -20,6 +20,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requirePermission, resolvePlatformTenantId, AUTH_API_URL } from '@/lib/auth/rbac';
 import { digitikaPerm, mapGlobalRolesToDigitika, isFleetTestFixtureEmail } from '@/lib/digitika-rbac-catalog';
+import { extractProfileName, extractProfileAvatar } from '@/lib/auth/sso-profile';
 
 const PAGE_LIMIT = 100;
 const MAX_PAGES = 50; // safety bound — 5,000 users
@@ -28,7 +29,7 @@ interface AuthApiUser {
   id: string;
   email: string;
   primary_tenant_id?: string | null;
-  profile?: { full_name?: string; fullName?: string; avatar_url?: string; phone?: string } | null;
+  profile?: unknown;
   last_login_at?: string | null;
   memberships?: { tenant_id: string; roles: string[]; status: string }[];
 }
@@ -97,14 +98,16 @@ export async function POST(req: NextRequest) {
       const roles = rolesFor(u, platformTenantId);
       const existing = await prisma.siteUser.findUnique({ where: { id: u.id } });
       const mappedRole = !existing?.digitikaRoleCode ? mapGlobalRolesToDigitika(roles) : undefined;
+      const fullName = extractProfileName(u.profile);
+      const avatarUrl = extractProfileAvatar(u.profile);
 
       await prisma.siteUser.upsert({
         where: { id: u.id },
         create: {
           id: u.id,
           email: u.email,
-          fullName: u.profile?.full_name ?? u.profile?.fullName ?? null,
-          avatarUrl: u.profile?.avatar_url ?? null,
+          fullName,
+          avatarUrl,
           role: roles[0] ?? 'member',
           tenantId: u.primary_tenant_id ?? null,
           lastLoginAt: u.last_login_at ? new Date(u.last_login_at) : null,
@@ -113,8 +116,8 @@ export async function POST(req: NextRequest) {
         },
         update: {
           email: u.email,
-          fullName: u.profile?.full_name ?? u.profile?.fullName ?? undefined,
-          avatarUrl: u.profile?.avatar_url ?? undefined,
+          fullName: fullName ?? undefined,
+          avatarUrl: avatarUrl ?? undefined,
           role: roles[0] ?? undefined,
           tenantId: u.primary_tenant_id ?? undefined,
           lastLoginAt: u.last_login_at ? new Date(u.last_login_at) : undefined,
