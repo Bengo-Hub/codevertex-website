@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requirePermission } from '@/lib/auth/rbac';
+import { requirePermission, AUTH_API_URL } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -37,12 +37,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 /**
- * DELETE /api/admin/users/{id} — hard-deletes the LOCAL SiteUser row (Digitika's own
- * mirror + panel-access grant). This does NOT delete the person's actual SSO account —
- * auth-api has no hard-delete for that (AdminDeleteUser there only sets status="deleted",
- * a soft delete, and the record stays a member of whatever other tenants they belong to).
- * If the user still authenticates via SSO afterwards, JIT re-creates this row with no
- * Digitika role assigned — i.e. this is a real removal from Digitika's roster, not a ban.
+ * DELETE /api/admin/users/{id} — removes the LOCAL SiteUser row (Digitika's own mirror
+ * + panel-access grant). By default this does NOT delete the person's actual SSO
+ * account — if they log in again, JIT re-creates this row with no Digitika role
+ * assigned (a real removal from Digitika's roster, not a ban).
+ *
+ * Pass `?purge=true` to ALSO permanently delete their underlying SSO account platform-
+ * wide via auth-api's real hard-delete (POST /api/v1/admin/users/{id}/purge) —
+ * irreversible: sessions, tokens, MFA, tenant memberships, everything. auth-api then
+ * emits `auth.user.deleted` so other services can remove their own shadow-user data too.
  */
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requirePermission(req, digitikaPerm('users', 'manage'));
@@ -51,6 +54,21 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params;
   const user = await prisma.siteUser.findUnique({ where: { id } });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+  const purge = new URL(req.url).searchParams.get('purge') === 'true';
+  if (purge) {
+    const res = await fetch(`${AUTH_API_URL}/api/v1/admin/users/${id}/purge`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${guard.session.accessToken}` },
+    });
+    if (!res.ok && res.status !== 404) {
+      const detail = await res.text().catch(() => '');
+      return NextResponse.json(
+        { error: `auth-api rejected the purge (${res.status}): ${detail || 'no detail'}` },
+        { status: 502 }
+      );
+    }
+  }
 
   await prisma.siteUser.delete({ where: { id } });
   return new NextResponse(null, { status: 204 });

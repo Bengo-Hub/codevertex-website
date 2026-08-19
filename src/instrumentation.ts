@@ -13,4 +13,12 @@ export async function register() {
     // Non-fatal: the app runs fine without the subscriber; the sync endpoint is a fallback.
     console.warn('[instrumentation] treasury subscriber startup error (non-fatal):', err);
   }
+
+  try {
+    const { startAuthUserDeletedSubscriber } = await import('./lib/auth-user-deleted-subscriber');
+    await startAuthUserDeletedSubscriber();
+  } catch (err) {
+    // Non-fatal: worst case a purged user briefly lingers locally until the next sync.
+    console.warn('[instrumentation] auth user-deleted subscriber startup error (non-fatal):', err);
+  }
 }

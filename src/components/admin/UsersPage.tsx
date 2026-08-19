@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw, ShieldCheck, CloudDownload, UserPlus, Copy, Check, Trash2 } from 'lucide-react';
+import { Search, RefreshCw, ShieldCheck, CloudDownload, UserPlus, Copy, Check, Trash2, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
@@ -27,8 +27,12 @@ interface RoleOption { code: string; name: string }
 
 export function UsersPage() {
   const { user: currentUser } = useAuthStore();
-  const canManage = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner)
-    || hasDigitikaPermission(currentUser?.permissions, digitikaPerm('users', 'manage'));
+  const isPlatformOwnerBypass = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner);
+  const canManage = isPlatformOwnerBypass || hasDigitikaPermission(currentUser?.permissions, digitikaPerm('users', 'manage'));
+  // Purging is a true platform-wide SSO account deletion — auth-api itself only allows
+  // this for actual platform owners, so only show it to those (a locally-appointed
+  // Digitika Admin who isn't also a platform owner would just get a 403 from auth-api).
+  const canPurge = isPlatformOwnerBypass;
 
   const [data, setData] = useState<PageData | null>(null);
   const [roles, setRoles] = useState<RoleOption[]>([]);
@@ -130,6 +134,30 @@ export function UsersPage() {
     }
   }
 
+  async function handlePurge(row: SiteUserRow) {
+    const confirmText = prompt(
+      `PERMANENTLY DELETE the SSO account for ${row.email}?\n\n` +
+      `This is irreversible and platform-wide: sessions, tokens, MFA, and ALL tenant ` +
+      `memberships are destroyed everywhere on Codevertex, not just here. This CANNOT be undone.\n\n` +
+      `Type the email address to confirm:`
+    );
+    if (confirmText !== row.email) {
+      if (confirmText !== null) toast.error('Email did not match — purge cancelled');
+      return;
+    }
+    setSavingId(row.id);
+    try {
+      const res = await authedFetch(`/api/admin/users/${row.id}?purge=true`, { method: 'DELETE' });
+      if (!res.ok && res.status !== 204) throw new Error((await res.json()).error || 'Failed to purge');
+      toast.success(`${row.email} permanently deleted from the platform`);
+      load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to purge');
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   async function handleRoleChange(row: SiteUserRow, digitikaRoleCode: string | null) {
     setSavingId(row.id);
     try {
@@ -213,14 +241,26 @@ export function UsersPage() {
       key: 'actions',
       header: '',
       render: (row: SiteUserRow) => (
-        <button
-          onClick={() => handleDelete(row)}
-          disabled={savingId === row.id}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50"
-          title="Remove from Digitika roster"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center justify-end gap-1">
+          {canPurge && (
+            <button
+              onClick={() => handlePurge(row)}
+              disabled={savingId === row.id}
+              className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50"
+              title="Permanently delete SSO account platform-wide (irreversible)"
+            >
+              <UserX className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={() => handleDelete(row)}
+            disabled={savingId === row.id}
+            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-destructive disabled:opacity-50"
+            title="Remove from Digitika roster only"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       ),
     } as Column<SiteUserRow>] : []),
   ];
