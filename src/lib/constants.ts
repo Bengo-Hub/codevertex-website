@@ -26,6 +26,8 @@ export const ERP = {
   tenant: process.env.NEXT_PUBLIC_ERP_TENANT ?? 'codevertex',
 };
 
+export const SUBSCRIPTIONS_API_URL = process.env.SUBSCRIPTIONS_API_URL ?? 'https://pricingapi.codevertexafrica.com';
+
 export const NAV_LINKS = [
   { label: 'Services', href: '/services' },
   { label: 'Digitika', href: '/digitika' },

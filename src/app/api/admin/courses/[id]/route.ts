@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 const installmentPaymentSchema = z.object({
   amount: z.number(),
@@ -37,9 +39,12 @@ const patchSchema = z.object({
 });
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requirePermission(req, digitikaPerm('courses', 'view'));
+  if ('response' in guard) return guard.response;
+
   const { id } = await params;
   const course = await prisma.course.findUnique({ where: { id } });
   if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -50,6 +55,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requirePermission(req, digitikaPerm('courses', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const { id } = await params;
   const body = await req.json();
   const data = patchSchema.parse(body);
@@ -59,9 +67,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requirePermission(req, digitikaPerm('courses', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const { id } = await params;
   // Soft-delete by setting isActive = false
   const updated = await prisma.course.update({

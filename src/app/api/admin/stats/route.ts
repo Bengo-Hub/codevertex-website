@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('dashboard', 'view'));
+  if ('response' in guard) return guard.response;
+
   const [
     totalEnrollments,
     pendingEnrollments,

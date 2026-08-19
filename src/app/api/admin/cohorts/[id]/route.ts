@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 const patchSchema = z.object({
   name: z.string().optional(),
@@ -17,6 +19,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requirePermission(req, digitikaPerm('cohorts', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const { id } = await params;
   const body = await req.json();
   const data = patchSchema.parse(body);
@@ -39,9 +44,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requirePermission(req, digitikaPerm('cohorts', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const { id } = await params;
   await prisma.cohort.delete({ where: { id: BigInt(id) } });
   return NextResponse.json({ success: true });
