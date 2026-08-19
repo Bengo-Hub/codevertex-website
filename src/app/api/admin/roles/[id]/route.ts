@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requirePermission } from '@/lib/auth/rbac';
-import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
+import { requireDigitikaAdmin } from '@/lib/auth/rbac';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const guard = await requirePermission(req, digitikaPerm('roles', 'manage'));
+  const guard = await requireDigitikaAdmin(req);
   if ('response' in guard) return guard.response;
 
   const { id } = await params;
@@ -48,7 +47,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const guard = await requirePermission(req, digitikaPerm('roles', 'manage'));
+  const guard = await requireDigitikaAdmin(req);
   if ('response' in guard) return guard.response;
 
   const { id } = await params;

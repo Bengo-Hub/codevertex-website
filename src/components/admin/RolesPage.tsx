@@ -2,10 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Lock, Plus, Pencil, Trash2, Users as UsersIcon, KeyRound } from 'lucide-react';
+import { ShieldCheck, Lock, Plus, Pencil, Trash2, Users as UsersIcon, KeyRound, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from './AdminPageHeader';
 import { authedFetch } from '@/lib/auth/authed-fetch';
+import { useAuthStore } from '@/lib/store/auth-store';
+import { hasBypassRole } from '@/lib/digitika-rbac-catalog';
 
 interface Role {
   id: string;
@@ -26,6 +28,13 @@ interface PermissionGroup {
 const EMPTY_FORM = { code: '', name: '', description: '', permissionCodes: [] as string[] };
 
 export function RolesPage() {
+  const { user: currentUser } = useAuthStore();
+  // Editing roles/permissions is deliberately restricted to Digitika Admin specifically
+  // (not just whoever holds the `digitika.roles.manage` permission) — see requireDigitikaAdmin
+  // in src/lib/auth/rbac.ts for why. Enforced server-side too; this only controls the UI.
+  const isDigitikaAdmin = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner)
+    || currentUser?.digitikaRole === 'digitika_admin';
+
   const [roles, setRoles] = useState<Role[]>([]);
   const [groups, setGroups] = useState<PermissionGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +84,7 @@ export function RolesPage() {
   }
 
   const isLockedAdmin = editing?.code === 'digitika_admin';
+  const readOnly = !isDigitikaAdmin;
 
   async function handleSave() {
     if (!editing && (!form.code.trim() || !form.name.trim())) {
@@ -137,12 +147,14 @@ export function RolesPage() {
             >
               <KeyRound className="h-4 w-4" /> View Permissions
             </Link>
-            <button
-              onClick={openCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-            >
-              <Plus className="h-4 w-4" /> New Role
-            </button>
+            {isDigitikaAdmin && (
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                <Plus className="h-4 w-4" /> New Role
+              </button>
+            )}
           </div>
         }
       />
@@ -176,10 +188,14 @@ export function RolesPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => openEdit(role)} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary" title="Edit permissions">
-                  <Pencil className="h-4 w-4" />
+                <button
+                  onClick={() => openEdit(role)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+                  title={isDigitikaAdmin ? 'Edit permissions' : 'View permissions'}
+                >
+                  {isDigitikaAdmin ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-                {!role.isSystem && (
+                {isDigitikaAdmin && !role.isSystem && (
                   <button onClick={() => handleDelete(role)} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-destructive" title="Delete">
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -234,11 +250,18 @@ export function RolesPage() {
               <div className="mb-4">
                 <label className="block text-xs font-bold mb-1">Description</label>
                 <input
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-60"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  disabled={readOnly}
                 />
               </div>
+            )}
+
+            {readOnly && (
+              <p className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Eye className="h-3.5 w-3.5" /> View-only — only Digitika Admin can edit roles and permissions.
+              </p>
             )}
 
             {isLockedAdmin ? (
@@ -258,7 +281,8 @@ export function RolesPage() {
                             type="checkbox"
                             checked={form.permissionCodes.includes(perm.code)}
                             onChange={() => togglePermission(perm.code)}
-                            className="h-3.5 w-3.5 rounded border-border accent-primary"
+                            disabled={readOnly}
+                            className="h-3.5 w-3.5 rounded border-border accent-primary disabled:opacity-60"
                           />
                           <span className="capitalize text-muted-foreground">{perm.action}</span>
                         </label>
@@ -271,15 +295,17 @@ export function RolesPage() {
 
             <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-border">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors">
-                Cancel
+                {readOnly ? 'Close' : 'Cancel'}
               </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || isLockedAdmin}
-                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Role'}
-              </button>
+              {!readOnly && (
+                <button
+                  onClick={handleSave}
+                  disabled={saving || isLockedAdmin}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Role'}
+                </button>
+              )}
             </div>
           </div>
         </div>

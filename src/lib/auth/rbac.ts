@@ -166,3 +166,25 @@ export async function requirePermission(
   }
   return { session };
 }
+
+/**
+ * Route-handler guard for role/permission ADMINISTRATION specifically (creating roles,
+ * editing a role's permission matrix, deleting a role). Deliberately hardcoded to the
+ * `digitika_admin` role code rather than the generic `digitika.roles.manage` permission —
+ * that permission is itself one of the checkboxes any custom role's matrix can grant, so
+ * gating self-service RBAC changes on it would let a misconfigured custom role edit (and
+ * potentially escalate) roles, including its own. Only Digitika Admin — or a full SSO
+ * bypass — may ever mutate roles/permissions.
+ */
+export async function requireDigitikaAdmin(
+  req: NextRequest
+): Promise<{ session: DigitikaSession } | { response: NextResponse }> {
+  const session = await resolveDigitikaSession(req);
+  if (!session) {
+    return { response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+  if (!session.isBypass && session.digitikaRoleCode !== 'digitika_admin') {
+    return { response: NextResponse.json({ error: 'Forbidden', reason: 'Only Digitika Admin can manage roles/permissions' }, { status: 403 }) };
+  }
+  return { session };
+}

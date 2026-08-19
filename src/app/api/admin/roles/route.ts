@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requirePermission } from '@/lib/auth/rbac';
+import { requirePermission, requireDigitikaAdmin } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 export async function GET(req: NextRequest) {
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const guard = await requirePermission(req, digitikaPerm('roles', 'manage'));
+  const guard = await requireDigitikaAdmin(req);
   if ('response' in guard) return guard.response;
 
   let body: { code?: string; name?: string; description?: string; permissionCodes?: string[] };
