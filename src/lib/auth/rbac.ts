@@ -2,7 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ADMIN_BYPASS_ROLES } from '@/lib/digitika-rbac-catalog';
 
-const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://sso.codevertexafrica.com';
+export const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://sso.codevertexafrica.com';
+const PLATFORM_TENANT_SLUG = 'codevertex';
+
+let cachedPlatformTenantId: string | null = null;
+
+/**
+ * Resolves the codevertex platform-owner tenant's UUID via auth-api's public
+ * by-slug lookup (no auth required) — never hardcode this UUID, per the platform's
+ * tenant-UUID-drift lesson (auth-api generates it at runtime, per environment).
+ * Cached in-process for the life of the pod since it never changes.
+ */
+export async function resolvePlatformTenantId(): Promise<string | null> {
+  if (cachedPlatformTenantId) return cachedPlatformTenantId;
+  try {
+    const res = await fetch(`${AUTH_API_URL}/api/v1/tenants/by-slug/${PLATFORM_TENANT_SLUG}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const body = await res.json();
+    const id = body?.id ?? body?.tenant_id ?? body?.tenant?.id ?? null;
+    if (id) cachedPlatformTenantId = id;
+    return id;
+  } catch {
+    return null;
+  }
+}
 
 export interface DigitikaSession {
   userId: string;
