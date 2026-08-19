@@ -17,7 +17,24 @@ export interface UserProfile {
   avatar_url?: string;
   tenant_id?: string;
   tenant_slug?: string;
+  is_platform_owner?: boolean;
+  /** Digitika admin-panel local role code (e.g. 'digitika_admin' | 'digitika_staff'), null if none assigned */
+  digitikaRole?: string | null;
+  /** Merged local permissions — contains `'*'` for a full-bypass (platform owner/global admin) user */
+  permissions?: string[];
   [key: string]: unknown;
+}
+
+/** Best-effort fetch of the local Digitika permissions/role — never blocks login on failure. */
+async function fetchDigitikaProfile(accessToken: string): Promise<{ digitikaRole: string | null; permissions: string[] }> {
+  try {
+    const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) return { digitikaRole: null, permissions: [] };
+    const data = await res.json();
+    return { digitikaRole: data.digitikaRole ?? null, permissions: Array.isArray(data.permissions) ? data.permissions : [] };
+  } catch {
+    return { digitikaRole: null, permissions: [] };
+  }
 }
 
 interface Session {
@@ -81,6 +98,7 @@ export const useAuthStore = create<AuthState>()(
           set({ session, accessToken: session.accessToken });
 
           const raw = await fetchProfile(session.accessToken);
+          const digitika = await fetchDigitikaProfile(session.accessToken);
           const user: UserProfile = {
             id: raw.id ?? raw.sub,
             email: raw.email,
@@ -92,6 +110,8 @@ export const useAuthStore = create<AuthState>()(
             tenant_id: raw.tenant_id,
             tenant_slug: raw.tenant_slug,
             ...raw,
+            digitikaRole: digitika.digitikaRole,
+            permissions: digitika.permissions,
           };
 
           set({ user, status: 'authenticated' });
@@ -114,6 +134,7 @@ export const useAuthStore = create<AuthState>()(
         if (!session?.accessToken) { set({ status: 'idle' }); return; }
         try {
           const raw = await fetchProfile(session.accessToken);
+          const digitika = await fetchDigitikaProfile(session.accessToken);
           const user: UserProfile = {
             id: raw.id ?? raw.sub,
             email: raw.email,
@@ -125,6 +146,8 @@ export const useAuthStore = create<AuthState>()(
             tenant_id: raw.tenant_id,
             tenant_slug: raw.tenant_slug,
             ...raw,
+            digitikaRole: digitika.digitikaRole,
+            permissions: digitika.permissions,
           };
           set({ user, status: 'authenticated' });
         } catch {

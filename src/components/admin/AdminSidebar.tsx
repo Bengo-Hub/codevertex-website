@@ -3,33 +3,19 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  BookOpen,
-  GraduationCap,
-  MessageSquare,
-  Mail,
-  Calendar,
-  CreditCard,
-  Library,
-  ChevronRight,
-  BadgePercent,
-} from 'lucide-react';
-
-const NAV = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard, exact: true },
-  { label: 'Enrollments', href: '/admin/enrollments', icon: BookOpen },
-  { label: 'Students', href: '/admin/students', icon: GraduationCap },
-  { label: 'Leads', href: '/admin/leads', icon: MessageSquare },
-  { label: 'Contacts', href: '/admin/contacts', icon: Mail },
-  { label: 'Courses', href: '/admin/courses', icon: Library },
-  { label: 'Cohorts', href: '/admin/cohorts', icon: Calendar },
-  { label: 'Installments', href: '/admin/installments', icon: CreditCard },
-  { label: 'Discounts', href: '/admin/discounts', icon: BadgePercent },
-];
+import { ChevronRight } from 'lucide-react';
+import { useAuthStore } from '@/lib/store/auth-store';
+import { ADMIN_NAV_ITEMS } from '@/lib/auth/admin-nav';
+import { hasBypassRole, hasDigitikaPermission } from '@/lib/digitika-rbac-catalog';
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { user } = useAuthStore();
+
+  const bypass = hasBypassRole(user?.roles, user?.is_platform_owner);
+  const visibleItems = ADMIN_NAV_ITEMS.filter(
+    (item) => bypass || hasDigitikaPermission(user?.permissions, item.permission)
+  );
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
@@ -54,7 +40,7 @@ export function AdminSidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ label, href, icon: Icon, exact }) => {
+        {visibleItems.map(({ label, href, icon: Icon, exact }) => {
           const active = isActive(href, exact);
           return (
             <Link
