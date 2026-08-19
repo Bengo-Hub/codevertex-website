@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
           id: true,
           fullName: true,
           email: true,
+          phone: true,
           courseName: true,
           studentUserId: true,
           paymentStatus: true,
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
       await sendInstallmentReminder({
         studentName: enrollment.fullName,
         studentEmail: enrollment.email,
+        studentPhone: enrollment.phone,
         courseName: enrollment.courseName,
         installmentNo: installment.installmentNo,
         totalInstallments,
