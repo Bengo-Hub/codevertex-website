@@ -101,3 +101,24 @@ export function hasDigitikaPermission(permissions: string[] | undefined, code: s
   if (!permissions) return false;
   return permissions.includes('*') || permissions.includes(code);
 }
+
+/**
+ * Auto-maps a synced platform user's SSO global roles to a seeded Digitika role,
+ * "where applicable" — used only to pre-fill a NEW user's panel access on sync
+ * (never overwrites an existing manual assignment). Conservative on purpose: a
+ * bare `member`/`viewer` doesn't imply Digitika program staff, so it maps to null.
+ */
+export function mapGlobalRolesToDigitika(roles: string[]): string | null {
+  if (roles.some((r) => ADMIN_BYPASS_ROLES.has(r))) return 'digitika_admin';
+  if (roles.includes('staff') || roles.includes('manager')) return 'digitika_staff';
+  return null;
+}
+
+// Fleet-wide e2e/QA fixture accounts seeded by auth-api (cmd/seed/seed_users.go) and
+// consumed by e2e specs across ~10 frontends. Never surface these in the Digitika Users
+// page — they aren't real Digitika staff, and they must NOT be deleted at the source
+// (auth-api) since doing so would break other services' login e2e tests.
+const FIXTURE_STAFF_EMAIL = /^staff@[^@]+\.com$/i;
+export function isFleetTestFixtureEmail(email: string): boolean {
+  return email.toLowerCase() === 'demo@bengobox.dev' || FIXTURE_STAFF_EMAIL.test(email);
+}

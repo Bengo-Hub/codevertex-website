@@ -60,6 +60,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # src/config is needed by prisma/seed/courses.ts at seed time (relative import).
 COPY --from=builder --chown=nextjs:nodejs /app/src/config ./src/config
+# src/lib is needed by prisma/seed/digitika-rbac.ts at seed time (relative import
+# of src/lib/digitika-rbac-catalog.ts, the RBAC catalog shared with the API routes).
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib ./src/lib
 
 # Entrypoint: migrate → seed → start
 COPY --chown=nextjs:nodejs scripts/entrypoint.sh ./entrypoint.sh
