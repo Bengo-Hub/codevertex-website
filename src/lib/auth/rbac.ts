@@ -81,12 +81,18 @@ export async function resolveDigitikaSession(req: NextRequest): Promise<Digitika
 
   const globalRoles = Array.isArray(profile.roles) ? (profile.roles as string[]) : [];
   const isPlatformOwner = Boolean(profile.is_platform_owner);
-  const isBypass = isPlatformOwner || globalRoles.some((r) => ADMIN_BYPASS_ROLES.has(r));
+  const tenantSlug = (profile.tenant_slug ?? null) as string | null;
+  // SECURITY: a bare "admin"/"superuser" role string is tenant-scoped (any tenant's own
+  // admin has it for THEIR tenant) — it must never grant a bypass of Digitika's local RBAC
+  // unless it's held specifically within the codevertex platform tenant. Without this check,
+  // any customer tenant's admin gets full, unrestricted access to Digitika's admin panel
+  // (student PII, payments, discount codes) purely by being an admin of their own unrelated
+  // business. Fixed 2026-08-19 after a live report of exactly this.
+  const isBypass = isPlatformOwner || (tenantSlug === PLATFORM_TENANT_SLUG && globalRoles.some((r) => ADMIN_BYPASS_ROLES.has(r)));
 
   const fullName = extractProfileName(profile.profile);
   const avatarUrl = extractProfileAvatar(profile.profile);
   const tenantId = (profile.tenant_id ?? profile.primary_tenant_id ?? null) as string | null;
-  const tenantSlug = (profile.tenant_slug ?? null) as string | null;
 
   const siteUser = await prisma.siteUser.upsert({
     where: { id: userId },

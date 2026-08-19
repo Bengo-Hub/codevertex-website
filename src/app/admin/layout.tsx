@@ -12,12 +12,12 @@ import type { UserProfile } from '@/lib/store/auth-store';
 
 function canAccessAdminPanel(user: UserProfile | null | undefined): boolean {
   if (!user) return false;
-  return hasBypassRole(user.roles, user.is_platform_owner) || (user.permissions?.length ?? 0) > 0;
+  return hasBypassRole(user.roles, user.is_platform_owner, user.tenant_slug) || (user.permissions?.length ?? 0) > 0;
 }
 
 function canAccessPath(user: UserProfile | null | undefined, pathname: string): boolean {
   if (!user) return false;
-  if (hasBypassRole(user.roles, user.is_platform_owner)) return true;
+  if (hasBypassRole(user.roles, user.is_platform_owner, user.tenant_slug)) return true;
   const required = requiredPermissionForPath(pathname);
   if (!required) return true; // no specific module guard for this path (e.g. /admin/unauthorized)
   return hasDigitikaPermission(user.permissions, required);

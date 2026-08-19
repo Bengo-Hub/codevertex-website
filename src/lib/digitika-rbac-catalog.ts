@@ -90,9 +90,22 @@ export const DIGITIKA_ROLE_DEFAULTS: DigitikaRoleDef[] = [
 // SSO global roles that always bypass local RBAC entirely (platform-owner-tier access).
 export const ADMIN_BYPASS_ROLES = new Set(['admin', 'superuser', 'platform_admin', 'superadmin']);
 
-/** Client-safe helper — true if the user's SSO global roles/flag grant a full bypass. */
-export function hasBypassRole(roles: string[] | undefined, isPlatformOwner: boolean | undefined): boolean {
+// Must match rbac.ts's own PLATFORM_TENANT_SLUG — duplicated here since this file is
+// intentionally dependency-free (importable from prisma/seed/* with no Next/DB imports).
+const PLATFORM_TENANT_SLUG = 'codevertex';
+
+/**
+ * Client-safe helper — true if the user's SSO global roles/flag grant a full bypass.
+ *
+ * SECURITY: `roles` is a bare, tenant-scoped role string (e.g. "admin" of the caller's OWN
+ * tenant) — it must NEVER grant a bypass unless it's held specifically within the codevertex
+ * platform tenant. Without checking `tenantSlug`, any customer tenant's own admin would get
+ * full, unrestricted Digitika admin-panel access. `tenantSlug` is required (not optional) so a
+ * call site can't silently skip this check by omitting the argument.
+ */
+export function hasBypassRole(roles: string[] | undefined, isPlatformOwner: boolean | undefined, tenantSlug: string | null | undefined): boolean {
   if (isPlatformOwner) return true;
+  if (tenantSlug !== PLATFORM_TENANT_SLUG) return false;
   return (roles ?? []).some((r) => ADMIN_BYPASS_ROLES.has(r));
 }
 

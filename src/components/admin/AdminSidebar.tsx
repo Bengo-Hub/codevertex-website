@@ -12,7 +12,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { user } = useAuthStore();
 
-  const bypass = hasBypassRole(user?.roles, user?.is_platform_owner);
+  const bypass = hasBypassRole(user?.roles, user?.is_platform_owner, user?.tenant_slug);
   const visibleItems = ADMIN_NAV_ITEMS.filter(
     (item) => bypass || hasDigitikaPermission(user?.permissions, item.permission)
   );
