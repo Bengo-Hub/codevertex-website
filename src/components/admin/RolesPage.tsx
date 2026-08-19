@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { ShieldCheck, Lock, Plus, Pencil, Trash2, Users as UsersIcon } from 'lucide-react';
+import Link from 'next/link';
+import { ShieldCheck, Lock, Plus, Pencil, Trash2, Users as UsersIcon, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminPageHeader } from './AdminPageHeader';
 import { authedFetch } from '@/lib/auth/authed-fetch';
@@ -126,15 +127,23 @@ export function RolesPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <AdminPageHeader
-        title="Roles & Permissions"
+        title="Roles"
         description="Digitika admin-panel access control — assign these roles to platform users from the Users page"
         actions={
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-          >
-            <Plus className="h-4 w-4" /> New Role
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/permissions"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+            >
+              <KeyRound className="h-4 w-4" /> View Permissions
+            </Link>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              <Plus className="h-4 w-4" /> New Role
+            </button>
+          </div>
         }
       />
 
