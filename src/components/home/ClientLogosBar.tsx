@@ -21,12 +21,13 @@ export async function ClientLogosBar() {
           {items.map((t, i) => (
             <div
               key={`${t.slug}-${i}`}
-              className="flex flex-col items-center justify-center w-44 h-20 rounded-xl bg-background border border-border px-4 py-3 shrink-0 hover:border-primary/30 transition-colors duration-200"
+              className="flex flex-col items-center justify-center w-48 h-28 rounded-xl bg-background border border-border px-4 py-3 shrink-0 hover:border-primary/30 transition-colors duration-200"
               title={t.name}
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary tenant-hosted/data-URI logos, not a next/image-friendly source */}
               <img src={t.logoUrl} alt={t.name} className="h-8 w-auto max-w-[120px] object-contain" />
-              <span className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.useCase}</span>
+              <span className="mt-2 text-xs font-bold text-foreground text-center leading-tight line-clamp-1">{t.name}</span>
+              <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t.useCase}</span>
             </div>
           ))}
         </div>
