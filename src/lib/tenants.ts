@@ -31,6 +31,8 @@ const USE_CASE_LABELS: Record<string, string> = {
   healthcare: 'Healthcare',
   isp: 'ISP',
   fbo: 'Food Business',
+  axle_load_enforcement: 'Axle Load Enforcement',
+  commercial_weighing: 'Commercial Weighing',
 };
 
 function labelFor(useCase?: string): string {
