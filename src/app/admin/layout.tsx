@@ -6,14 +6,21 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminTopNav } from '@/components/admin/AdminTopNav';
 import { AdminFooter } from '@/components/admin/AdminFooter';
+import { requiredPermissionForPath } from '@/lib/auth/admin-nav';
+import { hasBypassRole, hasDigitikaPermission } from '@/lib/digitika-rbac-catalog';
+import type { UserProfile } from '@/lib/store/auth-store';
 
-const ADMIN_ROLES = new Set(['admin', 'superuser', 'platform_admin', 'superadmin']);
-
-function hasAdminRole(user: { role?: string; roles?: string[]; is_platform_owner?: boolean } | null | undefined): boolean {
+function canAccessAdminPanel(user: UserProfile | null | undefined): boolean {
   if (!user) return false;
-  if (user.is_platform_owner) return true;
-  const roles = user.roles ?? (user.role ? [user.role] : []);
-  return roles.some((r) => ADMIN_ROLES.has(r));
+  return hasBypassRole(user.roles, user.is_platform_owner) || (user.permissions?.length ?? 0) > 0;
+}
+
+function canAccessPath(user: UserProfile | null | undefined, pathname: string): boolean {
+  if (!user) return false;
+  if (hasBypassRole(user.roles, user.is_platform_owner)) return true;
+  const required = requiredPermissionForPath(pathname);
+  if (!required) return true; // no specific module guard for this path (e.g. /admin/unauthorized)
+  return hasDigitikaPermission(user.permissions, required);
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +37,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    if (!hasAdminRole(user) && pathname !== '/admin/unauthorized') {
+    if (pathname === '/admin/unauthorized') return;
+
+    if (!canAccessAdminPanel(user) || !canAccessPath(user, pathname)) {
       router.replace('/admin/unauthorized');
     }
   }, [status, user, router, pathname]);
@@ -43,7 +52,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
     );
   }
-  if (user && !hasAdminRole(user) && !isUnauthorizedPage) {
+  if (user && (!canAccessAdminPanel(user) || !canAccessPath(user, pathname)) && !isUnauthorizedPage) {
     return null;
   }
 

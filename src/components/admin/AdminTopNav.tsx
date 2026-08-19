@@ -16,6 +16,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/courses': 'Courses',
   '/admin/cohorts': 'Cohorts',
   '/admin/installments': 'Installment Schedules',
+  '/admin/discounts': 'Discount Rules',
+  '/admin/users': 'Users',
+  '/admin/roles': 'Roles & Permissions',
 };
 
 function getPageTitle(pathname: string): string {
@@ -49,7 +52,7 @@ export function AdminTopNav() {
 
   const displayName = user?.fullName ?? user?.name ?? user?.email ?? 'Admin';
   const initials = getInitials(user?.fullName ?? user?.name, user?.email);
-  const role = Array.isArray(user?.roles) ? user.roles[0] : (user?.role ?? 'admin');
+  const role = user?.digitikaRole ?? (Array.isArray(user?.roles) ? user.roles[0] : (user?.role ?? 'admin'));
 
   return (
     <header className="h-14 shrink-0 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10 flex items-center px-6 gap-4">

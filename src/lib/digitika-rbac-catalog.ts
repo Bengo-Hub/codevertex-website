@@ -1,0 +1,103 @@
+/**
+ * Digitika admin-panel RBAC catalog — Trinity Layer 3 (local to codevertex-website).
+ *
+ * Permission codes follow the platform-wide `{service}.{module}.{action}` format used
+ * across the fleet (see shared-docs/architecture/trinity-authorization-pattern.md).
+ * Pure data, no DB/Next imports — safe to import from both `prisma/seed/*` (seeding)
+ * and `src/app/api/**` (runtime permission checks) without pulling in Prisma or React.
+ */
+
+export interface DigitikaPermissionDef {
+  code: string;
+  module: string;
+  action: 'view' | 'manage';
+  description: string;
+}
+
+export interface DigitikaModuleDef {
+  key: string;
+  label: string;
+}
+
+// Order here drives the sidebar + permission-matrix display order.
+export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'enrollments', label: 'Enrollments' },
+  { key: 'students', label: 'Students' },
+  { key: 'leads', label: 'Leads' },
+  { key: 'contacts', label: 'Contacts' },
+  { key: 'courses', label: 'Courses' },
+  { key: 'cohorts', label: 'Cohorts' },
+  { key: 'installments', label: 'Installments' },
+  { key: 'discounts', label: 'Discounts' },
+  { key: 'users', label: 'Users' },
+  { key: 'roles', label: 'Roles & Permissions' },
+];
+
+// dashboard is view-only (a landing/stats page — nothing to "manage" on it directly)
+const VIEW_ONLY_MODULES = new Set(['dashboard']);
+
+function buildPermissions(): DigitikaPermissionDef[] {
+  const perms: DigitikaPermissionDef[] = [];
+  for (const { key, label } of DIGITIKA_MODULES) {
+    perms.push({ code: `digitika.${key}.view`, module: key, action: 'view', description: `View ${label}` });
+    if (!VIEW_ONLY_MODULES.has(key)) {
+      perms.push({ code: `digitika.${key}.manage`, module: key, action: 'manage', description: `Create, edit, and delete ${label}` });
+    }
+  }
+  return perms;
+}
+
+export const DIGITIKA_PERMISSIONS: DigitikaPermissionDef[] = buildPermissions();
+
+export function digitikaPerm(module: string, action: 'view' | 'manage'): string {
+  return `digitika.${module}.${action}`;
+}
+
+const ALL_PERMISSION_CODES = DIGITIKA_PERMISSIONS.map((p) => p.code);
+
+// Every content module except the RBAC-administration modules themselves.
+const STAFF_PERMISSION_CODES = ALL_PERMISSION_CODES.filter(
+  (code) => !code.startsWith('digitika.users.') && !code.startsWith('digitika.roles.')
+);
+
+export interface DigitikaRoleDef {
+  code: string;
+  name: string;
+  description: string;
+  permissionCodes: string[];
+}
+
+// Seeded, system-owned roles. `digitika_admin`'s permission set is force-reconciled
+// (additively) on every seed run — see prisma/seed/digitika-rbac.ts. `digitika_staff`'s
+// permission set only seeds on first creation; an admin may edit it afterwards via the
+// Roles page and that customization is preserved across restarts.
+export const DIGITIKA_ROLE_DEFAULTS: DigitikaRoleDef[] = [
+  {
+    code: 'digitika_admin',
+    name: 'Digitika Admin',
+    description: 'Full access to the Digitika admin panel, including user and role management.',
+    permissionCodes: ALL_PERMISSION_CODES,
+  },
+  {
+    code: 'digitika_staff',
+    name: 'Digitika Staff',
+    description: 'Manages Digitika LMS content (courses, cohorts, enrollments, students, leads, contacts, installments, discounts). No user or role administration.',
+    permissionCodes: STAFF_PERMISSION_CODES,
+  },
+];
+
+// SSO global roles that always bypass local RBAC entirely (platform-owner-tier access).
+export const ADMIN_BYPASS_ROLES = new Set(['admin', 'superuser', 'platform_admin', 'superadmin']);
+
+/** Client-safe helper — true if the user's SSO global roles/flag grant a full bypass. */
+export function hasBypassRole(roles: string[] | undefined, isPlatformOwner: boolean | undefined): boolean {
+  if (isPlatformOwner) return true;
+  return (roles ?? []).some((r) => ADMIN_BYPASS_ROLES.has(r));
+}
+
+/** Client-safe helper — checks a merged `permissions` array (may contain the `'*'` wildcard). */
+export function hasDigitikaPermission(permissions: string[] | undefined, code: string): boolean {
+  if (!permissions) return false;
+  return permissions.includes('*') || permissions.includes(code);
+}

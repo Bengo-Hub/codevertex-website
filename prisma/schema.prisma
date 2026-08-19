@@ -227,15 +227,67 @@ model SiteUser {
   email       String    @unique
   fullName    String?   @map("full_name")
   avatarUrl   String?   @map("avatar_url")
-  role        String    @default("member")  // 'member' | 'admin'
+  role        String    @default("member")  // legacy label mirrored from the last SSO sync payload ('member' | 'admin')
   tenantId    String?   @map("tenant_id")
   tenantSlug  String?   @map("tenant_slug")
   lastLoginAt DateTime? @map("last_login_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
+  // Digitika admin-panel RBAC (Trinity Layer 3 — local to this service, independent of `role` above).
+  // Null = no panel access unless the user's SSO global role passes the platform-admin bypass.
+  digitikaRoleCode String? @map("digitika_role_code")
+  digitikaRole     DigitikaRole? @relation(fields: [digitikaRoleCode], references: [code])
+  syncedFromSso    Boolean       @default(false) @map("synced_from_sso") // true = pulled in via admin "Sync platform users", not a real login yet
+
   @@index([email])
   @@index([tenantId])
   @@index([role])
+  @@index([digitikaRoleCode])
   @@map("site_users")
+}
+
+// ---------------------------------------------------------------------------
+// Digitika admin-panel RBAC — Trinity Layer 3 (local role/permission catalog).
+// Permission codes follow the platform-wide `{service}.{module}.{action}` format,
+// e.g. `digitika.students.manage`. See shared-docs/architecture/trinity-authorization-pattern.md.
+// ---------------------------------------------------------------------------
+model DigitikaPermission {
+  id          String   @id @default(cuid())
+  code        String   @unique  // e.g. "digitika.students.manage"
+  module      String             // e.g. "students"
+  action      String             // "view" | "manage"
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  roles DigitikaRolePermission[]
+
+  @@index([module])
+  @@map("digitika_permissions")
+}
+
+model DigitikaRole {
+  id          String   @id @default(cuid())
+  code        String   @unique  // e.g. "digitika_admin"
+  name        String             // e.g. "Digitika Admin"
+  description String?
+  isSystem    Boolean  @default(false) @map("is_system")  // seeded roles — permissions locked for digitika_admin
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  permissions DigitikaRolePermission[]
+  users       SiteUser[]
+
+  @@map("digitika_roles")
+}
+
+model DigitikaRolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       DigitikaRole       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission DigitikaPermission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("digitika_role_permissions")
 }

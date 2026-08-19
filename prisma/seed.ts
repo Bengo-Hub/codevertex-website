@@ -15,12 +15,17 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { COURSES, INSTALLMENT_PLANS_MAP, DEPRECATED_COURSE_IDS } from './seed/courses';
 import { COHORTS } from './seed/cohorts';
 import { BLOG_POSTS } from './seed/blog';
+import { seedDigitikaRbac, pushDigitikaRolesToAuthRegistry } from './seed/digitika-rbac';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Seeding Codevertex website database...');
+
+  // ── Digitika admin-panel RBAC (permissions + digitika_admin/digitika_staff roles) ──
+  await seedDigitikaRbac(prisma);
+  await pushDigitikaRolesToAuthRegistry();
 
   // ── Courses ──────────────────────────────────────────────────────────────
   console.log('\n🗑️  Removing deprecated course IDs...');
