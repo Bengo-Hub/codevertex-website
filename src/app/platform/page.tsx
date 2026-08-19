@@ -4,20 +4,17 @@ import { PlatformAuditFindings } from '@/components/platform/PlatformAuditFindin
 
 export const metadata: Metadata = {
   title: 'Platform Architecture',
-  description:
-    "A living map of the Codevertex Power Suite's ~20 services and how they connect, plus a section-by-section audit of the platform against a recent roadmap review.",
+  description: "How the Codevertex Power Suite's services fit together, and an honest look at where this site stands today.",
 };
 
 const JUMP_LINKS = [
   { href: '#ecosystem', label: 'Ecosystem map' },
-  { href: '#urgent', label: 'Urgent' },
-  { href: '#s1', label: 'Digitika LMS' },
-  { href: '#s2', label: 'Vera Chatbot' },
+  { href: '#s1', label: 'Digitika' },
+  { href: '#s2', label: 'Vera' },
   { href: '#s3', label: 'Trust & Security' },
   { href: '#s4', label: 'Enterprise' },
-  { href: '#s5', label: 'Technical' },
+  { href: '#s5', label: 'Infrastructure' },
   { href: '#s6', label: 'Growth' },
-  { href: '#shipped', label: 'What shipped' },
 ];
 
 export default function PlatformPage() {
@@ -28,12 +25,12 @@ export default function PlatformPage() {
         <div className="absolute top-0 right-0 w-125 h-125 bg-primary/15 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="max-w-5xl mx-auto relative z-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Engineering &middot; Platform Reference</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">How it fits together</p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] mb-6">
-            How Codevertex actually fits together.
+            What Codevertex actually is.
           </h1>
           <p className="text-white/70 dark:text-muted-foreground text-lg max-w-2xl leading-relaxed">
-            A living map of the Power Suite&apos;s ~20 services and how they connect, followed by a section-by-section fact-check of a recent platform roadmap review against the real codebase &mdash; what&apos;s genuinely missing, what&apos;s already built and just needs wiring, and one thing that needed fixing immediately.
+            Codevertex isn&apos;t one product — it&apos;s a whole suite of them, built to work together. Here&apos;s a map of how the pieces connect, followed by an honest look at where this particular site stands: what&apos;s real, what still needs doing, and what turned out to already exist somewhere else.
           </p>
         </div>
       </section>
@@ -58,7 +55,7 @@ export default function PlatformPage() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-2">The service ecosystem</h2>
           <p className="text-muted-foreground max-w-2xl mb-10">
-            Codevertex isn&apos;t one app &mdash; it&apos;s a fleet of independently deployed services sharing one identity layer, one billing/entitlements layer, and one event bus. This site is one node in that graph too.
+            Under the hood, everything shares one login system, one billing engine, and one message bus connecting it all — so a sale on the till, a payroll run, and a support ticket all end up talking to each other without anyone wiring it by hand. This site is one node in that same graph.
           </p>
           <PlatformEcosystemMap />
         </div>
@@ -67,9 +64,9 @@ export default function PlatformPage() {
       {/* ── Audit ────────────────────────────────────────────────── */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background border-t border-border">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-2">Roadmap reality check</h2>
+          <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-2">Where this site actually stands</h2>
           <p className="text-muted-foreground max-w-2xl mb-10">
-            An intern&apos;s gap-analysis reviewed one repo &mdash; this site. Here&apos;s every item from that review, fact-checked against the other ~19 services.
+            A recent review of this site raised a long list of gaps. Rather than just filing it away, we checked each one against what’s really built across the platform — some held up, some turned out to already be solved elsewhere, and a couple were more nuanced than they first looked.
           </p>
           <PlatformAuditFindings />
         </div>

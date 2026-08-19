@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 const createSchema = z.object({
   courseId: z.string(),
@@ -15,6 +17,9 @@ const createSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('cohorts', 'view'));
+  if ('response' in guard) return guard.response;
+
   const url = new URL(req.url);
   const courseId = url.searchParams.get('courseId') ?? undefined;
 
@@ -28,6 +33,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('cohorts', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const body = await req.json();
   const data = createSchema.parse(body);
 

@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 export async function GET(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('students', 'view'));
+  if ('response' in guard) return guard.response;
+
   const url = new URL(req.url);
   const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10));
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));

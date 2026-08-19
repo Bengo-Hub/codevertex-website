@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 const createSchema = z.object({
   name: z.string().min(1),
@@ -19,6 +21,9 @@ const createSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('discounts', 'view'));
+  if ('response' in guard) return guard.response;
+
   const url = new URL(req.url);
   const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20'));
@@ -50,6 +55,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('discounts', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const body = await req.json();
   const data = createSchema.parse(body);
 

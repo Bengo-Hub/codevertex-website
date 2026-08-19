@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { sendInstallmentReminder, buildPortalLink } from '@/lib/notifications';
+import { requirePermission } from '@/lib/auth/rbac';
+import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
 const patchSchema = z.object({
   id: z.string(),
@@ -10,6 +12,9 @@ const patchSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('installments', 'view'));
+  if ('response' in guard) return guard.response;
+
   const url = new URL(req.url);
   const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10));
   const limit = Math.min(100, parseInt(url.searchParams.get('limit') ?? '20', 10));
@@ -58,6 +63,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const guard = await requirePermission(req, digitikaPerm('installments', 'manage'));
+  if ('response' in guard) return guard.response;
+
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   // Manually send a payment reminder for a specific installment
   const url = new URL(req.url);

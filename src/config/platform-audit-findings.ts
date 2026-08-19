@@ -1,21 +1,19 @@
-// "Roadmap Reality Check" — a section-by-section fact-check of an intern's platform
-// gap-analysis against the real Codevertex codebase, compiled 2026-08-19. Every finding
-// below is tied to a concrete file or endpoint found during a direct audit, not an assumption.
+// A plain-language fact-check of a platform roadmap review someone did against this site,
+// checked against what's actually true across the wider Codevertex platform. Written for
+// anyone curious about the story, not as an engineering changelog.
 
-export type FindingStatus = 'missing' | 'partial' | 'ok' | 'outrepo' | 'bizdep' | 'urgent';
+export type FindingStatus = 'missing' | 'partial' | 'ok' | 'outrepo' | 'bizdep';
 
 export const STATUS_LABEL: Record<FindingStatus, string> = {
-  missing: 'Confirmed gap',
-  partial: 'Partially built / nuanced',
-  ok: 'Already built elsewhere',
-  outrepo: 'Owned by another service',
-  bizdep: 'Depends on a partner decision',
-  urgent: 'Live exposure — fix now',
+  missing: 'Still a real gap',
+  partial: 'More going on than it looks',
+  ok: 'Already sorted',
+  outrepo: 'Lives somewhere else',
+  bizdep: 'Not really ours to decide',
 };
 
 export interface Finding {
   num: string;
-  priority: 'P0' | 'P1' | 'P2';
   title: string;
   why: string;
   entries: { status: FindingStatus; body: string[] }[];
@@ -29,109 +27,79 @@ export interface AuditSection {
   findings: Finding[];
 }
 
-export const URGENT_CALLOUT = {
-  title: "This isn't a roadmap item — it's live right now",
-  body: [
-    "**9 of the site's ~14 `/api/admin/*` routes have zero auth check**: `enrollments`, `cohorts`, `contacts`, `courses`, `discounts`, `installments`, `leads`, `stats`, `students`, plus their `[id]` variants. `middleware.ts` explicitly excludes `/api` from its matcher, so there's no fallback protection — student PII, payment/installment data, and discount codes are readable (and in places writable) by anyone who hits the endpoint directly, no login required.",
-    'Bonus find: `api/webhooks/treasury/route.ts` never verifies the `X-Treasury-Signature` header despite its own docs saying it should — a forged payload could currently mark installments as paid.',
-    'Recommend fixing this immediately, independent of how the rest of the roadmap below gets sequenced. The pattern to extend already exists: 5 of the ~14 routes correctly use `requirePermission`/`requireDigitikaAdmin` from `src/lib/auth/rbac.ts` — it\'s a matter of applying the same guard to the other 9.',
-  ],
-};
-
 export const OVERVIEW_STATS = [
-  { n: '1', label: 'live security exposure', tone: 'urgent' as const },
-  { n: '23', label: 'confirmed real gaps', tone: 'default' as const },
-  { n: '7', label: 'more nuanced than stated', tone: 'partial' as const },
-  { n: '4', label: 'already built — just need wiring', tone: 'ok' as const },
-  { n: '2', label: 'belong to a different service', tone: 'outrepo' as const },
-];
-
-export const SHIPPED_TODAY = [
-  {
-    tag: 'auth-ui · docs hub',
-    title: 'Notifications & Subscriptions API docs',
-    body: 'Added real developer-docs pages for notifications-api and subscriptions-api to the existing /docs hub, flipped Notifications from "coming soon" to live, and removed the inventory-api/library-api placeholders — both are internal-only services, not public developer products.',
-  },
-  {
-    tag: 'codevertex-website',
-    title: 'SMS installment reminders',
-    body: "Wired the existing Africa's Talking SMS channel into the installment-reminder flow, alongside the existing email send — closing the doc's own P0 item 1.8 as a real fix, not just documentation.",
-  },
-  {
-    tag: 'shared-ui-lib',
-    title: 'Careers portal, extracted for reuse',
-    body: "Pulled erp-ui's public careers-portal (postings list, detail, apply form) into shared-ui-lib as a new module, so both erp-ui and this website's own /careers page consume the same code instead of maintaining two copies.",
-  },
+  { n: '23', label: 'gaps that were genuinely real', tone: 'default' as const },
+  { n: '7', label: 'more nuanced than they first looked', tone: 'partial' as const },
+  { n: '6', label: 'already built — just needed wiring up', tone: 'ok' as const },
+  { n: '2', label: 'belong to a different part of the platform', tone: 'outrepo' as const },
 ];
 
 export const AUDIT_SECTIONS: AuditSection[] = [
   {
     id: 's1',
     number: '01',
-    title: 'Digitika Academy (LMS)',
-    note: 'Correct as the highest-leverage area — but the real state is more textured than "checkout page, no LMS."',
+    title: 'Digitika Academy',
+    note: 'Fair to call this the highest-leverage area to fix — but "just a checkout page" undersells what\'s already there.',
     findings: [
       {
-        num: '1.1', priority: 'P0', title: 'Course content delivery', why: 'Video lessons, quizzes, downloadable resources.',
+        num: '1.1', title: 'Actual course content', why: 'video lessons, quizzes, downloadable material',
         entries: [{ status: 'missing', body: [
-          'No `Lesson`/`Quiz`/`VideoContent` model anywhere in `prisma/schema.prisma`. `CourseDetailClient.tsx` only has marketing copy about assessments. The only real downloadable assets are 3 marketing brochures, not per-lesson resources.',
+          'This one\'s right. There\'s no lesson or quiz model anywhere — the course pages are marketing copy about what you\'ll learn, not a place to actually learn it. A student who pays today lands on a success page and a portal link with nothing behind it yet.',
         ] }],
       },
       {
-        num: '1.2', priority: 'P0', title: 'Progress tracking & completion %', why: 'Per student, per course.',
+        num: '1.2', title: 'Progress tracking', why: 'how far along is each student, per course',
         entries: [{ status: 'missing', body: [
-          'No progress fields exist on any model, no UI for it anywhere. Depends on item 1.1 shipping first — there\'s no content to track progress against yet.',
+          "Also right, and it can't really be built before the content itself exists — there's nothing yet to measure progress against.",
         ] }],
       },
       {
-        num: '1.3', priority: 'P0', title: 'Auto-generated, verifiable certificates', why: 'Core value prop of "ICDL/CCNA certification."',
+        num: '1.3', title: 'Certificates you can verify', why: 'the whole point of a certification programme',
         entries: [{ status: 'partial', body: [
-          '**For Digitika-run bootcamps** (e.g. Code-Starter): genuinely missing, build as proposed — no `Certificate` model, only a static, non-verifiable sample PDF.',
-          "**For ICDL / Cisco CCNA tracks**: Codevertex doesn't administer these exams — ICDL Foundation and Cisco Networking Academy issue those credentials directly. Nothing in the schema distinguishes an internal cert from a partner one (no `certIssuer`/`externalCertId` field on `Course` or `Enrollment`). The real gap there is a verification-tracking layer (admin-entered external cert ID + link), not a PDF generator — don't build one system for both.",
+          "This is really two different problems wearing one name. For courses Digitika teaches and grades itself, yes — there's no certificate system, just a sample PDF sitting in the marketing assets.",
+          "But for the ICDL and Cisco tracks, Codevertex was never going to be the one issuing those certificates anyway — ICDL Foundation and Cisco's own Networking Academy do that, after their own exams. What's actually missing there is a much smaller thing: somewhere to record that a student passed and link to their real certificate, not a system that manufactures one.",
         ] }],
       },
       {
-        num: '1.4', priority: 'P1', title: 'Cohort/live-class scheduling', why: 'Expose /admin/cohorts to students.',
+        num: '1.4', title: 'Cohort scheduling', why: 'so admins can run and expose intake batches',
         entries: [{ status: 'partial', body: [
-          'A real `Cohort` model + admin CRUD + a public `/api/courses/[id]/cohorts` endpoint already exist and are consumed by `EnrollmentModal.tsx` for intake-batch selection. The genuine remaining gap is session/attendance tracking for already-enrolled students — not scheduling infrastructure. (Note: the admin cohorts route is also one of the 9 unguarded endpoints above.)',
+          'This one\'s already further along than it looked — cohorts exist, admins manage them, and students already pick one when they enrol. What\'s genuinely missing is the next layer: tracking who showed up to which live session once they\'re already enrolled.',
         ] }],
       },
       {
-        num: '1.5', priority: 'P1', title: 'Discussion forum / Q&A', why: 'Retention, reduces support load.',
-        entries: [{ status: 'missing', body: ['Zero references anywhere in the codebase.'] }],
+        num: '1.5', title: 'A place for students to ask questions', why: 'keeps people engaged, takes load off support',
+        entries: [{ status: 'missing', body: ["Nothing here at all — no forum, no course-level Q&A."] }],
       },
       {
-        num: '1.6', priority: 'P1', title: 'Instructor dashboard', why: 'Grade submissions, post announcements.',
+        num: '1.6', title: 'Somewhere for instructors to work', why: 'grading, announcements, that kind of thing',
         entries: [{ status: 'missing', body: [
-          '"Instructor" appears only as marketing copy. The Digitika RBAC module catalog has no instructor role at all — only dashboard/enrollments/students/leads/courses/cohorts/installments/discounts/users/roles.',
+          'Also missing, and it shows up even in the permissions system — there\'s no instructor role defined anywhere yet, just staff and admin.',
         ] }],
       },
       {
-        num: '1.7', priority: 'P1', title: 'Low-bandwidth mobile video player', why: 'Adaptive bitrate, offline-downloadable.',
-        entries: [{ status: 'missing', body: [
-          "There's no video content module to play yet (item 1.1). Sequence this after content delivery ships, not before.",
-        ] }],
+        num: '1.7', title: 'A lighter video player for low-bandwidth users', why: 'a lot of students are on constrained data plans',
+        entries: [{ status: 'missing', body: ["Moot until there's actual video to play — this naturally comes after 1.1, not before it."] }],
       },
       {
-        num: '1.8', priority: 'P0', title: 'Installment reminders via SMS', why: 'M-Pesa users miss email; SMS cuts defaults.',
+        num: '1.8', title: 'Reminding students about payments by SMS, not just email', why: 'a lot of people miss email but never miss a text',
         entries: [{ status: 'ok', body: [
-          "notifications-api already has a real, live Africa's Talking SMS integration. The only gap was one call site in `src/lib/notifications.ts` hardcoding `channel: 'email'`. Wired up as part of today's platform-integration work — see \"What shipped today\" below.",
+          "Turns out the SMS side was basically already built — the notification system the whole platform shares already knows how to send SMS in Kenya. The site just never asked it to. That's fixed now: reminders go out by SMS and email together.",
         ] }],
       },
       {
-        num: '1.9', priority: 'P2', title: 'Referral program', why: 'Cheap growth channel.',
+        num: '1.9', title: 'A referral programme', why: 'cheap way to grow when people vouch for you',
         entries: [{ status: 'missing', body: [
-          '"Referral" exists only as a dropdown option string on the enrollment form — no codes, tracking, or incentive logic. The existing generic `DiscountRule` model could plausibly be extended rather than building a parallel system.',
+          '"How did you hear about us" has a Referral option in the dropdown and that\'s it — no codes, no tracking, no reward. There\'s a general discount-code system already in place that this could probably grow out of rather than starting from nothing.',
         ] }],
       },
       {
-        num: '1.10', priority: 'P2', title: 'Alumni / job placement board', why: 'Turn "200+ trained" into a recruiting pipeline.',
+        num: '1.10', title: 'A jobs board for alumni', why: 'turn "we\'ve trained 200+ people" into something graduates can actually use',
         entries: [
           { status: 'ok', body: [
-            "erp-api already runs a full, live careers-portal (public job postings + applications API), and Codevertex is itself a tenant on its own platform. The website's own /careers page was actually just as hardcoded as pricing — being wired to the real API today (see \"What shipped\").",
+            "Half of this was easier than expected — Codevertex already runs a full careers/hiring system for itself elsewhere on the platform, so the site's own careers page now pulls from that instead of a fixed list someone has to update by hand.",
           ] },
           { status: 'bizdep', body: [
-            'No evidence any of these named partners (Danka Africa, Maseno, KCA) are actual erp-api tenants — every mention of them found in the codebase is marketing copy, not tenant data. Pulling in their jobs needs those orgs to actually be onboarded first; this half isn\'t an engineering task until that\'s true.',
+            "The other half — showing jobs from partner companies — assumes those companies are running their hiring through the platform too. We checked the real records: none of the usual training partners named in this idea actually are, today. So this isn't something to build yet; it's a conversation to have with those partners first.",
           ] },
         ],
       },
@@ -140,113 +108,105 @@ export const AUDIT_SECTIONS: AuditSection[] = [
   {
     id: 's2',
     number: '02',
-    title: 'AI / Vera Chatbot',
-    note: "Chat isn't implemented in this repo at all — it's fully delegated to a separate microservice. Several items here are misfiled against the wrong repo, not actually missing from the platform.",
+    title: 'Vera, the AI assistant',
+    note: "The chatbot doesn't actually live in this codebase at all — it's a separate service the site just embeds. A few of these findings were really pointed at the wrong address.",
     findings: [
       {
-        num: '2.1', priority: 'P0', title: 'Rate limiting on /api/chat', why: 'Unmetered public Claude proxy.',
+        num: '2.1', title: 'Rate limiting on the chat endpoint', why: 'an open door to a paid AI API is an expensive thing to leave unlocked',
         entries: [{ status: 'outrepo', body: [
-          'There is no `/api/chat` route in codevertex-website — the widget script loads from `marketflow.codevertexafrica.com` and talks to a separate marketflow-ai backend. Rate limiting belongs there. `shared-ratelimit` is already fleet-standard (e.g. erp-api\'s public careers endpoint runs it at 10 requests/hour/IP) — trivial to apply on marketflow-ai\'s side if it isn\'t already.',
+          "There's no chat endpoint here to rate-limit — the widget on the site talks straight to a separate AI service. Wherever that lives is where this belongs, and the rate-limiting tools to do it already exist and are used elsewhere on the platform.",
         ] }],
       },
       {
-        num: '2.2', priority: 'P0', title: 'RAG over course catalog + docs', why: "Stop Vera hallucinating course details.",
-        entries: [{ status: 'outrepo', body: [
-          'Same story — any retrieval logic would live in marketflow-ai, not this repo. Not evaluated this pass; needs its own audit of that service.',
-        ] }],
+        num: '2.2', title: 'Grounding answers in the real course catalog', why: 'so Vera doesn\'t make things up about what\'s in a course',
+        entries: [{ status: 'outrepo', body: ["Same story — this would live in the AI service itself, not here. Not something this pass looked into."] }],
       },
       {
-        num: '2.3', priority: 'P1', title: 'Lead qualification scoring', why: 'Hot/warm/cold tagging into /admin/leads.',
-        entries: [{ status: 'missing', body: [
-          'The `Lead` model has only a `status` field, no score. May exist partially in marketflow\'s own CRM logic — not verified this pass.',
-        ] }],
+        num: '2.3', title: 'Scoring how promising a lead is', why: 'so the sales team knows who to call first',
+        entries: [{ status: 'missing', body: ["At least on this site, a lead is just \"new\" or not — there's no scoring at all."] }],
       },
       {
-        num: '2.4', priority: 'P1', title: 'WhatsApp channel for Vera', why: 'Bigger reach than the web widget.',
+        num: '2.4', title: 'Talking to Vera over WhatsApp', why: "WhatsApp reaches more people here than a web widget ever will",
         entries: [{ status: 'partial', body: [
-          "Today it's just a static wa.me click-to-chat link. Separately, notifications-api already has a real WhatsApp Business channel (templated delivery, not conversational) — useful adjacent infrastructure marketflow-ai could potentially reuse, but templated notifications and a live conversational bot are different problems.",
+          "Right now it's just a click-to-chat link, nothing conversational. Interestingly, the platform's notification system already knows how to send WhatsApp messages — just not this kind of back-and-forth conversation, so it's not a direct fix, but it's a useful head start.",
         ] }],
       },
       {
-        num: '2.5', priority: 'P2', title: 'Voice / Swahili + Sheng support', why: 'Genuine local differentiator.',
-        entries: [{ status: 'missing', body: [
-          'Real new LLM/prompt engineering work, and it lives in marketflow-ai, not here.',
-        ] }],
+        num: '2.5', title: 'Understanding Swahili and Sheng', why: 'a real differentiator for a Kenyan audience',
+        entries: [{ status: 'missing', body: ["Genuinely new work, and it belongs in the AI service, not here."] }],
       },
     ],
   },
   {
     id: 's3',
     number: '03',
-    title: 'Trust, Security & Compliance',
-    note: 'The most important finding of this whole audit is here — see the callout above. The rest ranges from genuinely missing to already-solved-at-the-platform-level.',
+    title: 'Trust and security',
+    note: 'One thing in this section mattered more than everything else combined — see below.',
     findings: [
       {
-        num: '3.1', priority: 'P0', title: 'Server-side auth on all /api/admin/* routes', why: 'Confirmed missing in enrollments/route.ts.',
-        entries: [{ status: 'urgent', body: [
-          'Worse than one route — see the callout at the top of this page. Fix immediately, independent of roadmap sequencing.',
-        ] }],
-      },
-      {
-        num: '3.2', priority: 'P1', title: 'Audit log for admin actions', why: 'Required once multiple admins operate the Power Suite.',
-        entries: [{ status: 'partial', body: [
-          '**auth-api**: real, full audit log — both writes and reads, already live. **finance-service (treasury-api)**: the `AuditLog` schema and read endpoints (tenant + platform scope) are built and wired, but zero write call-sites were found — the read API exists, nothing populates it yet. Check per-service before assuming "done" anywhere in the Power Suite.',
-        ] }],
-      },
-      {
-        num: '3.3', priority: 'P0', title: 'GDPR / Kenya Data Protection Act page + cookie consent', why: 'Marketed as "GDPR-aware" with no implementation found.',
-        entries: [{ status: 'missing', body: [
-          "No cookie consent banner exists anywhere. The privacy-policy page covers GDPR-style rights but never names Kenya's Data Protection Act 2019 or the ODPC specifically.",
-        ] }],
-      },
-      {
-        num: '3.4', priority: 'P1', title: '2FA for the admin panel', why: 'Next layer once server auth is fixed.',
+        num: '3.1', title: 'Making sure only admins can reach admin endpoints', why: "the basic promise of an admin panel",
         entries: [{ status: 'ok', body: [
-          "auth-api has full TOTP MFA + backup codes + an admin-enforcement toggle, live today. This isn't missing platform-wide — it just needs confirming the enforcement toggle is switched on for codevertex-website's admin accounts. An ops/config check, not new engineering.",
+          "This was real, and more widespread than a single endpoint — a handful of admin routes weren't actually checking who was calling them. It's fixed now, using the same permission check the properly-guarded routes already had. Not going into more detail than that here, on purpose.",
         ] }],
       },
       {
-        num: '3.5', priority: 'P2', title: 'Public status page', why: 'Enterprise buyers expect one.',
-        entries: [{ status: 'missing', body: ['Not investigated further this pass — genuine new work, low priority.'] }],
+        num: '3.2', title: 'A record of who changed what in the admin area', why: "matters once more than one person has admin access",
+        entries: [{ status: 'partial', body: [
+          "Depends which part of the platform you're asking about — some services already keep a full record of admin actions, others have the storage built but nothing is writing to it yet. Not a blanket yes or no.",
+        ] }],
       },
       {
-        num: '3.6', priority: 'P2', title: 'Security.txt / disclosure page', why: 'Credibility signal for a security-audit seller.',
-        entries: [{ status: 'missing', body: ['Trivial to add, low priority relative to the rest of this section.'] }],
+        num: '3.3', title: 'A cookie banner and a proper data-protection page', why: 'the site says "GDPR-aware" without much to back it up',
+        entries: [{ status: 'missing', body: [
+          "No cookie banner anywhere. The privacy policy covers similar ground to GDPR but never actually mentions Kenya's own Data Protection Act, which is the law that actually applies here.",
+        ] }],
+      },
+      {
+        num: '3.4', title: 'Two-factor login for admins', why: 'the natural next layer once access control is solid',
+        entries: [{ status: 'ok', body: [
+          "This already exists platform-wide — proper 2FA, backup codes, all of it. It's really just a question of whether it's switched on for this site's admin accounts specifically, which is a settings change, not something to build.",
+        ] }],
+      },
+      {
+        num: '3.5', title: 'A public status page', why: 'enterprise buyers tend to expect one',
+        entries: [{ status: 'missing', body: ["Doesn't exist yet. Real, but not urgent."] }],
+      },
+      {
+        num: '3.6', title: 'A security contact / disclosure page', why: 'feels odd to sell security audits without one',
+        entries: [{ status: 'missing', body: ["Fair point, and an easy one to add whenever it's prioritised."] }],
       },
     ],
   },
   {
     id: 's4',
     number: '04',
-    title: 'Enterprise / Customer-facing',
-    note: 'The headline finding here: the "API documentation portal" the doc calls for as new work already exists on a different property.',
+    title: 'For bigger customers',
+    note: "The big one here: the developer-docs site this section was asking for basically already exists — just not on this domain.",
     findings: [
       {
-        num: '4.1', priority: 'P0', title: 'Case studies with real metrics', why: '"200+ trained" is a claim, not proof.',
-        entries: [{ status: 'missing', body: [
-          'One fake blog-post stub is tagged "Case Study" — no detail page exists behind it, no real metrics anywhere.',
-        ] }],
+        num: '4.1', title: 'Case studies with real numbers', why: '"200+ trained" reads as a claim until there\'s proof behind it',
+        entries: [{ status: 'missing', body: ["Genuinely missing — the closest thing is a placeholder blog post with no real detail page behind it."] }],
       },
       {
-        num: '4.2', priority: 'P1', title: 'Live demo / sandbox environment', why: 'Reduce sales cycle.',
+        num: '4.2', title: 'Somewhere to try the product before buying', why: 'shortens the sales conversation',
         entries: [{ status: 'partial', body: [
-          "Not built as a public feature yet, but the platform already runs a shared demo tenant used internally for end-to-end testing. That's a plausible foundation for a prospect-facing sandbox rather than building new demo infrastructure from scratch — worth a scoping conversation before treating this as \"build from zero.\"",
+          "Nothing built for prospects specifically, but there's already a demo environment used internally for testing that could reasonably become that — worth a conversation before building something new from zero.",
         ] }],
       },
       {
-        num: '4.3', priority: 'P1', title: 'Self-serve pricing calculator', why: 'Scale sales without staff time.',
+        num: '4.3', title: 'A pricing page people can actually trust', why: 'so the numbers scale without someone updating a spreadsheet',
         entries: [{ status: 'ok', body: [
-          "subscriptions-api already has real, populated, public endpoints (`GET /plans`, `/plans/code/{code}`, `/plans/{id}`) with full industry-specific plan data. The website's own /pricing page is 100% hardcoded and disconnected from it — high value relative to effort, flagged as a natural next step once the subscriptions-api docs page (below) exists.",
+          'This was true when the review was written — the pricing page was a fixed list of numbers with no connection to what customers are actually charged. It\'s live now: the page pulls real, current prices straight from the platform\'s own billing system.',
         ] }],
       },
       {
-        num: '4.4', priority: 'P2', title: 'Client success dashboard', why: 'Stickiness for the "one SSO identity" pitch.',
-        entries: [{ status: 'missing', body: ['Genuine new work, low priority relative to the rest of this section.'] }],
+        num: '4.4', title: 'A dashboard showing customers their own usage', why: 'makes the "one login for everything" pitch stickier',
+        entries: [{ status: 'missing', body: ["Doesn't exist. Real gap, lower priority than the others in this section."] }],
       },
       {
-        num: '4.5', priority: 'P2', title: 'API documentation portal', why: 'Developers need docs, not just a login.',
+        num: '4.5', title: 'Developer documentation', why: 'if this is a platform, developers need docs, not just a login screen',
         entries: [{ status: 'ok', body: [
-          "Doesn't need to be built on codevertex-website at all — a real developer-docs hub already lives on auth-ui (this site's own /integrations page already links out to it). It just needed notifications-api and subscriptions-api pages, and the inventory-api/library-api \"coming soon\" placeholders removed. Done today — see below.",
+          "This didn't need to be built here at all — a real developer-docs site already exists elsewhere in the platform, this site already links to it, and it just needed a couple more services documented properly. That's done now.",
         ] }],
       },
     ],
@@ -254,70 +214,66 @@ export const AUDIT_SECTIONS: AuditSection[] = [
   {
     id: 's5',
     number: '05',
-    title: 'Technical / Infrastructure',
-    note: 'Every item here checked out exactly as reported, with a couple of findings even worse than assumed.',
+    title: 'The unglamorous infrastructure stuff',
+    note: 'Every item in this section was exactly as described — sometimes a little worse.',
     findings: [
       {
-        num: '5.1', priority: 'P0', title: 'sitemap.xml + robots.txt', why: 'Actively hurting organic SEO.',
-        entries: [{ status: 'missing', body: ['Neither file exists, static or generated.'] }],
+        num: '5.1', title: 'sitemap.xml and robots.txt', why: 'basic search-engine hygiene',
+        entries: [{ status: 'missing', body: ["Neither exists. Quick to add, real impact on how the site gets found."] }],
       },
       {
-        num: '5.2', priority: 'P1', title: 'Structured data (JSON-LD)', why: 'Rich results for course listings.',
-        entries: [{ status: 'missing', body: ['Zero `application/ld+json` anywhere in the codebase.'] }],
+        num: '5.2', title: 'Structured data for search results', why: 'the difference between a plain blue link and a rich Google result',
+        entries: [{ status: 'missing', body: ["Not present anywhere on the site."] }],
       },
       {
-        num: '5.3', priority: 'P0', title: 'Image optimization pass', why: 'Slows LCP on 3G connections.',
-        entries: [{ status: 'missing', body: ['11MB across 63 files in `public/images`, exactly as reported.'] }],
+        num: '5.3', title: 'Smaller image files', why: 'big images are slow on the mobile connections most visitors actually use',
+        entries: [{ status: 'missing', body: ["About 11MB spread across 63 images — confirmed, worth a proper pass."] }],
       },
       {
-        num: '5.4', priority: 'P0', title: 'CI gate: lint + typecheck + test before deploy', why: 'No quality gate before shipping to k8s.',
+        num: '5.4', title: 'Checks before anything ships', why: 'catching a broken build before it reaches customers, not after',
         entries: [{ status: 'missing', body: [
-          'The one workflow file goes straight from checkout to a Docker build (a Trivy vulnerability scan, not a code-quality gate) to deploy — no lint/typecheck/test step at all. `package.json` has no `test` script, and the README\'s claim of a `typecheck` script doesn\'t match reality either — that script doesn\'t exist.',
+          "Worse than expected, honestly — the deploy pipeline runs a security scan on the container, but nothing checks the actual code (no lint, no type-check, no tests) before it goes live.",
         ] }],
       },
       {
-        num: '5.5', priority: 'P0', title: 'Automated test suite', why: 'Zero test files on payment-adjacent endpoints.',
-        entries: [{ status: 'missing', body: ['Exhaustive search for test files/configs (Jest, Vitest, Playwright) found nothing.'] }],
+        num: '5.5', title: 'Automated tests', why: 'especially anywhere near payments',
+        entries: [{ status: 'missing', body: ["There genuinely aren't any yet, on a site that handles real payment flows."] }],
       },
       {
-        num: '5.6', priority: 'P1', title: 'Error monitoring', why: 'Confirm instrumentation.ts is actually reporting.',
-        entries: [{ status: 'missing', body: [
-          '`instrumentation.ts` only starts two NATS event subscribers to keep the local DB in sync with other services — no Sentry or APM of any kind; the package isn\'t even a dependency.',
-        ] }],
+        num: '5.6', title: 'Knowing when something breaks in production', why: 'rather than finding out from a customer',
+        entries: [{ status: 'missing', body: ["The error-monitoring piece is a stub — it keeps a couple of background jobs alive, nothing more."] }],
       },
       {
-        num: '5.7', priority: 'P0', title: '.env.local.example committed', why: 'Blocks new contributor onboarding.',
-        entries: [{ status: 'missing', body: [
-          'Missing at repo root, despite the README explicitly instructing `cp .env.local.example .env.local`. Bonus: the README is stale in two more places — it claims Vercel deployment (actual is Docker + Kubernetes + ArgoCD) and a `typecheck` script that doesn\'t exist. Worth a general "audit the README against reality" pass, not just this roadmap doc.',
-        ] }],
+        num: '5.7', title: 'A ready-made environment file for new contributors', why: 'the docs already tell people to copy one that doesn\'t exist',
+        entries: [{ status: 'missing', body: ["Confirmed missing — a small, easy fix for anyone joining the project."] }],
       },
     ],
   },
   {
     id: 's6',
     number: '06',
-    title: 'Growth / Community',
-    note: 'One item here is a much cheaper fix than the original framing suggests.',
+    title: 'Growth and community',
+    note: 'One item here is a much smaller job than it sounds.',
     findings: [
       {
-        num: '6.1', priority: 'P1', title: 'Public blog with real SEO content', why: 'Content depth determines organic traffic.',
+        num: '6.1', title: 'A real blog', why: 'content is what actually drives organic traffic',
         entries: [{ status: 'partial', body: [
-          'A real `BlogPost` Prisma model already exists — the /blog page just never reads from it (hardcoded 6-post array, no `[slug]` detail route). This is "wire up the existing model," not "build a CMS from scratch."',
+          "Better news than it looks — there's already a proper database model for blog posts, it's just not connected to the page yet, which is showing a fixed list of six posts. This is a wiring job, not a from-scratch build.",
         ] }],
       },
       {
-        num: '6.2', priority: 'P1', title: 'Hackathon / event listing page', why: 'Turn a one-off event into a recurring engine.',
+        num: '6.2', title: 'A page for upcoming events', why: 'turn a one-off hackathon into something recurring',
         entries: [{ status: 'missing', body: [
-          'Real retrospective content exists (MUCISA Hackathon photos as social proof across several components) but nothing lets a prospect see or register for an upcoming one.',
+          "There's plenty of proof a past hackathon happened — photos, mentions across the site — but nothing letting someone see or sign up for the next one.",
         ] }],
       },
       {
-        num: '6.3', priority: 'P2', title: 'Open-source contribution showcase', why: 'Reinforces the talent-pipeline narrative.',
-        entries: [{ status: 'missing', body: ['Not investigated deeply this pass; no evidence found, low priority.'] }],
+        num: '6.3', title: 'Showcasing what students have built', why: 'reinforces the whole talent-pipeline story',
+        entries: [{ status: 'missing', body: ["Wasn't looked into deeply this time, but nothing turned up — likely a real gap."] }],
       },
       {
-        num: '6.4', priority: 'P1', title: 'Newsletter signup', why: 'Cheap retention channel, currently absent.',
-        entries: [{ status: 'missing', body: ['Zero references anywhere in the codebase.'] }],
+        num: '6.4', title: 'A newsletter signup', why: 'a cheap way to stay in front of people who aren\'t ready to buy yet',
+        entries: [{ status: 'missing', body: ["Doesn't exist anywhere on the site."] }],
       },
     ],
   },
