@@ -32,7 +32,7 @@ export function RolesPage() {
   // Editing roles/permissions is deliberately restricted to Digitika Admin specifically
   // (not just whoever holds the `digitika.roles.manage` permission) — see requireDigitikaAdmin
   // in src/lib/auth/rbac.ts for why. Enforced server-side too; this only controls the UI.
-  const isDigitikaAdmin = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner)
+  const isDigitikaAdmin = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner, currentUser?.tenant_slug)
     || currentUser?.digitikaRole === 'digitika_admin';
 
   const [roles, setRoles] = useState<Role[]>([]);

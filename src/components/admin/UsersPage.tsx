@@ -27,7 +27,7 @@ interface RoleOption { code: string; name: string }
 
 export function UsersPage() {
   const { user: currentUser } = useAuthStore();
-  const isPlatformOwnerBypass = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner);
+  const isPlatformOwnerBypass = hasBypassRole(currentUser?.roles, currentUser?.is_platform_owner, currentUser?.tenant_slug);
   const canManage = isPlatformOwnerBypass || hasDigitikaPermission(currentUser?.permissions, digitikaPerm('users', 'manage'));
   // Purging is a true platform-wide SSO account deletion — auth-api itself only allows
   // this for actual platform owners, so only show it to those (a locally-appointed
