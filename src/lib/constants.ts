@@ -21,6 +21,11 @@ export const TREASURY = {
 
 export const SSO_URL = 'https://accounts.codevertexafrica.com';
 
+export const ERP = {
+  apiBaseUrl: process.env.NEXT_PUBLIC_ERP_API_URL ?? 'https://erpapi.codevertexafrica.com',
+  tenant: process.env.NEXT_PUBLIC_ERP_TENANT ?? 'codevertex',
+};
+
 export const NAV_LINKS = [
   { label: 'Services', href: '/services' },
   { label: 'Digitika', href: '/digitika' },

@@ -29,6 +29,7 @@ export interface EnrollmentConfirmationData {
 export interface InstallmentReminderData {
   studentName: string;
   studentEmail: string;
+  studentPhone?: string;
   courseName: string;
   installmentNo: number;
   totalInstallments: number;
@@ -70,10 +71,11 @@ async function postNotification(
   to: string,
   data: Record<string, unknown>,
   subject: string,
-  requestId?: string
+  requestId?: string,
+  channel: 'email' | 'sms' = 'email'
 ): Promise<void> {
   if (!SERVICE_KEY) {
-    console.warn('[notifications] INTERNAL_SERVICE_KEY not set — skipping email');
+    console.warn(`[notifications] INTERNAL_SERVICE_KEY not set — skipping ${channel}`);
     return;
   }
 
@@ -86,7 +88,7 @@ async function postNotification(
         'X-Request-ID': requestId ?? crypto.randomUUID(),
       },
       body: JSON.stringify({
-        channel: 'email',
+        channel,
         tenant: TENANT,
         template,
         to: [to],
@@ -97,12 +99,12 @@ async function postNotification(
 
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      console.error(`[notifications] email failed (${res.status}): ${body}`);
+      console.error(`[notifications] ${channel} failed (${res.status}): ${body}`);
     } else {
-      console.log(`[notifications] email queued: template=${template} to=${to}`);
+      console.log(`[notifications] ${channel} queued: template=${template} to=${to}`);
     }
   } catch (err) {
-    console.error('[notifications] email send error:', err);
+    console.error(`[notifications] ${channel} send error:`, err);
   }
 }
 
@@ -135,24 +137,25 @@ export async function sendInstallmentReminder(
 ): Promise<void> {
   const ORDINALS = ['', '1st', '2nd', '3rd', '4th', '5th'];
   const label = ORDINALS[data.installmentNo] ?? `${data.installmentNo}th`;
-  await postNotification(
-    'digitika/installment_reminder',
-    data.studentEmail,
-    {
-      student_name: data.studentName,
-      course_name: data.courseName,
-      payment_label: label,
-      total_installments: data.totalInstallments,
-      amount: data.amount.toLocaleString(),
-      currency: data.currency,
-      due_date: data.dueDate,
-      days_until_due: data.daysUntilDue,
-      student_id: data.studentId,
-      portal_link: data.portalLink,
-    },
-    `Payment Reminder — ${label} Installment Due: ${data.courseName}`,
-    requestId
-  );
+  const payload = {
+    student_name: data.studentName,
+    course_name: data.courseName,
+    payment_label: label,
+    total_installments: data.totalInstallments,
+    amount: data.amount.toLocaleString(),
+    currency: data.currency,
+    due_date: data.dueDate,
+    days_until_due: data.daysUntilDue,
+    student_id: data.studentId,
+    portal_link: data.portalLink,
+  };
+  const subject = `Payment Reminder — ${label} Installment Due: ${data.courseName}`;
+
+  await postNotification('digitika/installment_reminder', data.studentEmail, payload, subject, requestId, 'email');
+
+  if (data.studentPhone) {
+    await postNotification('digitika/installment_reminder', data.studentPhone, payload, subject, requestId, 'sms');
+  }
 }
 
 export async function sendInstallmentReceipt(
