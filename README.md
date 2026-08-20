@@ -90,11 +90,14 @@ pnpm install
 # or: npm install
 
 # 2. Configure environment
-cp .env.local.example .env.local
-# Edit .env.local:
+cp .env.example .env.local
+# Edit .env.local — see .env.example for the full list and comments. At minimum:
 #   DATABASE_URL=postgresql://...
 #   ANTHROPIC_API_KEY=sk-ant-...
 #   NEXT_PUBLIC_TREASURY_TENANT=your-uuid
+# To log in locally (rather than against production SSO), also run auth-service locally,
+# seed it (`cd ../auth-service/auth-api && go run ./cmd/seed`), and set
+# NEXT_PUBLIC_AUTH_SERVICE_URL=http://localhost:4000
 
 # 3. Run DB migrations
 psql $DATABASE_URL -f scripts/schema.sql
