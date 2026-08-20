@@ -49,6 +49,9 @@ model StudentUser {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   enrollments Enrollment[]
+  progress    LessonProgress[]
+  quizAttempts QuizAttempt[]
+  certificates Certificate[]
 
   @@index([email])
   @@map("student_users")
@@ -191,9 +194,153 @@ model Course {
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@index([categoryId])
+  modules      CourseModule[]
+  certificates Certificate[]
+
   @@index([featured])
   @@index([isActive])
   @@map("courses")
+}
+
+// ---------------------------------------------------------------------------
+// Digitika Academy — course content delivery (modules, lessons, progress,
+// quizzes, certificates). Added to close the "checkout-only, no LMS" gap.
+// No third-party integration: video is a plain URL field for now (self-hosted
+// or an external link) until a streaming provider is chosen; everything else
+// (progress, quizzes, certs) is pure DB + server-rendered PDF.
+// ---------------------------------------------------------------------------
+
+enum LessonType {
+  VIDEO
+  TEXT
+  QUIZ
+  RESOURCE
+}
+
+model CourseModule {
+  id          String   @id @default(cuid())
+  courseId    String   @map("course_id")
+  title       String
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId])
+  @@map("course_modules")
+}
+
+model Lesson {
+  id           String     @id @default(cuid())
+  moduleId     String     @map("module_id")
+  title        String
+  type         LessonType @default(TEXT)
+  // TEXT: rendered markdown body. VIDEO: video source (self-hosted path or external URL,
+  // e.g. YouTube unlisted) — no streaming-provider integration decided yet, see docs/integrations.md.
+  content      String?    @db.Text
+  videoUrl     String?    @map("video_url")
+  durationSec  Int?       @map("duration_sec")
+  // Downloadable resource (RESOURCE type) — path under /public or an external file URL.
+  resourceUrl  String?    @map("resource_url")
+  resourceName String?    @map("resource_name")
+  // Free-preview lessons are visible to anyone, even without a paid enrollment.
+  isPreview    Boolean    @default(false) @map("is_preview")
+  sortOrder    Int        @default(0) @map("sort_order")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quiz     Quiz?
+  progress LessonProgress[]
+
+  @@index([moduleId])
+  @@map("lessons")
+}
+
+model LessonProgress {
+  id                  String    @id @default(cuid())
+  lessonId            String    @map("lesson_id")
+  studentUserId       String    @map("student_user_id")
+  completedAt         DateTime? @map("completed_at")
+  lastPositionSec     Int?      @map("last_position_sec")   // video resume point
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  lesson      Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  studentUser StudentUser @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, studentUserId])
+  @@index([studentUserId])
+  @@map("lesson_progress")
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  lessonId      String   @unique @map("lesson_id")
+  title         String
+  passingScore  Int      @default(70) @map("passing_score") // percent
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id           String   @id @default(cuid())
+  quizId       String   @map("quiz_id")
+  prompt       String   @db.Text
+  options      Json     // string[] — answer choices
+  correctIndex Int      @map("correct_index")
+  sortOrder    Int      @default(0) @map("sort_order")
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id            String   @id @default(cuid())
+  quizId        String   @map("quiz_id")
+  studentUserId String   @map("student_user_id")
+  scorePct      Int      @map("score_pct")
+  passed        Boolean
+  answers       Json     // number[] — chosen option index per question, in question order
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  quiz        Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  studentUser StudentUser @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([studentUserId])
+  @@map("quiz_attempts")
+}
+
+model Certificate {
+  id                String   @id @default(cuid())
+  certificateNumber String   @unique @map("certificate_number") // e.g. CV-DGT-2026-000123, shown on the PDF
+  verifyToken       String   @unique @default(cuid()) @map("verify_token") // opaque, used in the public verify URL instead of the sequential number
+  studentUserId     String   @map("student_user_id")
+  courseId          String   @map("course_id")
+  enrollmentId      BigInt?  @map("enrollment_id")
+  studentName       String   @map("student_name")   // snapshot at issue time — survives student profile edits
+  courseName        String   @map("course_name")    // snapshot at issue time — survives course catalog edits
+  issuedAt          DateTime @default(now()) @map("issued_at")
+  revoked           Boolean  @default(false)
+
+  studentUser StudentUser @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([studentUserId])
+  @@index([courseId])
+  @@map("certificates")
 }
 
 // ---------------------------------------------------------------------------
