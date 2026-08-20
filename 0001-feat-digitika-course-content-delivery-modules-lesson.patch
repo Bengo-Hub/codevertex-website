@@ -1,0 +1,1454 @@
+From 8371170dfa6374159a213b92f76069981f69da91 Mon Sep 17 00:00:00 2001
+From: "Carson (via Claude Sonnet 5)" <carson+claude@codevertexafrica.com>
+Date: Thu, 20 Aug 2026 08:56:19 +0000
+Subject: [PATCH] =?UTF-8?q?feat(digitika):=20course=20content=20delivery?=
+ =?UTF-8?q?=20=E2=80=94=20modules,=20lessons,=20progress,=20quizzes,=20cer?=
+ =?UTF-8?q?tificates?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Closes roadmap items 1-3 in section 1 (DIGITIKA ACADEMY): Digitika was
+enrollment+payment only, students had nowhere to go after paying.
+
+Schema: CourseModule, Lesson (VIDEO/TEXT/QUIZ/RESOURCE), LessonProgress,
+Quiz/QuizQuestion/QuizAttempt (graded server-side), Certificate (opaque
+verifyToken, snapshots student/course name at issue time).
+
+RBAC: added 'content' and 'certificates' modules to digitika-rbac-catalog.ts,
+auto-generates permissions via the existing generic seed script.
+
+Admin API: CRUD for modules/lessons, quiz authoring (PUT replaces a lesson's
+quiz+questions transactionally).
+
+Student-facing API (gated by existing Student-ID + paid-enrollment lookup —
+see digitika-access.ts docblock for the known limitation this carries over):
+GET content, POST complete-lesson, POST quiz-attempt, POST/GET certificate.
+
+Certificates render as PDF in-process via pdf-lib, no third-party service.
+Public unauthenticated verify page at /certificates/[token].
+
+UI: /digitika/[courseId]/learn — Student-ID gate, lesson sidebar w/ progress,
+video/text/resource/quiz viewers, certificate CTA at 100% completion.
+
+NOT done here: admin content-authoring UI (API only), real video
+streaming/hosting (plain URL field until a provider is chosen), cert
+issuance notifications.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+---
+ package.json                                  |   1 +
+ prisma/schema.prisma                          | 147 ++++++++
+ .../api/admin/courses/[id]/modules/route.ts   |  57 ++++
+ src/app/api/admin/lessons/[id]/quiz/route.ts  |  67 ++++
+ src/app/api/admin/lessons/[id]/route.ts       |  44 +++
+ .../api/admin/modules/[id]/lessons/route.ts   |  37 ++
+ src/app/api/admin/modules/[id]/route.ts       |  39 +++
+ src/app/api/certificates/[token]/pdf/route.ts |  32 ++
+ .../api/certificates/[token]/verify/route.ts  |  23 ++
+ .../courses/[courseId]/certificate/route.ts   |  92 +++++
+ .../courses/[courseId]/content/route.ts       |  74 ++++
+ .../lessons/[lessonId]/complete/route.ts      |  60 ++++
+ .../lessons/[lessonId]/quiz-attempt/route.ts  |  75 +++++
+ src/app/certificates/[token]/page.tsx         |  63 ++++
+ src/app/digitika/[courseId]/learn/page.tsx    |  23 ++
+ src/components/digitika/LearnClient.tsx       | 315 ++++++++++++++++++
+ src/lib/certificate-pdf.ts                    |  52 +++
+ src/lib/digitika-access.ts                    |  31 ++
+ src/lib/digitika-rbac-catalog.ts              |   2 +
+ 19 files changed, 1234 insertions(+)
+ create mode 100644 src/app/api/admin/courses/[id]/modules/route.ts
+ create mode 100644 src/app/api/admin/lessons/[id]/quiz/route.ts
+ create mode 100644 src/app/api/admin/lessons/[id]/route.ts
+ create mode 100644 src/app/api/admin/modules/[id]/lessons/route.ts
+ create mode 100644 src/app/api/admin/modules/[id]/route.ts
+ create mode 100644 src/app/api/certificates/[token]/pdf/route.ts
+ create mode 100644 src/app/api/certificates/[token]/verify/route.ts
+ create mode 100644 src/app/api/students/[studentId]/courses/[courseId]/certificate/route.ts
+ create mode 100644 src/app/api/students/[studentId]/courses/[courseId]/content/route.ts
+ create mode 100644 src/app/api/students/[studentId]/lessons/[lessonId]/complete/route.ts
+ create mode 100644 src/app/api/students/[studentId]/lessons/[lessonId]/quiz-attempt/route.ts
+ create mode 100644 src/app/certificates/[token]/page.tsx
+ create mode 100644 src/app/digitika/[courseId]/learn/page.tsx
+ create mode 100644 src/components/digitika/LearnClient.tsx
+ create mode 100644 src/lib/certificate-pdf.ts
+ create mode 100644 src/lib/digitika-access.ts
+
+diff --git a/package.json b/package.json
+index 7ed92ac..3d6000b 100644
+--- a/package.json
++++ b/package.json
+@@ -30,6 +30,7 @@
+     "nats": "^2.29.3",
+     "next": "16.2.4",
+     "next-themes": "^0.4.6",
++    "pdf-lib": "^1.17.1",
+     "pg": "^8.20.0",
+     "react": "19.2.5",
+     "react-dom": "19.2.5",
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index b5d4d35..1067517 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -49,6 +49,9 @@ model StudentUser {
+   updatedAt DateTime @updatedAt @map("updated_at")
+ 
+   enrollments Enrollment[]
++  progress    LessonProgress[]
++  quizAttempts QuizAttempt[]
++  certificates Certificate[]
+ 
+   @@index([email])
+   @@map("student_users")
+@@ -191,11 +194,155 @@ model Course {
+   updatedAt           DateTime @updatedAt @map("updated_at")
+ 
+   @@index([categoryId])
++  modules      CourseModule[]
++  certificates Certificate[]
++
+   @@index([featured])
+   @@index([isActive])
+   @@map("courses")
+ }
+ 
++// ---------------------------------------------------------------------------
++// Digitika Academy — course content delivery (modules, lessons, progress,
++// quizzes, certificates). Added to close the "checkout-only, no LMS" gap.
++// No third-party integration: video is a plain URL field for now (self-hosted
++// or an external link) until a streaming provider is chosen; everything else
++// (progress, quizzes, certs) is pure DB + server-rendered PDF.
++// ---------------------------------------------------------------------------
++
++enum LessonType {
++  VIDEO
++  TEXT
++  QUIZ
++  RESOURCE
++}
++
++model CourseModule {
++  id          String   @id @default(cuid())
++  courseId    String   @map("course_id")
++  title       String
++  description String?
++  sortOrder   Int      @default(0) @map("sort_order")
++  createdAt   DateTime @default(now()) @map("created_at")
++  updatedAt   DateTime @updatedAt @map("updated_at")
++
++  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
++  lessons Lesson[]
++
++  @@index([courseId])
++  @@map("course_modules")
++}
++
++model Lesson {
++  id           String     @id @default(cuid())
++  moduleId     String     @map("module_id")
++  title        String
++  type         LessonType @default(TEXT)
++  // TEXT: rendered markdown body. VIDEO: video source (self-hosted path or external URL,
++  // e.g. YouTube unlisted) — no streaming-provider integration decided yet, see docs/integrations.md.
++  content      String?    @db.Text
++  videoUrl     String?    @map("video_url")
++  durationSec  Int?       @map("duration_sec")
++  // Downloadable resource (RESOURCE type) — path under /public or an external file URL.
++  resourceUrl  String?    @map("resource_url")
++  resourceName String?    @map("resource_name")
++  // Free-preview lessons are visible to anyone, even without a paid enrollment.
++  isPreview    Boolean    @default(false) @map("is_preview")
++  sortOrder    Int        @default(0) @map("sort_order")
++  createdAt    DateTime   @default(now()) @map("created_at")
++  updatedAt    DateTime   @updatedAt @map("updated_at")
++
++  module   CourseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
++  quiz     Quiz?
++  progress LessonProgress[]
++
++  @@index([moduleId])
++  @@map("lessons")
++}
++
++model LessonProgress {
++  id                  String    @id @default(cuid())
++  lessonId            String    @map("lesson_id")
++  studentUserId       String    @map("student_user_id")
++  completedAt         DateTime? @map("completed_at")
++  lastPositionSec     Int?      @map("last_position_sec")   // video resume point
++  createdAt           DateTime  @default(now()) @map("created_at")
++  updatedAt           DateTime  @updatedAt @map("updated_at")
++
++  lesson      Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
++  studentUser StudentUser @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
++
++  @@unique([lessonId, studentUserId])
++  @@index([studentUserId])
++  @@map("lesson_progress")
++}
++
++model Quiz {
++  id            String   @id @default(cuid())
++  lessonId      String   @unique @map("lesson_id")
++  title         String
++  passingScore  Int      @default(70) @map("passing_score") // percent
++  createdAt     DateTime @default(now()) @map("created_at")
++  updatedAt     DateTime @updatedAt @map("updated_at")
++
++  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
++  questions QuizQuestion[]
++  attempts  QuizAttempt[]
++
++  @@map("quizzes")
++}
++
++model QuizQuestion {
++  id           String   @id @default(cuid())
++  quizId       String   @map("quiz_id")
++  prompt       String   @db.Text
++  options      Json     // string[] — answer choices
++  correctIndex Int      @map("correct_index")
++  sortOrder    Int      @default(0) @map("sort_order")
++
++  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
++
++  @@index([quizId])
++  @@map("quiz_questions")
++}
++
++model QuizAttempt {
++  id            String   @id @default(cuid())
++  quizId        String   @map("quiz_id")
++  studentUserId String   @map("student_user_id")
++  scorePct      Int      @map("score_pct")
++  passed        Boolean
++  answers       Json     // number[] — chosen option index per question, in question order
++  createdAt     DateTime @default(now()) @map("created_at")
++
++  quiz        Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
++  studentUser StudentUser @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
++
++  @@index([quizId])
++  @@index([studentUserId])
++  @@map("quiz_attempts")
++}
++
++model Certificate {
++  id                String   @id @default(cuid())
++  certificateNumber String   @unique @map("certificate_number") // e.g. CV-DGT-2026-000123, shown on the PDF
++  verifyToken       String   @unique @default(cuid()) @map("verify_token") // opaque, used in the public verify URL instead of the sequential number
++  studentUserId     String   @map("student_user_id")
++  courseId          String   @map("course_id")
++  enrollmentId      BigInt?  @map("enrollment_id")
++  studentName       String   @map("student_name")   // snapshot at issue time — survives student profile edits
++  courseName        String   @map("course_name")    // snapshot at issue time — survives course catalog edits
++  issuedAt          DateTime @default(now()) @map("issued_at")
++  revoked           Boolean  @default(false)
++
++  studentUser StudentUser @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
++  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
++
++  @@index([studentUserId])
++  @@index([courseId])
++  @@map("certificates")
++}
++
+ // ---------------------------------------------------------------------------
+ // Blog posts — CMS for the /blog section
+ // ---------------------------------------------------------------------------
+diff --git a/src/app/api/admin/courses/[id]/modules/route.ts b/src/app/api/admin/courses/[id]/modules/route.ts
+new file mode 100644
+index 0000000..18af950
+--- /dev/null
++++ b/src/app/api/admin/courses/[id]/modules/route.ts
+@@ -0,0 +1,57 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++import { requirePermission } from '@/lib/auth/rbac';
++import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
++
++const createSchema = z.object({
++  title: z.string().min(2),
++  description: z.string().optional(),
++  sortOrder: z.number().int().default(0),
++});
++
++export async function GET(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'view'));
++  if ('response' in guard) return guard.response;
++
++  const { id: courseId } = await params;
++
++  const modules = await prisma.courseModule.findMany({
++    where: { courseId },
++    orderBy: { sortOrder: 'asc' },
++    include: {
++      lessons: {
++        orderBy: { sortOrder: 'asc' },
++        include: { quiz: { include: { questions: true } } },
++      },
++    },
++  });
++
++  return NextResponse.json(modules);
++}
++
++export async function POST(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id: courseId } = await params;
++  const course = await prisma.course.findUnique({ where: { id: courseId } });
++  if (!course) {
++    return NextResponse.json({ error: 'Course not found' }, { status: 404 });
++  }
++
++  const body = await req.json();
++  const data = createSchema.parse(body);
++
++  const courseModule = await prisma.courseModule.create({
++    data: { courseId, ...data },
++  });
++
++  return NextResponse.json(courseModule, { status: 201 });
++}
+diff --git a/src/app/api/admin/lessons/[id]/quiz/route.ts b/src/app/api/admin/lessons/[id]/quiz/route.ts
+new file mode 100644
+index 0000000..787dbe4
+--- /dev/null
++++ b/src/app/api/admin/lessons/[id]/quiz/route.ts
+@@ -0,0 +1,67 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++import { requirePermission } from '@/lib/auth/rbac';
++import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
++
++const questionSchema = z.object({
++  prompt: z.string().min(1),
++  options: z.array(z.string()).min(2),
++  correctIndex: z.number().int().min(0),
++  sortOrder: z.number().int().default(0),
++});
++
++const upsertSchema = z.object({
++  title: z.string().min(2),
++  passingScore: z.number().int().min(0).max(100).default(70),
++  questions: z.array(questionSchema).min(1),
++});
++
++/**
++ * Creates or fully replaces the quiz (and all its questions) attached to a
++ * QUIZ-type lesson. Replacing rather than diffing keeps the admin quiz editor
++ * simple — a course's quiz bank is small enough that this is cheap, and it
++ * avoids stale-question bugs from partial updates.
++ */
++export async function PUT(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id: lessonId } = await params;
++  const lesson = await prisma.lesson.findUnique({ where: { id: lessonId } });
++  if (!lesson) {
++    return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
++  }
++  if (lesson.type !== 'QUIZ') {
++    return NextResponse.json({ error: 'Lesson is not a QUIZ-type lesson' }, { status: 400 });
++  }
++
++  const body = await req.json();
++  const data = upsertSchema.parse(body);
++
++  const quiz = await prisma.$transaction(async (tx) => {
++    const upserted = await tx.quiz.upsert({
++      where: { lessonId },
++      create: { lessonId, title: data.title, passingScore: data.passingScore },
++      update: { title: data.title, passingScore: data.passingScore },
++    });
++
++    await tx.quizQuestion.deleteMany({ where: { quizId: upserted.id } });
++    await tx.quizQuestion.createMany({
++      data: data.questions.map((q, i) => ({
++        quizId: upserted.id,
++        prompt: q.prompt,
++        options: q.options,
++        correctIndex: q.correctIndex,
++        sortOrder: q.sortOrder ?? i,
++      })),
++    });
++
++    return tx.quiz.findUnique({ where: { id: upserted.id }, include: { questions: true } });
++  });
++
++  return NextResponse.json(quiz);
++}
+diff --git a/src/app/api/admin/lessons/[id]/route.ts b/src/app/api/admin/lessons/[id]/route.ts
+new file mode 100644
+index 0000000..c67ea8f
+--- /dev/null
++++ b/src/app/api/admin/lessons/[id]/route.ts
+@@ -0,0 +1,44 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++import { requirePermission } from '@/lib/auth/rbac';
++import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
++
++const updateSchema = z.object({
++  title: z.string().min(2).optional(),
++  type: z.enum(['VIDEO', 'TEXT', 'QUIZ', 'RESOURCE']).optional(),
++  content: z.string().optional(),
++  videoUrl: z.string().optional(),
++  durationSec: z.number().int().optional(),
++  resourceUrl: z.string().optional(),
++  resourceName: z.string().optional(),
++  isPreview: z.boolean().optional(),
++  sortOrder: z.number().int().optional(),
++});
++
++export async function PATCH(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id } = await params;
++  const body = await req.json();
++  const data = updateSchema.parse(body);
++
++  const lesson = await prisma.lesson.update({ where: { id }, data });
++  return NextResponse.json(lesson);
++}
++
++export async function DELETE(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id } = await params;
++  await prisma.lesson.delete({ where: { id } });
++  return NextResponse.json({ success: true });
++}
+diff --git a/src/app/api/admin/modules/[id]/lessons/route.ts b/src/app/api/admin/modules/[id]/lessons/route.ts
+new file mode 100644
+index 0000000..cc8cfce
+--- /dev/null
++++ b/src/app/api/admin/modules/[id]/lessons/route.ts
+@@ -0,0 +1,37 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++import { requirePermission } from '@/lib/auth/rbac';
++import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
++
++const createSchema = z.object({
++  title: z.string().min(2),
++  type: z.enum(['VIDEO', 'TEXT', 'QUIZ', 'RESOURCE']).default('TEXT'),
++  content: z.string().optional(),
++  videoUrl: z.string().optional(),
++  durationSec: z.number().int().optional(),
++  resourceUrl: z.string().optional(),
++  resourceName: z.string().optional(),
++  isPreview: z.boolean().default(false),
++  sortOrder: z.number().int().default(0),
++});
++
++export async function POST(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id: moduleId } = await params;
++  const courseModule = await prisma.courseModule.findUnique({ where: { id: moduleId } });
++  if (!courseModule) {
++    return NextResponse.json({ error: 'Module not found' }, { status: 404 });
++  }
++
++  const body = await req.json();
++  const data = createSchema.parse(body);
++
++  const lesson = await prisma.lesson.create({ data: { moduleId, ...data } });
++  return NextResponse.json(lesson, { status: 201 });
++}
+diff --git a/src/app/api/admin/modules/[id]/route.ts b/src/app/api/admin/modules/[id]/route.ts
+new file mode 100644
+index 0000000..6173f74
+--- /dev/null
++++ b/src/app/api/admin/modules/[id]/route.ts
+@@ -0,0 +1,39 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++import { requirePermission } from '@/lib/auth/rbac';
++import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
++
++const updateSchema = z.object({
++  title: z.string().min(2).optional(),
++  description: z.string().optional(),
++  sortOrder: z.number().int().optional(),
++});
++
++export async function PATCH(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id } = await params;
++  const body = await req.json();
++  const data = updateSchema.parse(body);
++
++  const courseModule = await prisma.courseModule.update({ where: { id }, data });
++  return NextResponse.json(courseModule);
++}
++
++export async function DELETE(
++  req: NextRequest,
++  { params }: { params: Promise<{ id: string }> }
++) {
++  const guard = await requirePermission(req, digitikaPerm('content', 'manage'));
++  if ('response' in guard) return guard.response;
++
++  const { id } = await params;
++  // Cascades to lessons → progress/quiz via onDelete: Cascade in schema.
++  await prisma.courseModule.delete({ where: { id } });
++  return NextResponse.json({ success: true });
++}
+diff --git a/src/app/api/certificates/[token]/pdf/route.ts b/src/app/api/certificates/[token]/pdf/route.ts
+new file mode 100644
+index 0000000..c52849e
+--- /dev/null
++++ b/src/app/api/certificates/[token]/pdf/route.ts
+@@ -0,0 +1,32 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { prisma } from '@/lib/db';
++import { renderCertificatePdf } from '@/lib/certificate-pdf';
++
++export async function GET(
++  req: NextRequest,
++  { params }: { params: Promise<{ token: string }> }
++) {
++  const { token } = await params;
++
++  const cert = await prisma.certificate.findUnique({ where: { verifyToken: token } });
++  if (!cert || cert.revoked) {
++    return NextResponse.json({ error: 'Certificate not found' }, { status: 404 });
++  }
++
++  const verifyUrl = `${new URL(req.url).origin}/certificates/${cert.verifyToken}`;
++  const pdfBytes = await renderCertificatePdf({
++    certificateNumber: cert.certificateNumber,
++    studentName: cert.studentName,
++    courseName: cert.courseName,
++    issuedAt: cert.issuedAt,
++    verifyUrl,
++  });
++
++  return new NextResponse(Buffer.from(pdfBytes), {
++    headers: {
++      'Content-Type': 'application/pdf',
++      'Content-Disposition': `inline; filename="${cert.certificateNumber}.pdf"`,
++      'Cache-Control': 'private, max-age=3600',
++    },
++  });
++}
+diff --git a/src/app/api/certificates/[token]/verify/route.ts b/src/app/api/certificates/[token]/verify/route.ts
+new file mode 100644
+index 0000000..47706d9
+--- /dev/null
++++ b/src/app/api/certificates/[token]/verify/route.ts
+@@ -0,0 +1,23 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { prisma } from '@/lib/db';
++
++export async function GET(
++  _req: NextRequest,
++  { params }: { params: Promise<{ token: string }> }
++) {
++  const { token } = await params;
++
++  const cert = await prisma.certificate.findUnique({ where: { verifyToken: token } });
++  if (!cert || cert.revoked) {
++    return NextResponse.json({ valid: false }, { status: 404 });
++  }
++
++  // Deliberately minimal — public endpoint, don't leak email/enrollment internals.
++  return NextResponse.json({
++    valid: true,
++    certificateNumber: cert.certificateNumber,
++    studentName: cert.studentName,
++    courseName: cert.courseName,
++    issuedAt: cert.issuedAt,
++  });
++}
+diff --git a/src/app/api/students/[studentId]/courses/[courseId]/certificate/route.ts b/src/app/api/students/[studentId]/courses/[courseId]/certificate/route.ts
+new file mode 100644
+index 0000000..df15418
+--- /dev/null
++++ b/src/app/api/students/[studentId]/courses/[courseId]/certificate/route.ts
+@@ -0,0 +1,92 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { Prisma } from '@prisma/client';
++import { prisma } from '@/lib/db';
++import { resolvePaidAccess } from '@/lib/digitika-access';
++
++async function nextCertificateNumber(): Promise<string> {
++  const year = new Date().getFullYear();
++  const count = await prisma.certificate.count({
++    where: { certificateNumber: { startsWith: `CV-DGT-${year}-` } },
++  });
++  return `CV-DGT-${year}-${String(count + 1).padStart(6, '0')}`;
++}
++
++/**
++ * Issues a certificate with a fresh sequential number, retrying on a rare
++ * concurrent-issuance collision (two students completing a course in the
++ * same instant could both compute the same count() before either insert
++ * lands — the unique constraint on certificateNumber then rejects the
++ * second one). A handful of retries is enough; this isn't a high-write-rate
++ * table.
++ */
++async function createCertificateWithRetry(data: {
++  studentUserId: string;
++  courseId: string;
++  studentName: string;
++  courseName: string;
++}) {
++  for (let attempt = 0; attempt < 5; attempt++) {
++    const certificateNumber = await nextCertificateNumber();
++    try {
++      return await prisma.certificate.create({ data: { ...data, certificateNumber } });
++    } catch (err) {
++      const isUniqueClash = err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002';
++      if (!isUniqueClash || attempt === 4) throw err;
++    }
++  }
++  throw new Error('Failed to allocate a certificate number after retries');
++}
++
++export async function GET(
++  _req: NextRequest,
++  { params }: { params: Promise<{ studentId: string; courseId: string }> }
++) {
++  const { studentId, courseId } = await params;
++  const sid = studentId.trim().toUpperCase();
++
++  const cert = await prisma.certificate.findFirst({
++    where: { studentUserId: sid, courseId, revoked: false },
++  });
++  return NextResponse.json(cert ?? null);
++}
++
++export async function POST(
++  _req: NextRequest,
++  { params }: { params: Promise<{ studentId: string; courseId: string }> }
++) {
++  const { studentId, courseId } = await params;
++  const { student, hasAccess } = await resolvePaidAccess(studentId, courseId);
++
++  if (!student) return NextResponse.json({ error: 'Student not found' }, { status: 404 });
++  if (!hasAccess) return NextResponse.json({ error: 'No paid enrollment for this course' }, { status: 403 });
++
++  const existing = await prisma.certificate.findFirst({
++    where: { studentUserId: student.id, courseId, revoked: false },
++  });
++  if (existing) return NextResponse.json(existing);
++
++  const [course, totalLessons, completedLessons] = await Promise.all([
++    prisma.course.findUnique({ where: { id: courseId } }),
++    prisma.lesson.count({ where: { module: { courseId } } }),
++    prisma.lessonProgress.count({
++      where: { studentUserId: student.id, completedAt: { not: null }, lesson: { module: { courseId } } },
++    }),
++  ]);
++
++  if (!course) return NextResponse.json({ error: 'Course not found' }, { status: 404 });
++  if (totalLessons === 0 || completedLessons < totalLessons) {
++    return NextResponse.json(
++      { error: 'Course not yet complete', completedLessons, totalLessons },
++      { status: 400 }
++    );
++  }
++
++  const certificate = await createCertificateWithRetry({
++    studentUserId: student.id,
++    courseId,
++    studentName: student.fullName,
++    courseName: course.name,
++  });
++
++  return NextResponse.json(certificate, { status: 201 });
++}
+diff --git a/src/app/api/students/[studentId]/courses/[courseId]/content/route.ts b/src/app/api/students/[studentId]/courses/[courseId]/content/route.ts
+new file mode 100644
+index 0000000..24f816d
+--- /dev/null
++++ b/src/app/api/students/[studentId]/courses/[courseId]/content/route.ts
+@@ -0,0 +1,74 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { prisma } from '@/lib/db';
++import { resolvePaidAccess } from '@/lib/digitika-access';
++
++export async function GET(
++  _req: NextRequest,
++  { params }: { params: Promise<{ studentId: string; courseId: string }> }
++) {
++  const { studentId, courseId } = await params;
++  const { student, hasAccess } = await resolvePaidAccess(studentId, courseId);
++
++  if (!student) {
++    return NextResponse.json({ error: 'Student not found' }, { status: 404 });
++  }
++
++  const modules = await prisma.courseModule.findMany({
++    where: { courseId },
++    orderBy: { sortOrder: 'asc' },
++    include: {
++      lessons: {
++        orderBy: { sortOrder: 'asc' },
++        include: {
++          quiz: { include: { questions: true } },
++          progress: { where: { studentUserId: student.id } },
++        },
++      },
++    },
++  });
++
++  // Strip content the student hasn't paid for (unless it's a free-preview lesson),
++  // and strip quiz answer keys either way — never send correctIndex to the client.
++  const shaped = modules.map((m) => ({
++    id: m.id,
++    title: m.title,
++    description: m.description,
++    lessons: m.lessons.map((l) => {
++      const locked = !l.isPreview && !hasAccess;
++      return {
++        id: l.id,
++        title: l.title,
++        type: l.type,
++        isPreview: l.isPreview,
++        durationSec: l.durationSec,
++        locked,
++        completedAt: l.progress[0]?.completedAt ?? null,
++        lastPositionSec: l.progress[0]?.lastPositionSec ?? null,
++        content: locked ? null : l.content,
++        videoUrl: locked ? null : l.videoUrl,
++        resourceUrl: locked ? null : l.resourceUrl,
++        resourceName: l.resourceName,
++        quiz: locked || !l.quiz ? null : {
++          id: l.quiz.id,
++          title: l.quiz.title,
++          passingScore: l.quiz.passingScore,
++          questions: l.quiz.questions.map((q) => ({ id: q.id, prompt: q.prompt, options: q.options })),
++        },
++      };
++    }),
++  }));
++
++  const totalLessons = modules.reduce((n, m) => n + m.lessons.length, 0);
++  const completedLessons = modules.reduce(
++    (n, m) => n + m.lessons.filter((l) => l.progress[0]?.completedAt).length,
++    0
++  );
++
++  return NextResponse.json({
++    hasAccess,
++    modules: shaped,
++    progressPct: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
++    completedLessons,
++    totalLessons,
++  });
++}
+diff --git a/src/app/api/students/[studentId]/lessons/[lessonId]/complete/route.ts b/src/app/api/students/[studentId]/lessons/[lessonId]/complete/route.ts
+new file mode 100644
+index 0000000..a72759e
+--- /dev/null
++++ b/src/app/api/students/[studentId]/lessons/[lessonId]/complete/route.ts
+@@ -0,0 +1,60 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++
++const bodySchema = z.object({
++  completed: z.boolean().default(true),
++  lastPositionSec: z.number().int().min(0).optional(),
++});
++
++export async function POST(
++  req: NextRequest,
++  { params }: { params: Promise<{ studentId: string; lessonId: string }> }
++) {
++  const { studentId, lessonId } = await params;
++  const sid = studentId.trim().toUpperCase();
++
++  const student = await prisma.studentUser.findUnique({ where: { id: sid } });
++  if (!student) {
++    return NextResponse.json({ error: 'Student not found' }, { status: 404 });
++  }
++
++  const lesson = await prisma.lesson.findUnique({
++    where: { id: lessonId },
++    include: { module: true },
++  });
++  if (!lesson) {
++    return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
++  }
++
++  // Don't let progress be recorded on content the student hasn't paid for and
++  // isn't a free preview — mirrors the gating in the content GET route.
++  if (!lesson.isPreview) {
++    const enrollment = await prisma.enrollment.findFirst({
++      where: { studentUserId: sid, courseId: lesson.module.courseId },
++    });
++    const paid = enrollment && (enrollment.paymentStatus === 'succeeded' || enrollment.paymentStatus === 'paid');
++    if (!paid) {
++      return NextResponse.json({ error: 'No paid enrollment for this course' }, { status: 403 });
++    }
++  }
++
++  const body = await req.json().catch(() => ({}));
++  const data = bodySchema.parse(body);
++
++  const progress = await prisma.lessonProgress.upsert({
++    where: { lessonId_studentUserId: { lessonId, studentUserId: sid } },
++    create: {
++      lessonId,
++      studentUserId: sid,
++      completedAt: data.completed ? new Date() : null,
++      lastPositionSec: data.lastPositionSec,
++    },
++    update: {
++      ...(data.completed ? { completedAt: new Date() } : {}),
++      ...(data.lastPositionSec !== undefined ? { lastPositionSec: data.lastPositionSec } : {}),
++    },
++  });
++
++  return NextResponse.json(progress);
++}
+diff --git a/src/app/api/students/[studentId]/lessons/[lessonId]/quiz-attempt/route.ts b/src/app/api/students/[studentId]/lessons/[lessonId]/quiz-attempt/route.ts
+new file mode 100644
+index 0000000..eb66007
+--- /dev/null
++++ b/src/app/api/students/[studentId]/lessons/[lessonId]/quiz-attempt/route.ts
+@@ -0,0 +1,75 @@
++import { NextRequest, NextResponse } from 'next/server';
++import { z } from 'zod';
++import { prisma } from '@/lib/db';
++
++const bodySchema = z.object({
++  answers: z.array(z.number().int().min(0)),
++});
++
++export async function POST(
++  req: NextRequest,
++  { params }: { params: Promise<{ studentId: string; lessonId: string }> }
++) {
++  const { studentId, lessonId } = await params;
++  const sid = studentId.trim().toUpperCase();
++
++  const student = await prisma.studentUser.findUnique({ where: { id: sid } });
++  if (!student) {
++    return NextResponse.json({ error: 'Student not found' }, { status: 404 });
++  }
++
++  const lesson = await prisma.lesson.findUnique({
++    where: { id: lessonId },
++    include: { module: true, quiz: { include: { questions: { orderBy: { sortOrder: 'asc' } } } } },
++  });
++  if (!lesson || !lesson.quiz) {
++    return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
++  }
++
++  if (!lesson.isPreview) {
++    const enrollment = await prisma.enrollment.findFirst({
++      where: { studentUserId: sid, courseId: lesson.module.courseId },
++    });
++    const paid = enrollment && (enrollment.paymentStatus === 'succeeded' || enrollment.paymentStatus === 'paid');
++    if (!paid) {
++      return NextResponse.json({ error: 'No paid enrollment for this course' }, { status: 403 });
++    }
++  }
++
++  const { answers } = bodySchema.parse(await req.json());
++  const questions = lesson.quiz.questions;
++
++  if (answers.length !== questions.length) {
++    return NextResponse.json({ error: `Expected ${questions.length} answers, got ${answers.length}` }, { status: 400 });
++  }
++
++  // Graded server-side only — the client never receives correctIndex (see content route).
++  const correctCount = questions.reduce((n, q, i) => n + (q.correctIndex === answers[i] ? 1 : 0), 0);
++  const scorePct = Math.round((correctCount / questions.length) * 100);
++  const passed = scorePct >= lesson.quiz.passingScore;
++
++  const attempt = await prisma.$transaction(async (tx) => {
++    const created = await tx.quizAttempt.create({
++      data: { quizId: lesson.quiz!.id, studentUserId: sid, scorePct, passed, answers },
++    });
++
++    if (passed) {
++      await tx.lessonProgress.upsert({
++        where: { lessonId_studentUserId: { lessonId, studentUserId: sid } },
++        create: { lessonId, studentUserId: sid, completedAt: new Date() },
++        update: { completedAt: new Date() },
++      });
++    }
++
++    return created;
++  });
++
++  return NextResponse.json({
++    attemptId: attempt.id,
++    scorePct,
++    passed,
++    passingScore: lesson.quiz.passingScore,
++    correctCount,
++    totalQuestions: questions.length,
++  });
++}
+diff --git a/src/app/certificates/[token]/page.tsx b/src/app/certificates/[token]/page.tsx
+new file mode 100644
+index 0000000..a79bdf5
+--- /dev/null
++++ b/src/app/certificates/[token]/page.tsx
+@@ -0,0 +1,63 @@
++import type { Metadata } from 'next';
++import Link from 'next/link';
++import { CheckCircle2, XCircle, Download } from 'lucide-react';
++import { prisma } from '@/lib/db';
++
++export const metadata: Metadata = {
++  title: 'Verify Certificate | Digitika — Codevertex',
++  robots: { index: false, follow: false },
++};
++
++export default async function VerifyCertificatePage({
++  params,
++}: {
++  params: Promise<{ token: string }>;
++}) {
++  const { token } = await params;
++  const cert = await prisma.certificate.findUnique({ where: { verifyToken: token } });
++  const valid = Boolean(cert && !cert.revoked);
++
++  return (
++    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
++      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm text-center space-y-5">
++        {valid && cert ? (
++          <>
++            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
++            <div>
++              <h1 className="text-xl font-bold">Certificate Verified</h1>
++              <p className="text-sm text-muted-foreground mt-1">
++                This is a genuine Digitika Academy certificate.
++              </p>
++            </div>
++            <div className="rounded-lg bg-muted/50 p-4 text-left text-sm space-y-1.5">
++              <p><span className="text-muted-foreground">Student:</span> <span className="font-medium">{cert.studentName}</span></p>
++              <p><span className="text-muted-foreground">Course:</span> <span className="font-medium">{cert.courseName}</span></p>
++              <p><span className="text-muted-foreground">Certificate No:</span> <span className="font-mono">{cert.certificateNumber}</span></p>
++              <p><span className="text-muted-foreground">Issued:</span> {cert.issuedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
++            </div>
++            <a
++              href={`/api/certificates/${token}/pdf`}
++              target="_blank"
++              className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold"
++            >
++              <Download className="h-4 w-4" /> Download PDF
++            </a>
++          </>
++        ) : (
++          <>
++            <XCircle className="h-12 w-12 text-destructive mx-auto" />
++            <div>
++              <h1 className="text-xl font-bold">Certificate Not Found</h1>
++              <p className="text-sm text-muted-foreground mt-1">
++                This certificate link is invalid, expired, or has been revoked.
++              </p>
++            </div>
++            <Link href="/digitika" className="text-primary text-sm underline underline-offset-2">
++              Browse Digitika courses →
++            </Link>
++          </>
++        )}
++      </div>
++    </main>
++  );
++}
+diff --git a/src/app/digitika/[courseId]/learn/page.tsx b/src/app/digitika/[courseId]/learn/page.tsx
+new file mode 100644
+index 0000000..349b754
+--- /dev/null
++++ b/src/app/digitika/[courseId]/learn/page.tsx
+@@ -0,0 +1,23 @@
++import type { Metadata } from 'next';
++import { notFound } from 'next/navigation';
++import { prisma } from '@/lib/db';
++import { LearnClient } from '@/components/digitika/LearnClient';
++
++export const dynamic = 'force-dynamic';
++
++export const metadata: Metadata = {
++  title: 'Course Content | Digitika — Codevertex',
++  robots: { index: false, follow: false },
++};
++
++export default async function LearnPage({
++  params,
++}: {
++  params: Promise<{ courseId: string }>;
++}) {
++  const { courseId } = await params;
++  const course = await prisma.course.findFirst({ where: { id: courseId, isActive: true } });
++  if (!course) notFound();
++
++  return <LearnClient courseId={courseId} courseName={course.name} />;
++}
+diff --git a/src/components/digitika/LearnClient.tsx b/src/components/digitika/LearnClient.tsx
+new file mode 100644
+index 0000000..8bb34c8
+--- /dev/null
++++ b/src/components/digitika/LearnClient.tsx
+@@ -0,0 +1,315 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import {
++  GraduationCap, CheckCircle2, Circle, Lock, PlayCircle, FileText, Download,
++  Award, Loader2, AlertCircle,
++} from 'lucide-react';
++import { Button } from '@/components/ui/button';
++
++interface QuizQuestion {
++  id: string;
++  prompt: string;
++  options: string[];
++}
++
++interface Lesson {
++  id: string;
++  title: string;
++  type: 'VIDEO' | 'TEXT' | 'QUIZ' | 'RESOURCE';
++  isPreview: boolean;
++  durationSec: number | null;
++  locked: boolean;
++  completedAt: string | null;
++  content: string | null;
++  videoUrl: string | null;
++  resourceUrl: string | null;
++  resourceName: string | null;
++  quiz: { id: string; title: string; passingScore: number; questions: QuizQuestion[] } | null;
++}
++
++interface Module {
++  id: string;
++  title: string;
++  description: string | null;
++  lessons: Lesson[];
++}
++
++interface ContentResponse {
++  hasAccess: boolean;
++  modules: Module[];
++  progressPct: number;
++  completedLessons: number;
++  totalLessons: number;
++}
++
++export function LearnClient({ courseId, courseName }: { courseId: string; courseName: string }) {
++  const [studentId, setStudentId] = useState('');
++  const [verifiedStudentId, setVerifiedStudentId] = useState<string | null>(null);
++  const [lookupError, setLookupError] = useState<string | null>(null);
++  const [lookupLoading, setLookupLoading] = useState(false);
++
++  const [data, setData] = useState<ContentResponse | null>(null);
++  const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
++  const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
++  const [quizResult, setQuizResult] = useState<{ scorePct: number; passed: boolean; passingScore: number } | null>(null);
++  const [certUrl, setCertUrl] = useState<string | null>(null);
++  const [busy, setBusy] = useState(false);
++
++  async function loadContent(sid: string) {
++    const res = await fetch(`/api/students/${encodeURIComponent(sid)}/courses/${courseId}/content`);
++    if (!res.ok) {
++      setLookupError('Could not load course content for this Student ID.');
++      return;
++    }
++    const json: ContentResponse = await res.json();
++    setData(json);
++    const firstUnlocked = json.modules.flatMap((m) => m.lessons).find((l) => !l.locked);
++    setActiveLessonId((prev) => prev ?? firstUnlocked?.id ?? null);
++  }
++
++  async function handleLookup(e: React.FormEvent) {
++    e.preventDefault();
++    const sid = studentId.trim().toUpperCase();
++    if (!sid) return;
++    setLookupLoading(true);
++    setLookupError(null);
++    try {
++      await loadContent(sid);
++      setVerifiedStudentId(sid);
++    } finally {
++      setLookupLoading(false);
++    }
++  }
++
++  useEffect(() => {
++    if (verifiedStudentId) {
++      const cert = localStorage.getItem(`digitika-cert-${courseId}-${verifiedStudentId}`);
++      if (cert) setCertUrl(cert);
++    }
++  }, [verifiedStudentId, courseId]);
++
++  const activeLesson = data?.modules.flatMap((m) => m.lessons).find((l) => l.id === activeLessonId) ?? null;
++
++  async function markComplete(lessonId: string) {
++    if (!verifiedStudentId) return;
++    setBusy(true);
++    try {
++      await fetch(`/api/students/${verifiedStudentId}/lessons/${lessonId}/complete`, {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ completed: true }),
++      });
++      await loadContent(verifiedStudentId);
++    } finally {
++      setBusy(false);
++    }
++  }
++
++  async function submitQuiz() {
++    if (!verifiedStudentId || !activeLesson?.quiz) return;
++    const answers = activeLesson.quiz.questions.map((_, i) => quizAnswers[i] ?? -1);
++    if (answers.some((a) => a === -1)) return;
++
++    setBusy(true);
++    try {
++      const res = await fetch(`/api/students/${verifiedStudentId}/lessons/${activeLesson.id}/quiz-attempt`, {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ answers }),
++      });
++      const json = await res.json();
++      setQuizResult(json);
++      if (json.passed) await loadContent(verifiedStudentId);
++    } finally {
++      setBusy(false);
++    }
++  }
++
++  async function issueCertificate() {
++    if (!verifiedStudentId) return;
++    setBusy(true);
++    try {
++      const res = await fetch(`/api/students/${verifiedStudentId}/courses/${courseId}/certificate`, { method: 'POST' });
++      if (res.ok) {
++        const cert = await res.json();
++        const url = `/certificates/${cert.verifyToken}`;
++        localStorage.setItem(`digitika-cert-${courseId}-${verifiedStudentId}`, url);
++        setCertUrl(url);
++      }
++    } finally {
++      setBusy(false);
++    }
++  }
++
++  // --- Student ID gate -------------------------------------------------
++  if (!verifiedStudentId) {
++    return (
++      <main className="min-h-screen bg-background flex flex-col">
++        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 py-16 px-4 text-primary-foreground">
++          <div className="max-w-2xl mx-auto text-center relative z-10">
++            <div className="w-16 h-16 rounded-full bg-white/15 border-2 border-white/25 flex items-center justify-center mx-auto mb-5">
++              <GraduationCap className="h-8 w-8" />
++            </div>
++            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{courseName}</h1>
++            <p className="mt-3 text-primary-foreground/80 text-base max-w-md mx-auto leading-relaxed">
++              Enter your Student ID to access your course content.
++            </p>
++          </div>
++        </div>
++        <div className="flex-1 flex items-start justify-center px-4 py-12">
++          <form onSubmit={handleLookup} className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
++            <div>
++              <label className="text-sm font-medium">Student ID</label>
++              <input
++                value={studentId}
++                onChange={(e) => setStudentId(e.target.value)}
++                placeholder="DGT-XXXXXXXX"
++                className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
++              />
++            </div>
++            {lookupError && (
++              <p className="text-sm text-destructive flex items-center gap-1.5"><AlertCircle className="h-4 w-4" /> {lookupError}</p>
++            )}
++            <Button type="submit" disabled={lookupLoading} className="w-full">
++              {lookupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Access Course'}
++            </Button>
++          </form>
++        </div>
++      </main>
++    );
++  }
++
++  if (!data) return <main className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></main>;
++
++  return (
++    <main className="min-h-screen bg-background">
++      <div className="max-w-6xl mx-auto px-4 py-8 grid md:grid-cols-[300px_1fr] gap-6">
++        {/* Sidebar */}
++        <aside className="space-y-4">
++          <div>
++            <h1 className="text-lg font-bold">{courseName}</h1>
++            <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
++              <div className="h-full bg-primary transition-all" style={{ width: `${data.progressPct}%` }} />
++            </div>
++            <p className="text-xs text-muted-foreground mt-1">{data.completedLessons}/{data.totalLessons} lessons complete ({data.progressPct}%)</p>
++          </div>
++
++          {!data.hasAccess && (
++            <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-700 dark:text-amber-400">
++              Only free-preview lessons are unlocked. Complete payment to unlock the full course.
++            </div>
++          )}
++
++          {data.progressPct === 100 && (
++            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3 space-y-2">
++              <p className="text-xs font-medium flex items-center gap-1.5"><Award className="h-4 w-4" /> Course complete!</p>
++              {certUrl ? (
++                <a href={certUrl} className="text-xs underline underline-offset-2 text-emerald-700 dark:text-emerald-400">View your certificate →</a>
++              ) : (
++                <Button size="sm" disabled={busy} onClick={issueCertificate} className="w-full">Get Certificate</Button>
++              )}
++            </div>
++          )}
++
++          {data.modules.map((m) => (
++            <div key={m.id}>
++              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">{m.title}</p>
++              <ul className="space-y-1">
++                {m.lessons.map((l) => (
++                  <li key={l.id}>
++                    <button
++                      onClick={() => { setActiveLessonId(l.id); setQuizResult(null); setQuizAnswers({}); }}
++                      disabled={l.locked}
++                      className={`w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm ${
++                        l.id === activeLessonId ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted/60'
++                      } ${l.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
++                    >
++                      {l.locked ? <Lock className="h-3.5 w-3.5 shrink-0" /> :
++                        l.completedAt ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" /> :
++                        <Circle className="h-3.5 w-3.5 shrink-0" />}
++                      <span className="truncate">{l.title}</span>
++                    </button>
++                  </li>
++                ))}
++              </ul>
++            </div>
++          ))}
++        </aside>
++
++        {/* Content */}
++        <section className="rounded-2xl border border-border bg-card p-6 min-h-[400px]">
++          {!activeLesson ? (
++            <p className="text-muted-foreground text-sm">Select a lesson to begin.</p>
++          ) : activeLesson.locked ? (
++            <div className="text-center py-16 space-y-3">
++              <Lock className="h-8 w-8 mx-auto text-muted-foreground" />
++              <p className="text-sm text-muted-foreground">This lesson is locked. Complete enrollment payment to unlock it.</p>
++            </div>
++          ) : (
++            <div className="space-y-5">
++              <h2 className="text-xl font-bold flex items-center gap-2">
++                {activeLesson.type === 'VIDEO' && <PlayCircle className="h-5 w-5" />}
++                {activeLesson.type === 'RESOURCE' && <Download className="h-5 w-5" />}
++                {activeLesson.type === 'TEXT' && <FileText className="h-5 w-5" />}
++                {activeLesson.title}
++              </h2>
++
++              {activeLesson.type === 'VIDEO' && activeLesson.videoUrl && (
++                <video controls className="w-full rounded-lg bg-black" src={activeLesson.videoUrl} />
++              )}
++
++              {activeLesson.type === 'TEXT' && activeLesson.content && (
++                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">{activeLesson.content}</div>
++              )}
++
++              {activeLesson.type === 'RESOURCE' && activeLesson.resourceUrl && (
++                <a href={activeLesson.resourceUrl} target="_blank" className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted/60">
++                  <Download className="h-4 w-4" /> {activeLesson.resourceName ?? 'Download resource'}
++                </a>
++              )}
++
++              {activeLesson.type === 'QUIZ' && activeLesson.quiz && (
++                <div className="space-y-5">
++                  {activeLesson.quiz.questions.map((q, qi) => (
++                    <div key={q.id}>
++                      <p className="text-sm font-medium mb-2">{qi + 1}. {q.prompt}</p>
++                      <div className="space-y-1.5">
++                        {q.options.map((opt, oi) => (
++                          <label key={oi} className="flex items-center gap-2 text-sm rounded-lg border border-border px-3 py-2 cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
++                            <input
++                              type="radio"
++                              name={`q-${qi}`}
++                              checked={quizAnswers[qi] === oi}
++                              onChange={() => setQuizAnswers((prev) => ({ ...prev, [qi]: oi }))}
++                            />
++                            {opt}
++                          </label>
++                        ))}
++                      </div>
++                    </div>
++                  ))}
++                  {quizResult && (
++                    <p className={`text-sm font-medium ${quizResult.passed ? 'text-emerald-600' : 'text-destructive'}`}>
++                      Score: {quizResult.scorePct}% — {quizResult.passed ? 'Passed!' : `Needs ${quizResult.passingScore}% to pass, try again.`}
++                    </p>
++                  )}
++                  <Button onClick={submitQuiz} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit Quiz'}</Button>
++                </div>
++              )}
++
++              {activeLesson.type !== 'QUIZ' && !activeLesson.completedAt && (
++                <Button onClick={() => markComplete(activeLesson.id)} disabled={busy} variant="outline">
++                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark as complete'}
++                </Button>
++              )}
++              {activeLesson.completedAt && activeLesson.type !== 'QUIZ' && (
++                <p className="text-sm text-emerald-600 flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4" /> Completed</p>
++              )}
++            </div>
++          )}
++        </section>
++      </div>
++    </main>
++  );
++}
+diff --git a/src/lib/certificate-pdf.ts b/src/lib/certificate-pdf.ts
+new file mode 100644
+index 0000000..1d4b592
+--- /dev/null
++++ b/src/lib/certificate-pdf.ts
+@@ -0,0 +1,52 @@
++import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
++
++interface CertificateData {
++  certificateNumber: string;
++  studentName: string;
++  courseName: string;
++  issuedAt: Date;
++  verifyUrl: string;
++}
++
++const BRAND_PINK = rgb(0.831, 0.176, 0.514); // hsl(330 81% 60%) — matches site theme
++const NAVY = rgb(0.086, 0.106, 0.157);
++
++export async function renderCertificatePdf(data: CertificateData): Promise<Uint8Array> {
++  const doc = await PDFDocument.create();
++  const page = doc.addPage([842, 595]); // A4 landscape
++  const { width, height } = page.getSize();
++
++  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
++  const regular = await doc.embedFont(StandardFonts.Helvetica);
++
++  // Border
++  page.drawRectangle({
++    x: 24, y: 24, width: width - 48, height: height - 48,
++    borderColor: BRAND_PINK, borderWidth: 3,
++  });
++  page.drawRectangle({
++    x: 34, y: 34, width: width - 68, height: height - 68,
++    borderColor: NAVY, borderWidth: 1,
++  });
++
++  const centerText = (text: string, y: number, font = regular, size = 14, color = NAVY) => {
++    const w = font.widthOfTextAtSize(text, size);
++    page.drawText(text, { x: (width - w) / 2, y, size, font, color });
++  };
++
++  centerText('CODEVERTEX AFRICA — DIGITIKA ACADEMY', height - 90, bold, 16, BRAND_PINK);
++  centerText('Certificate of Completion', height - 130, bold, 30, NAVY);
++  centerText('This certifies that', height - 190, regular, 14);
++  centerText(data.studentName, height - 230, bold, 26, BRAND_PINK);
++  centerText('has successfully completed the course', height - 265, regular, 14);
++  centerText(data.courseName, height - 300, bold, 20, NAVY);
++
++  centerText(
++    `Issued ${data.issuedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`,
++    height - 360, regular, 12
++  );
++  centerText(`Certificate No. ${data.certificateNumber}`, height - 380, regular, 11);
++  centerText(`Verify at ${data.verifyUrl}`, 60, regular, 10);
++
++  return doc.save();
++}
+diff --git a/src/lib/digitika-access.ts b/src/lib/digitika-access.ts
+new file mode 100644
+index 0000000..0a9a1de
+--- /dev/null
++++ b/src/lib/digitika-access.ts
+@@ -0,0 +1,31 @@
++import { prisma } from '@/lib/db';
++
++const PAID_STATUSES = new Set(['succeeded', 'paid']);
++
++/**
++ * Resolves a student by their public Student ID (DGT-XXXXXXXX) and checks they
++ * have a paid enrollment for the given course. Mirrors the lookup used by
++ * /api/students/[studentId]/enrollment — no password, matching the existing
++ * low-friction Digitika student-portal pattern (see docs/integrations.md §3,
++ * "the marketing website does not enforce authentication").
++ *
++ * KNOWN LIMITATION carried over from that existing pattern: knowing a Student ID
++ * is sufficient to view content. That's an acceptable bar for viewing your own
++ * installment schedule, but worth revisiting (e.g. email OTP, or the planned
++ * auth-service JWKS integration in docs/integrations.md §3) before this gates
++ * real paid video content at scale.
++ */
++export async function resolvePaidAccess(studentId: string, courseId: string) {
++  const sid = studentId.trim().toUpperCase();
++
++  const student = await prisma.studentUser.findUnique({ where: { id: sid } });
++  if (!student) return { student: null, enrollment: null, hasAccess: false };
++
++  const enrollment = await prisma.enrollment.findFirst({
++    where: { studentUserId: sid, courseId },
++    orderBy: { createdAt: 'desc' },
++  });
++
++  const hasAccess = Boolean(enrollment && PAID_STATUSES.has(enrollment.paymentStatus));
++  return { student, enrollment, hasAccess };
++}
+diff --git a/src/lib/digitika-rbac-catalog.ts b/src/lib/digitika-rbac-catalog.ts
+index c202509..73a3983 100644
+--- a/src/lib/digitika-rbac-catalog.ts
++++ b/src/lib/digitika-rbac-catalog.ts
+@@ -27,6 +27,8 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
+   { key: 'leads', label: 'Leads' },
+   { key: 'contacts', label: 'Contacts' },
+   { key: 'courses', label: 'Courses' },
++  { key: 'content', label: 'Course Content' },
++  { key: 'certificates', label: 'Certificates' },
+   { key: 'cohorts', label: 'Cohorts' },
+   { key: 'installments', label: 'Installments' },
+   { key: 'discounts', label: 'Discounts' },
+-- 
+2.43.0
+
