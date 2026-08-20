@@ -129,9 +129,8 @@ export function mapGlobalRolesToDigitika(roles: string[]): string | null {
 
 // Fleet-wide e2e/QA fixture accounts seeded by auth-api (cmd/seed/seed_users.go) and
 // consumed by e2e specs across ~10 frontends. Never surface these in the Digitika Users
-// page — they aren't real Digitika staff, and they must NOT be deleted at the source
-// (auth-api) since doing so would break other services' login e2e tests.
+// page — they aren't real Digitika staff.
 const FIXTURE_STAFF_EMAIL = /^staff@[^@]+\.com$/i;
 export function isFleetTestFixtureEmail(email: string): boolean {
-  return email.toLowerCase() === 'demo@bengobox.dev' || FIXTURE_STAFF_EMAIL.test(email);
+  return email.toLowerCase() === 'admin@demo.codevertexafrica.com' || FIXTURE_STAFF_EMAIL.test(email);
 }
