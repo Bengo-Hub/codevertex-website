@@ -15,14 +15,24 @@ export interface AdminNavItem {
 // href/icon per module key — DIGITIKA_MODULES (src/lib/digitika-rbac-catalog.ts) is the
 // single source of truth for WHICH modules exist and their permission codes; this map only
 // adds the UI-specific bits (route + icon) so the two never drift out of sync.
-const MODULE_UI: Record<string, { href: string; icon: typeof LayoutDashboard; exact?: boolean }> = {
+const MODULE_UI: Record<
+  string,
+  { href: string; icon: typeof LayoutDashboard; exact?: boolean }
+> = {
   dashboard: { href: '/admin', icon: LayoutDashboard, exact: true },
   enrollments: { href: '/admin/enrollments', icon: BookOpen },
   students: { href: '/admin/students', icon: GraduationCap },
   leads: { href: '/admin/leads', icon: MessageSquare },
   contacts: { href: '/admin/contacts', icon: Mail },
   courses: { href: '/admin/courses', icon: Library },
+<<<<<<< HEAD
   blog: { href: '/admin/blog', icon: Newspaper },
+=======
+
+  content: { href: '/admin/content', icon: BookOpen },
+  certificates: { href: '/admin/certificates', icon: GraduationCap },
+
+>>>>>>> 969b46b (feat: polish website)
   cohorts: { href: '/admin/cohorts', icon: Calendar },
   installments: { href: '/admin/installments', icon: CreditCard },
   discounts: { href: '/admin/discounts', icon: BadgePercent },
