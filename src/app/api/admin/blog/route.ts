@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
   const guard = await requirePermission(req, digitikaPerm('blog', 'manage'));
   if ('response' in guard) return guard.response;
 
+<<<<<<< HEAD
   try {
     const body = await req.json();
     const data = createSchema.parse(body);
@@ -51,4 +52,12 @@ export async function POST(req: NextRequest) {
     console.error('[admin/blog POST]', err);
     return NextResponse.json({ error: [{ message: 'Failed to create post' }] }, { status: 500 });
   }
+=======
+  const body = await req.json();
+  const data = createSchema.parse(body);
+  const publishedAt = data.published ? (data.publishedAt ?? new Date()) : null;
+
+  const post = await prisma.blogPost.create({ data: { ...data, publishedAt } });
+  return NextResponse.json({ ...post, id: post.id.toString() }, { status: 201 });
+>>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
 }

@@ -27,6 +27,11 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
   { key: 'leads', label: 'Leads' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'courses', label: 'Courses' },
+<<<<<<< HEAD
+=======
+  { key: 'content', label: 'Course Content' },
+  { key: 'certificates', label: 'Certificates' },
+>>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
   { key: 'blog', label: 'Blog' },
   { key: 'cohorts', label: 'Cohorts' },
   { key: 'installments', label: 'Installments' },
