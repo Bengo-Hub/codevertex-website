@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
     prisma.lead.count({ where }),
     prisma.lead.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ score: 'desc' }, { createdAt: 'desc' }],
       skip: (page - 1) * limit,
       take: limit,
     }),

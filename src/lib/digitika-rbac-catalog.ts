@@ -78,6 +78,19 @@ export interface DigitikaRoleDef {
 // (additively) on every seed run — see prisma/seed/digitika-rbac.ts. `digitika_staff`'s
 // permission set only seeds on first creation; an admin may edit it afterwards via the
 // Roles page and that customization is preserved across restarts.
+// Instructor-facing modules only: authoring/grading content, and read-only visibility
+// into who's enrolled — no leads/contacts/discounts/installments (sales/ops territory),
+// no user or role administration.
+const INSTRUCTOR_PERMISSION_CODES = [
+  digitikaPerm('content', 'view'),
+  digitikaPerm('content', 'manage'),
+  digitikaPerm('certificates', 'view'),
+  digitikaPerm('courses', 'view'),
+  digitikaPerm('cohorts', 'view'),
+  digitikaPerm('enrollments', 'view'),
+  digitikaPerm('students', 'view'),
+];
+
 export const DIGITIKA_ROLE_DEFAULTS: DigitikaRoleDef[] = [
   {
     code: 'digitika_admin',
@@ -90,6 +103,12 @@ export const DIGITIKA_ROLE_DEFAULTS: DigitikaRoleDef[] = [
     name: 'Digitika Staff',
     description: 'Manages Digitika LMS content (courses, cohorts, enrollments, students, leads, contacts, installments, discounts). No user or role administration.',
     permissionCodes: STAFF_PERMISSION_CODES,
+  },
+  {
+    code: 'digitika_instructor',
+    name: 'Digitika Instructor',
+    description: 'Authors and grades course content (modules, lessons, quizzes, certificates) and can see who is enrolled. No access to leads, discounts, installments, or user/role administration.',
+    permissionCodes: INSTRUCTOR_PERMISSION_CODES,
   },
 ];
 

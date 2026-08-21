@@ -18,6 +18,7 @@ interface Lead {
   status: string;
   notes: string | null;
   preferredTime: string | null;
+  score: number;
   createdAt: string;
 }
 
@@ -62,6 +63,23 @@ export function LeadsPage() {
           <p className="font-medium text-sm text-foreground">{row.name ?? '—'}</p>
           <p className="text-xs text-muted-foreground">{row.email ?? row.phone ?? '—'}</p>
         </div>
+      ),
+    },
+    {
+      key: 'score',
+      header: 'Score',
+      render: (row) => (
+        <span
+          className={`inline-flex items-center justify-center min-w-8 px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
+            row.score >= 60
+              ? 'bg-primary/10 text-primary'
+              : row.score >= 30
+              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              : 'bg-muted text-muted-foreground'
+          }`}
+        >
+          {row.score}
+        </span>
       ),
     },
     { key: 'topic', header: 'Topic', render: (row) => <span className="text-xs text-muted-foreground">{row.topic ?? '—'}</span> },

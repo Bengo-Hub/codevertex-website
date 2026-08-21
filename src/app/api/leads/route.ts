@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { checkSpam } from '@/lib/spam-guard';
+import { scoreLead } from '@/lib/lead-scoring';
 
 const schema = z.object({
   name: z.string().optional(),
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
         preferredTime: data.preferredTime ?? null,
         notes: data.notes ?? null,
         source: data.source,
+        score: scoreLead(data),
       },
     });
 

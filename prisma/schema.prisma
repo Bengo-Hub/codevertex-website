@@ -33,9 +33,14 @@ model Lead {
   source        String   @default("chatbot")
   notes         String?
   status        String   @default("new")
+  // Rule-based lead score (0-100) computed at creation from field completeness
+  // and source — see scoreLead() in src/lib/lead-scoring.ts. Not AI-based;
+  // that would live in the AI service, not here.
+  score         Int      @default(0)
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([status])
+  @@index([score(sort: Desc)])
   @@map("leads")
 }
 
@@ -73,6 +78,12 @@ model DiscountRule {
   validFrom     DateTime? @map("valid_from")
   validUntil    DateTime? @map("valid_until")
   active        Boolean   @default(true)
+  // Self-serve referral codes (one per referring student) vs admin-created
+  // promo codes are both DiscountRule rows — this just tags which is which
+  // so the referring student can be credited and the two don't get mixed up
+  // in the general promo-codes admin list.
+  isReferral       Boolean @default(false) @map("is_referral")
+  referrerStudentId String? @map("referrer_student_id")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -80,6 +91,7 @@ model DiscountRule {
 
   @@index([code])
   @@index([active])
+  @@index([referrerStudentId])
   @@map("discount_rules")
 }
 
@@ -364,6 +376,22 @@ model BlogPost {
   @@index([publishedAt(sort: Desc)])
   @@index([slug])
   @@map("blog_posts")
+}
+
+// ---------------------------------------------------------------------------
+// Newsletter — footer/blog signup capture only. No send integration wired
+// yet (that would go through Notifications API — a cross-service call, so
+// deliberately left out per "polish first, integrations need sign-off").
+// ---------------------------------------------------------------------------
+model NewsletterSubscriber {
+  id            BigInt    @id @default(autoincrement())
+  email         String    @unique
+  source        String    @default("footer") // footer | blog | other
+  subscribedAt  DateTime  @default(now()) @map("subscribed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+
+  @@index([email])
+  @@map("newsletter_subscribers")
 }
 
 // ---------------------------------------------------------------------------
