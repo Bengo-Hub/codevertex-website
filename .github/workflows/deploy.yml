@@ -9,7 +9,42 @@ on:
 # GH_PAT must exist in THIS repo to authenticate cross-repo workflow triggers.
 
 jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Generate Prisma client
+        # Needed for typecheck — Prisma model types don't exist until generated.
+        # No real DB needed for `generate`, only for `migrate`.
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/placeholder"
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # No test script yet — tracked separately (automated tests, especially
+      # around payment-adjacent routes, is its own follow-up item).
+
   sync-secrets:
+    needs: quality-gate
     runs-on: ubuntu-latest
     outputs:
       result: ${{ steps.sync.outputs.result }}
@@ -89,7 +124,7 @@ jobs:
           echo "result=partial" >> $GITHUB_OUTPUT
 
   deploy:
-    needs: sync-secrets
+    needs: [quality-gate, sync-secrets]
     runs-on: ubuntu-latest
     permissions:
       contents: write

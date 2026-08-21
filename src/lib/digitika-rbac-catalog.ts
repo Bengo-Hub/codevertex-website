@@ -27,6 +27,7 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
   { key: 'leads', label: 'Leads' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'courses', label: 'Courses' },
+  { key: 'blog', label: 'Blog' },
   { key: 'cohorts', label: 'Cohorts' },
   { key: 'installments', label: 'Installments' },
   { key: 'discounts', label: 'Discounts' },
