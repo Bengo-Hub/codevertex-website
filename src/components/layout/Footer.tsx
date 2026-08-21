@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { SITE, NAV_LINKS, SSO_URL } from '@/lib/constants';
@@ -17,6 +19,7 @@ const PRODUCT_LINKS = [
 const LEGAL_LINKS = [
   { label: 'Privacy Policy', href: '/privacy-policy' },
   { label: 'Terms of Service', href: '/terms-of-service' },
+  { label: 'Security', href: '/security' },
 ];
 
 export function Footer() {
@@ -149,6 +152,13 @@ export function Footer() {
                 {l.label}
               </Link>
             ))}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('cv:open-cookie-settings'))}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cookie settings
+            </button>
             <div className="flex items-center gap-4 ml-2 pl-2 border-l border-border">
               <a href={SITE.socials.linkedin} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
                 <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

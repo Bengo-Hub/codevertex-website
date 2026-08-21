@@ -4,6 +4,7 @@ import { findCourse } from '@/config/courses';
 import { type DbCourse } from '@/types/course';
 import { prisma } from '@/lib/db';
 import { CourseDetailClient } from '@/components/digitika/CourseDetailClient';
+import { JsonLd, courseJsonLd } from '@/lib/json-ld';
 
 // Rendered per-request so course data comes straight from the DB on the running
 // pod (where Postgres is reachable). Avoids the previous build-time self-fetch to
@@ -87,5 +88,18 @@ export default async function CourseDetailPage({ params }: Props) {
     startDate: staticCourse.startDate,
   };
 
-  return <CourseDetailClient course={dbCourse} category={category} staticData={staticData} />;
+  return (
+    <>
+      <JsonLd
+        data={courseJsonLd({
+          id: dbCourse.id,
+          name: dbCourse.name,
+          description: dbCourse.longDescription ?? dbCourse.description,
+          price: dbCourse.price,
+          duration: dbCourse.duration,
+        })}
+      />
+      <CourseDetailClient course={dbCourse} category={category} staticData={staticData} />
+    </>
+  );
 }

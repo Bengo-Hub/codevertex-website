@@ -4,6 +4,8 @@ import './globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteShell } from '@/components/layout/SiteShell';
+import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner';
+import { JsonLd, organizationJsonLd } from '@/lib/json-ld';
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700', '800'],
@@ -59,12 +61,16 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <JsonLd data={organizationJsonLd()} />
+      </head>
       <body
         className={`${poppins.variable} ${geistMono.variable} font-sans min-h-screen bg-background antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <SiteShell>{children}</SiteShell>
           <Toaster richColors position="top-right" />
+          <CookieConsentBanner />
         </ThemeProvider>
         {/* Vera AI widget — loaded as a plain async script so document.currentScript works */}
         {/* eslint-disable-next-line @next/next/no-sync-scripts */}

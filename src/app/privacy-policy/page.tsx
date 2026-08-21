@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: 'How Codevertex Africa Limited collects, uses, and protects your personal data.',
 };
 
-const LAST_UPDATED = '25 June 2026';
+const LAST_UPDATED = '20 August 2026';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -65,6 +65,32 @@ export default function PrivacyPolicyPage() {
             You may request access to, correction of, or deletion of your personal data, and you may withdraw
             consent to marketing communications at any time. To exercise these rights, contact us using the
             details below.
+          </p>
+
+          <h2>Kenya Data Protection Act, 2019</h2>
+          <p>
+            As a data controller and processor operating in Kenya, Codevertex Africa Limited processes personal
+            data in accordance with the Kenya Data Protection Act, 2019 and the regulations issued under it. In
+            addition to the rights described above, this means you may:
+          </p>
+          <ul>
+            <li>request confirmation of whether we hold personal data about you, and obtain a copy of it;</li>
+            <li>object to processing that is not based on your consent or another lawful basis;</li>
+            <li>lodge a complaint with the Office of the Data Protection Commissioner (ODPC) if you believe
+              your data has been mishandled.</li>
+          </ul>
+          <p>
+            We rely on consent, contractual necessity (e.g. enrolling you in a course or delivering a service
+            you requested), and legal obligation as our lawful bases for processing, depending on the activity.
+          </p>
+
+          <h2>Cookies</h2>
+          <p>
+            We use a small number of cookies: strictly necessary cookies that keep the site and admin panel
+            working (e.g. session state), and optional analytics cookies that help us understand how the site
+            is used. On your first visit, a cookie banner lets you accept or decline the optional cookies —
+            strictly necessary cookies cannot be disabled, as the site cannot function without them. You can
+            change your choice at any time via the &ldquo;Cookie settings&rdquo; link in the site footer.
           </p>
 
           <h2>Contact us</h2>

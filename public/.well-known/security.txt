@@ -1,0 +1,6 @@
+Contact: mailto:security@codevertexafrica.com
+Contact: https://codevertexafrica.com/security
+Expires: 2027-08-20T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://codevertexafrica.com/.well-known/security.txt
+Policy: https://codevertexafrica.com/security
