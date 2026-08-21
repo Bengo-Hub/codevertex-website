@@ -37,6 +37,7 @@ export async function PATCH(
   if ('response' in guard) return guard.response;
 
   const { id } = await params;
+<<<<<<< HEAD
 
   try {
     const body = await req.json();
@@ -61,6 +62,20 @@ export async function PATCH(
     console.error('[admin/blog PATCH]', err);
     return NextResponse.json({ error: [{ message: 'Failed to update post' }] }, { status: 500 });
   }
+=======
+  const body = await req.json();
+  const data = patchSchema.parse(body);
+
+  if (data.published === true && data.publishedAt === undefined) {
+    const existing = await prisma.blogPost.findUnique({ where: { id: BigInt(id) } });
+    if (existing && !existing.publishedAt) {
+      (data as { publishedAt?: Date }).publishedAt = new Date();
+    }
+  }
+
+  const updated = await prisma.blogPost.update({ where: { id: BigInt(id) }, data });
+  return NextResponse.json({ ...updated, id: updated.id.toString() });
+>>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
 }
 
 export async function DELETE(

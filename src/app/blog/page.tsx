@@ -9,10 +9,14 @@ export const metadata: Metadata = {
   description: 'Insights on technology, business, and the future of African digital infrastructure.',
 };
 
+<<<<<<< HEAD
 // Rendered per-request (same rationale as the digitika course page): the build stage
 // has no live DATABASE_URL, so a statically-prerendered/ISR page here fails `next build`
 // outright trying to reach a database that isn't there yet at image-build time.
 export const dynamic = 'force-dynamic';
+=======
+export const revalidate = 300; // 5 min — posts are edited rarely, keep this cheap
+>>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
 
 const CATEGORY_PALETTE = [
   'bg-primary/10 text-primary border-primary/20',
