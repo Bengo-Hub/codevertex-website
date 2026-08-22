@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { SITE, NAV_LINKS, SSO_URL } from '@/lib/constants';
 import { Mail, Phone, MapPin, ExternalLink } from 'lucide-react';
+import { NewsletterSignup } from './NewsletterSignup';
 
 const PRODUCT_LINKS = [
   { label: 'Ordering', href: 'https://ordering.codevertexafrica.com' },
@@ -61,6 +62,10 @@ export function Footer() {
                 <MapPin className="h-4 w-4 shrink-0 text-primary/60 mt-0.5" />
                 <span className="text-xs leading-relaxed">{SITE.address}</span>
               </div>
+            </div>
+
+            <div className="mt-5">
+              <NewsletterSignup />
             </div>
 
             {/* WhatsApp CTA */}
