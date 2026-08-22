@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { ReferralCard } from './ReferralCard';
 
 interface StudentData {
   student: {
@@ -427,6 +428,8 @@ export function StudentDashboard() {
             </div>
           )}
         </section>
+
+        <ReferralCard studentId={data.student.id} />
 
         {/* Quiz */}
         <section className="mt-6 rounded-2xl border border-border bg-card p-6">
