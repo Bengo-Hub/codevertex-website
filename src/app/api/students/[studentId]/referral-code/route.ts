@@ -13,12 +13,25 @@ export async function GET(
   { params }: { params: Promise<{ studentId: string }> }
 ) {
   const { studentId } = await params;
-  const id = studentId.trim().toUpperCase();
+  // The id comes straight from the authenticated student's own record
+  // (StudentDashboard passes `data.student.id`), so it's already
+  // correctly-cased — do NOT force-uppercase it here. Real prod ids are
+  // "DGT-XXXXXXXX", but local/dev seed ids like "student-1" are lowercase;
+  // uppercasing unconditionally broke lookups for those.
+  const trimmed = studentId.trim();
 
-  const student = await prisma.studentUser.findUnique({ where: { id } });
+  let student = await prisma.studentUser.findUnique({ where: { id: trimmed } });
+  if (!student) {
+    // Fall back to a case-insensitive lookup for the few places that still
+    // pass user-typed input (e.g. an uppercase-normalized DGT- id).
+    student = await prisma.studentUser.findFirst({
+      where: { id: { equals: trimmed, mode: 'insensitive' } },
+    });
+  }
   if (!student) {
     return NextResponse.json({ error: 'Student not found' }, { status: 404 });
   }
+  const id = student.id;
 
   let rule = await prisma.discountRule.findFirst({
     where: { referrerStudentId: id, isReferral: true },
