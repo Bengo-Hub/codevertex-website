@@ -195,15 +195,15 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
           discountAmount: discountSaving > 0 ? discountSaving : undefined,
           paymentPlan: planKey,
           firstPaymentAmount: firstPayment,
-          installments,
+          installments: discountedTotal === 0 ? undefined : installments,
         }),
       });
 
       const result = await res.json().catch(() => ({}));
 
       // Enrollment was rejected (e.g. cohort filled up, registration window closed,
-      // or validation failed). Surface the reason and DO NOT send the learner to pay
-      // for an enrollment that was never created.
+      // already enrolled, or validation failed). Surface the reason and DO NOT send
+      // the learner to pay for an enrollment that was never created.
       if (!res.ok) {
         const msg =
           typeof result?.error === 'string'
@@ -214,6 +214,16 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
       }
 
       const invoiceRef = result.invoiceRef ?? `DGT-${course.id}-${Date.now()}`;
+
+      // Free course (or a discount code that brings the price to zero): there's nothing
+      // to pay, the enrollment was already confirmed server-side. Skip the payment
+      // gateway entirely and go straight to the same success/portal page paid
+      // enrollments land on.
+      if (result.isFree || discountedTotal === 0) {
+        window.location.href = `${window.location.origin}/digitika/success?reference=${invoiceRef}`;
+        setStep(3);
+        return;
+      }
 
       // Build treasury redirect URL. When the enrollment API pre-created a treasury intent
       // (and returned initiate_url), we pass it so the treasury-ui pay page skips auto-creation

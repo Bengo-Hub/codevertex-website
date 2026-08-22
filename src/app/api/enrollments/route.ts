@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
+import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
 
 const TREASURY_API_URL =
   process.env.TREASURY_API_URL ?? 'https://booksapi.codevertexafrica.com';
@@ -83,16 +84,8 @@ const schema = z.object({
     .optional(),
 });
 
-function generateStudentId(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let id = 'DGT-';
-  for (let i = 0; i < 8; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return id;
-}
-
 export async function POST(req: NextRequest) {
+
   // Propagate or generate a request ID for distributed tracing (matches httpware X-Request-ID pattern)
   const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
 
@@ -105,7 +98,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
     }
 
-    // 0. Validate cohort: capacity + registration window
+    // 0a. Enrollment check: block re-enrolling in a course the student is already
+    // confirmed (paid/succeeded) in, instead of silently creating a duplicate row.
+    const alreadyEnrolled = await hasActiveEnrollment(data.email, data.courseId);
+    if (alreadyEnrolled) {
+      return NextResponse.json(
+        { error: 'You already have an active enrollment in this course. Check your student dashboard.' },
+        { status: 409 }
+      );
+    }
+
+    // 0b. Validate cohort: capacity + registration window
     if (data.cohortId) {
       const cohort = await prisma.cohort.findUnique({
         where: { id: BigInt(data.cohortId) },
@@ -136,29 +139,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Upsert student user — one record per unique email
-    let studentUser = await prisma.studentUser.findUnique({
-      where: { email: data.email },
+    const studentUser = await upsertStudentUser({
+      email: data.email,
+      fullName: data.fullName,
+      phone: data.phone,
+      dob: data.dob,
     });
 
-    if (!studentUser) {
-      let studentId = generateStudentId();
-      let attempts = 0;
-      while (attempts < 5) {
-        const collision = await prisma.studentUser.findUnique({ where: { id: studentId } });
-        if (!collision) break;
-        studentId = generateStudentId();
-        attempts++;
-      }
-      studentUser = await prisma.studentUser.create({
-        data: {
-          id: studentId,
-          email: data.email,
-          fullName: data.fullName,
-          phone: data.phone,
-          dob: data.dob ? new Date(data.dob) : null,
-        },
-      });
-    }
+    // A course with a total price of 0 needs no payment step — confirm it immediately.
+    const isFree = data.totalAmount === 0;
 
     // 2. Create enrollment (amount = first payment only)
     const enrollment = await prisma.enrollment.create({
@@ -176,6 +165,7 @@ export async function POST(req: NextRequest) {
         totalAmount: data.totalAmount,
         currency: data.currency,
         paymentPlan: data.paymentPlan,
+        paymentStatus: isFree ? 'succeeded' : 'pending',
         installmentNo: 1,
         studentUserId: studentUser.id,
         cohortId: data.cohortId ? BigInt(data.cohortId) : null,
@@ -188,8 +178,8 @@ export async function POST(req: NextRequest) {
 
     const enrollmentId = enrollment.id.toString();
 
-    // 3. Create installment schedule rows
-    if (data.installments && data.installments.length > 0) {
+    // 3. Create installment schedule rows (skipped for free courses — nothing owed)
+    if (!isFree && data.installments && data.installments.length > 0) {
       await prisma.installmentSchedule.createMany({
         data: data.installments.map((inst) => ({
           enrollmentId: enrollment.id,
@@ -208,21 +198,25 @@ export async function POST(req: NextRequest) {
 
     // 5. Pre-create treasury payment intent so Paystack's success redirect goes directly to
     //    our /digitika/success page (not via treasury-ui's intermediate success page).
+    //    Free courses (totalAmount === 0) skip this entirely — there's nothing to pay for
+    //    and the enrollment was already created with paymentStatus: 'succeeded' above.
     const successUrl = `${SITE_URL}/digitika/success`;
     const isInstallment = data.installments && data.installments.length > 1;
     const intentDescription = isInstallment
       ? `${data.courseName} — Installment 1 of ${data.installments!.length}`
       : data.courseName;
 
-    const treasuryIntent = await createTreasuryIntent({
-      invoiceRef,
-      amount: data.firstPaymentAmount,
-      currency: data.currency,
-      description: `Digitika — ${intentDescription}`,
-      customerEmail: data.email,
-      returnUrl: successUrl,
-      requestId,
-    });
+    const treasuryIntent = isFree
+      ? null
+      : await createTreasuryIntent({
+          invoiceRef,
+          amount: data.firstPaymentAmount,
+          currency: data.currency,
+          description: `Digitika — ${intentDescription}`,
+          customerEmail: data.email,
+          returnUrl: successUrl,
+          requestId,
+        });
 
     // Build portal link for email
     const portalLink = `${SITE_URL}/digitika/success?reference=${invoiceRef}`;
@@ -275,6 +269,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
+        isFree,
         enrollmentId,
         studentId: studentUser.id,
         invoiceRef,

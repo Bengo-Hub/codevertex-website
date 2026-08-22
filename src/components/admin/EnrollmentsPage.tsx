@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, Plus } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
+import { AdminEnrollModal } from './AdminEnrollModal';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { authedFetch } from '@/lib/auth/authed-fetch';
@@ -41,6 +42,7 @@ export function EnrollmentsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -154,9 +156,18 @@ export function EnrollmentsPage() {
         title="Enrollments"
         description={`${data?.total ?? 0} total enrollments`}
         actions={
-          <button onClick={load} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors">
-            <RefreshCw className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setEnrollModalOpen(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" />
+              New Enrollment
+            </button>
+            <button onClick={load} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors">
+              <RefreshCw className="h-4 w-4" />
+            </button>
+          </div>
         }
       />
 
@@ -193,6 +204,10 @@ export function EnrollmentsPage() {
         loading={loading}
         emptyMessage="No enrollments yet."
       />
+
+      {enrollModalOpen && (
+        <AdminEnrollModal onClose={() => setEnrollModalOpen(false)} onCreated={load} />
+      )}
     </div>
   );
 }
