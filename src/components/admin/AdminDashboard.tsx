@@ -9,6 +9,7 @@ import {
 import { AdminPageHeader } from './AdminPageHeader';
 import { StatCard } from './StatCard';
 import { formatCurrency } from '@/lib/utils';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Stats {
   enrollments: { total: number; pending: number; succeeded: number };
@@ -24,8 +25,11 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/stats')
-      .then((r) => r.json())
+    authedFetch('/api/admin/stats')
+      .then((r) => {
+        if (!r.ok) throw new Error(`admin/stats returned ${r.status}`);
+        return r.json();
+      })
       .then(setStats)
       .catch(console.error)
       .finally(() => setLoading(false));
