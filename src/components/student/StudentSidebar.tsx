@@ -16,15 +16,16 @@ import {
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 import { cn } from '@/lib/utils';
+import { useStudentSection, type StudentSection } from './student-section-context';
 
-const NAV_ITEMS = [
-  { href: '#overview', label: 'Overview', icon: LayoutDashboard },
-  { href: '#course', label: 'My Course', icon: BookOpen },
-  { href: '#payments', label: 'Payments', icon: CreditCard },
-  { href: '#certificates', label: 'Certificates', icon: Award },
-  { href: '#referrals', label: 'Refer a Friend', icon: Gift },
-  { href: '#quizzes', label: 'Quiz Performance', icon: BarChart3 },
-] as const;
+const NAV_ITEMS: { id: StudentSection; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'course', label: 'My Course', icon: BookOpen },
+  { id: 'payments', label: 'Payments', icon: CreditCard },
+  { id: 'certificates', label: 'Certificates', icon: Award },
+  { id: 'referrals', label: 'Refer a Friend', icon: Gift },
+  { id: 'quizzes', label: 'Quiz Performance', icon: BarChart3 },
+];
 
 interface StudentSidebarProps {
   studentName?: string;
@@ -45,6 +46,8 @@ function SidebarContent({
   onNavigate?: () => void;
   onLogout: () => void;
 }) {
+  const { activeSection, setActiveSection } = useStudentSection();
+
   return (
     <div className="flex h-full flex-col">
       {/* Brand */}
@@ -60,22 +63,27 @@ function SidebarContent({
 
       {/* Nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-        {NAV_ITEMS.map((item, i) => {
+        {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
+          const isActive = activeSection === item.id;
           return (
-            <a
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                setActiveSection(item.id);
+                onNavigate?.();
+              }}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors',
+                'group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors',
                 'hover:bg-primary/8 hover:text-foreground',
-                i === 0 && 'bg-primary/10 text-primary font-semibold'
+                isActive && 'bg-primary/10 text-primary font-semibold'
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{item.label}</span>
-            </a>
+            </button>
           );
         })}
 
