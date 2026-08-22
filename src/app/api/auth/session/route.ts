@@ -2,6 +2,7 @@ import {
   NextRequest,
   NextResponse,
 } from 'next/server';
+import { signSessionPayload } from '@/lib/auth/session-crypto';
 
 const SSO_API_URL =
   process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ||
@@ -82,17 +83,11 @@ export async function POST(
       Math.floor(Date.now() / 1000) +
       SESSION_MAX_AGE;
 
-    const payload = Buffer.from(
-      JSON.stringify({
-        userId:
-          localSession.userId,
-
-        role:
-          localSession.role,
-
-        exp,
-      })
-    ).toString('base64url');
+    const payload = await signSessionPayload({
+      userId: localSession.userId,
+      role: localSession.role,
+      exp,
+    });
 
     const res =
       NextResponse.json({
@@ -191,13 +186,11 @@ export async function POST(
     SESSION_MAX_AGE;
 
   const payload =
-    Buffer.from(
-      JSON.stringify({
-        userId,
-        role,
-        exp,
-      })
-    ).toString('base64url');
+    await signSessionPayload({
+      userId,
+      role,
+      exp,
+    });
 
   const res =
     NextResponse.json({
