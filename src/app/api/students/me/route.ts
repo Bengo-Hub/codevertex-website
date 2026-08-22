@@ -86,6 +86,8 @@ export async function GET(req: NextRequest) {
               ? {
                   id: enrollment.cohort.id.toString(),
                   name: enrollment.cohort.name,
+                  startDate: enrollment.cohort.startDate,
+                  endDate: enrollment.cohort.endDate,
                 }
               : null,
             installments: enrollment.installments.map((item) => ({

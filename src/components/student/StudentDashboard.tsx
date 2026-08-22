@@ -4,13 +4,18 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Award,
   BookOpen,
+  Calendar,
   CheckCircle2,
   Clock,
   CreditCard,
   Flame,
   GraduationCap,
   Loader2,
+  Lock,
+  Mail,
   AlertCircle,
+  PlayCircle,
+  Phone,
   Sparkles,
   Target,
   Trophy,
@@ -42,7 +47,7 @@ interface StudentData {
     amount: number;
     totalAmount: number | null;
     currency: string;
-    cohort: { id: string; name: string } | null;
+    cohort: { id: string; name: string; startDate: string | null; endDate: string | null } | null;
     installments: {
       id: string;
       installmentNo: number;
@@ -84,6 +89,54 @@ async function fetchStudentData(): Promise<StudentData> {
   return result;
 }
 
+interface CourseContentLesson {
+  id: string;
+  title: string;
+  type: string;
+  isPreview: boolean;
+  durationSec: number | null;
+  locked: boolean;
+  completedAt: string | null;
+  lastPositionSec: number | null;
+  quiz: { id: string; title: string } | null;
+}
+
+interface CourseContentModule {
+  id: string;
+  title: string;
+  description: string | null;
+  lessons: CourseContentLesson[];
+}
+
+interface CourseContent {
+  hasAccess: boolean;
+  modules: CourseContentModule[];
+  progressPct: number;
+  completedLessons: number;
+  totalLessons: number;
+}
+
+async function fetchCourseContent(studentId: string, courseId: string): Promise<CourseContent> {
+  const response = await fetch(
+    `/api/students/${encodeURIComponent(studentId)}/courses/${encodeURIComponent(courseId)}/content`,
+    { cache: 'no-store' }
+  );
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error ?? 'Unable to load course content.');
+  }
+  return result;
+}
+
+function formatDuration(totalSeconds: number): string {
+  if (totalSeconds <= 0) return '0 min';
+  const hrs = Math.floor(totalSeconds / 3600);
+  const mins = Math.round((totalSeconds % 3600) / 60);
+  if (hrs === 0) return `${mins} min`;
+  if (mins === 0) return `${hrs} hr`;
+  return `${hrs} hr ${mins} min`;
+}
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 12 },
   show: (i: number) => ({
@@ -111,6 +164,9 @@ export function StudentDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const [content, setContent] = useState<CourseContent | null>(null);
+  const [contentLoading, setContentLoading] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -135,6 +191,26 @@ export function StudentDashboard() {
     return () => setIdentity(null);
   }, [data?.student, setIdentity]);
 
+  // Real curriculum + accurate progress — reuses the same endpoint the learn page uses.
+  useEffect(() => {
+    if (!data?.student || !data.enrollment) return;
+    let cancelled = false;
+    setContentLoading(true);
+    fetchCourseContent(data.student.id, data.enrollment.courseId)
+      .then((result) => {
+        if (!cancelled) setContent(result);
+      })
+      .catch(() => {
+        if (!cancelled) setContent(null);
+      })
+      .finally(() => {
+        if (!cancelled) setContentLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.student, data?.enrollment]);
+
   const stats = useMemo(() => {
     if (!data) return null;
 
@@ -144,10 +220,11 @@ export function StudentDashboard() {
     const quizPassRate = totalQuizAttempts > 0 ? Math.round((passedQuizzes / totalQuizAttempts) * 100) : 0;
     const paidInstallments = data.enrollment?.installments.filter((i) => i.status === 'paid' || i.paidAt).length ?? 0;
     const totalInstallments = data.enrollment?.installments.length ?? 0;
-    const courseProgressPct = Math.min(completedLessons * 10, 100);
+    // Fallback estimate used only until the real curriculum (content.progressPct) has loaded.
+    const courseProgressPct = content ? content.progressPct : Math.min(completedLessons * 10, 100);
 
     return {
-      completedLessons,
+      completedLessons: content ? content.completedLessons : completedLessons,
       totalQuizAttempts,
       passedQuizzes,
       quizPassRate,
@@ -155,7 +232,66 @@ export function StudentDashboard() {
       totalInstallments,
       courseProgressPct,
     };
-  }, [data]);
+  }, [data, content]);
+
+  // Total time watched, derived from durationSec of lessons the student has actually completed —
+  // no estimate, just a sum of real recorded lesson lengths.
+  const timeInvestedSec = useMemo(() => {
+    if (!content) return 0;
+    return content.modules
+      .flatMap((m) => m.lessons)
+      .filter((l) => l.completedAt)
+      .reduce((sum, l) => sum + (l.durationSec ?? 0), 0);
+  }, [content]);
+
+  // First lesson that isn't completed and isn't locked, in curriculum order — "resume where you left off".
+  const nextLesson = useMemo(() => {
+    if (!content) return null;
+    for (const courseModule of content.modules) {
+      for (const lesson of courseModule.lessons) {
+        if (!lesson.completedAt && !lesson.locked) {
+          return { ...lesson, moduleTitle: courseModule.title };
+        }
+      }
+    }
+    return null;
+  }, [content]);
+
+  // Merge lesson-completion + quiz-attempt timestamps into one real activity timeline.
+  const recentActivity = useMemo(() => {
+    if (!data) return [];
+    const lessonTitleById = new Map<string, string>();
+    const quizTitleById = new Map<string, string>();
+    for (const courseModule of content?.modules ?? []) {
+      for (const lesson of courseModule.lessons) {
+        lessonTitleById.set(lesson.id, lesson.title);
+        if (lesson.quiz) quizTitleById.set(lesson.quiz.id, lesson.title);
+      }
+    }
+
+    const events: { id: string; type: 'lesson' | 'quiz'; label: string; date: string; passed?: boolean }[] = [];
+
+    for (const p of data.progress) {
+      if (!p.completedAt) continue;
+      events.push({
+        id: `lesson-${p.lessonId}`,
+        type: 'lesson',
+        label: lessonTitleById.get(p.lessonId) ?? 'Lesson completed',
+        date: p.completedAt,
+      });
+    }
+    for (const q of data.quizAttempts) {
+      events.push({
+        id: `quiz-${q.id}`,
+        type: 'quiz',
+        label: quizTitleById.get(q.quizId) ? `Quiz: ${quizTitleById.get(q.quizId)}` : 'Quiz attempt',
+        date: q.createdAt,
+        passed: q.passed,
+      });
+    }
+
+    return events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
+  }, [data, content]);
 
   if (isLoading) {
     return (
@@ -199,12 +335,23 @@ export function StudentDashboard() {
         </div>
       )}
 
-      {activeSection === 'overview' && <OverviewSection data={data} stats={stats} />}
-      {activeSection === 'course' && <CourseSection data={data} stats={stats} />}
+      {activeSection === 'overview' && (
+        <OverviewSection
+          data={data}
+          stats={stats}
+          content={content}
+          nextLesson={nextLesson}
+          timeInvestedSec={timeInvestedSec}
+          recentActivity={recentActivity}
+        />
+      )}
+      {activeSection === 'course' && (
+        <CourseSection data={data} stats={stats} content={content} contentLoading={contentLoading} nextLesson={nextLesson} />
+      )}
       {activeSection === 'payments' && <PaymentsSection data={data} stats={stats} />}
       {activeSection === 'certificates' && <CertificatesSection data={data} />}
       {activeSection === 'referrals' && <ReferralCard studentId={data.student.id} />}
-      {activeSection === 'quizzes' && <QuizzesSection data={data} stats={stats} />}
+      {activeSection === 'quizzes' && <QuizzesSection data={data} stats={stats} content={content} />}
     </main>
   );
 }
@@ -219,13 +366,92 @@ interface Stats {
   courseProgressPct: number;
 }
 
-function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
+type ActivityEvent = { id: string; type: 'lesson' | 'quiz'; label: string; date: string; passed?: boolean };
+type NextLesson = CourseContentLesson & { moduleTitle: string };
+type Installment = NonNullable<StudentData['enrollment']>['installments'][number];
+
+function findNextDueInstallment(installments: Installment[]) {
+  return installments
+    .filter((i) => i.status !== 'paid' && !i.paidAt)
+    .sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    })[0];
+}
+
+function PaymentDueBanner({ data }: { data: StudentData }) {
+  const { setActiveSection } = useStudentSection();
+  if (!data.enrollment || data.enrollment.installments.length === 0) return null;
+
+  const nextDue = findNextDueInstallment(data.enrollment.installments);
+  if (!nextDue) return null;
+
+  const isOverdue = nextDue.status === 'overdue';
+  const daysUntilDue = nextDue.dueDate
+    ? Math.ceil((new Date(nextDue.dueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => setActiveSection('payments')}
+      className={`flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors ${
+        isOverdue
+          ? 'border-destructive/30 bg-destructive/5 hover:bg-destructive/10'
+          : 'border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10'
+      }`}
+    >
+      <span className="flex items-center gap-2.5">
+        {isOverdue ? (
+          <XCircle className="h-4 w-4 shrink-0 text-destructive" />
+        ) : (
+          <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+        )}
+        <span>
+          <span className="font-semibold text-foreground">
+            {isOverdue ? 'Installment overdue' : 'Upcoming installment'}
+          </span>{' '}
+          <span className="text-muted-foreground">
+            — {formatCurrency(nextDue.amount, nextDue.currency)}
+            {nextDue.dueDate &&
+              (isOverdue
+                ? ` was due ${new Date(nextDue.dueDate).toLocaleDateString()}`
+                : daysUntilDue !== null && daysUntilDue >= 0
+                  ? ` due in ${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'}`
+                  : ` due ${new Date(nextDue.dueDate).toLocaleDateString()}`)}
+          </span>
+        </span>
+      </span>
+      <span className="shrink-0 text-xs font-semibold text-primary">View payments →</span>
+    </button>
+  );
+}
+
+function OverviewSection({
+  data,
+  stats,
+  content,
+  nextLesson,
+  timeInvestedSec,
+  recentActivity,
+}: {
+  data: StudentData;
+  stats: Stats;
+  content: CourseContent | null;
+  nextLesson: NextLesson | null;
+  timeInvestedSec: number;
+  recentActivity: ActivityEvent[];
+}) {
   const router = useRouter();
   const { setActiveSection } = useStudentSection();
   const { completedLessons, quizPassRate, courseProgressPct } = stats;
 
   return (
     <div className="space-y-8">
+      {/* Payment reminder */}
+      <PaymentDueBanner data={data} />
+
       {/* Hero */}
       <motion.section initial="hidden" animate="show" custom={0} variants={fadeUp}>
         <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary via-primary to-accent-foreground p-6 text-primary-foreground sm:p-8">
@@ -243,7 +469,11 @@ function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
                 </p>
                 <h1 className="text-2xl font-black sm:text-3xl">Hi, {data.student.fullName.split(' ')[0]} 👋</h1>
                 <p className="mt-1 text-sm text-white/75">
-                  {data.enrollment ? `Continue your ${data.enrollment.courseName} journey` : 'Ready to start learning?'}
+                  {nextLesson
+                    ? `Up next: ${nextLesson.title}`
+                    : data.enrollment
+                      ? `Continue your ${data.enrollment.courseName} journey`
+                      : 'Ready to start learning?'}
                 </p>
               </div>
             </div>
@@ -254,7 +484,7 @@ function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-lg transition-transform hover:-translate-y-0.5 hover:shadow-xl"
               >
                 <BookOpen className="h-4 w-4" />
-                Continue Learning
+                {nextLesson ? 'Resume Learning' : 'Continue Learning'}
               </button>
             )}
           </div>
@@ -273,22 +503,22 @@ function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
             index={1}
             icon={<CheckCircle2 className="h-5 w-5" />}
             title="Lessons Completed"
-            value={completedLessons.toString()}
+            value={content ? `${completedLessons} / ${content.totalLessons}` : completedLessons.toString()}
             accent="from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400"
           />
           <StatCard
             index={2}
+            icon={<Clock className="h-5 w-5" />}
+            title="Time Invested"
+            value={formatDuration(timeInvestedSec)}
+            accent="from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-400"
+          />
+          <StatCard
+            index={3}
             icon={<Award className="h-5 w-5" />}
             title="Certificates"
             value={data.certificates.length.toString()}
             accent="from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400"
-          />
-          <StatCard
-            index={3}
-            icon={<CreditCard className="h-5 w-5" />}
-            title="Payment"
-            value={data.enrollment?.paymentStatus ?? 'Not enrolled'}
-            accent="from-sky-500/15 to-sky-500/5 text-sky-600 dark:text-sky-400"
           />
         </div>
       </motion.section>
@@ -320,7 +550,9 @@ function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
             {data.enrollment ? (
               <div>
                 <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-medium text-muted-foreground">{completedLessons} lessons completed</span>
+                  <span className="font-medium text-muted-foreground">
+                    {content ? `${completedLessons} of ${content.totalLessons} lessons completed` : `${completedLessons} lessons completed`}
+                  </span>
                   <span className="font-semibold text-foreground">{courseProgressPct}%</span>
                 </div>
                 <div className="h-3 overflow-hidden rounded-full bg-muted">
@@ -331,6 +563,12 @@ function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                   />
                 </div>
+                {nextLesson && (
+                  <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <PlayCircle className="h-3.5 w-3.5 text-primary" />
+                    Next: {nextLesson.title} <span className="text-muted-foreground/70">({nextLesson.moduleTitle})</span>
+                  </p>
+                )}
                 <p className="mt-3 text-xs font-medium text-primary">View full course details →</p>
               </div>
             ) : (
@@ -367,13 +605,90 @@ function OverviewSection({ data, stats }: { data: StudentData; stats: Stats }) {
           </div>
         </motion.div>
       </div>
+
+      {/* Recent activity + profile */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <motion.div className="lg:col-span-2" initial="hidden" animate="show" custom={3} variants={fadeUp}>
+          <div className="h-full rounded-2xl border border-border bg-card p-6">
+            <h2 className="mb-4 font-bold">Recent Activity</h2>
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nothing recorded yet — complete a lesson or take a quiz to see activity here.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {recentActivity.map((event) => (
+                  <li key={event.id} className="flex items-start gap-3">
+                    <span
+                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+                        event.type === 'quiz'
+                          ? event.passed
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-destructive/10 text-destructive'
+                          : 'bg-primary/10 text-primary'
+                      }`}
+                    >
+                      {event.type === 'quiz' ? <Trophy className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{event.label}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleString()}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div initial="hidden" animate="show" custom={4} variants={fadeUp}>
+          <div className="h-full rounded-2xl border border-border bg-card p-6">
+            <h2 className="mb-4 font-bold">Profile</h2>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <Mail className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">{data.student.email}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <Phone className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">{data.student.phone}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <Calendar className="h-4 w-4 shrink-0 text-primary" />
+                <span className="truncate">Member since {new Date(data.student.createdAt).toLocaleDateString()}</span>
+              </div>
+              {data.enrollment?.cohort?.startDate && (
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">
+                    Cohort starts {new Date(data.enrollment.cohort.startDate).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
 
-function CourseSection({ data, stats }: { data: StudentData; stats: Stats }) {
+function CourseSection({
+  data,
+  stats,
+  content,
+  contentLoading,
+  nextLesson,
+}: {
+  data: StudentData;
+  stats: Stats;
+  content: CourseContent | null;
+  contentLoading: boolean;
+  nextLesson: NextLesson | null;
+}) {
   const router = useRouter();
   const { completedLessons, courseProgressPct } = stats;
+  const cohort = data.enrollment?.cohort;
 
   return (
     <motion.section initial="hidden" animate="show" custom={0} variants={fadeUp}>
@@ -395,10 +710,24 @@ function CourseSection({ data, stats }: { data: StudentData; stats: Stats }) {
               <Badge variant="outline">{data.enrollment.category}</Badge>
             </div>
 
-            {data.enrollment.cohort && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <GraduationCap className="h-4 w-4 text-primary" />
-                Cohort: {data.enrollment.cohort.name}
+            {cohort && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted-foreground">
+                <span className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                  Cohort: {cohort.name}
+                </span>
+                {cohort.startDate && (
+                  <span className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    Starts {new Date(cohort.startDate).toLocaleDateString()}
+                  </span>
+                )}
+                {cohort.endDate && (
+                  <span className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    Ends {new Date(cohort.endDate).toLocaleDateString()}
+                  </span>
+                )}
               </div>
             )}
 
@@ -407,7 +736,9 @@ function CourseSection({ data, stats }: { data: StudentData; stats: Stats }) {
                 <span className="flex items-center gap-1.5 font-medium">
                   <Target className="h-4 w-4 text-primary" /> Learning Progress
                 </span>
-                <span className="font-semibold text-foreground">{completedLessons} lessons completed</span>
+                <span className="font-semibold text-foreground">
+                  {content ? `${completedLessons} of ${content.totalLessons} lessons` : `${completedLessons} lessons completed`}
+                </span>
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-muted">
                 <motion.div
@@ -423,8 +754,65 @@ function CourseSection({ data, stats }: { data: StudentData; stats: Stats }) {
               onClick={() => router.push(`/digitika/${data.enrollment?.courseId}/learn`)}
               className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90"
             >
-              Continue Learning
+              {nextLesson ? `Resume: ${nextLesson.title}` : 'Continue Learning'}
             </button>
+
+            {/* Curriculum */}
+            <div className="mt-8">
+              <h3 className="mb-3 text-sm font-bold text-foreground">Curriculum</h3>
+
+              {contentLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-12 animate-pulse rounded-xl bg-muted/50" />
+                  ))}
+                </div>
+              ) : !content || content.modules.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Curriculum for this course hasn't been published yet.</p>
+              ) : (
+                <div className="space-y-5">
+                  {content.modules.map((courseModule) => (
+                    <div key={courseModule.id}>
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        {courseModule.title}
+                      </p>
+                      <div className="overflow-hidden rounded-xl border border-border">
+                        {courseModule.lessons.map((lesson, idx) => {
+                          const isDone = Boolean(lesson.completedAt);
+                          const isNext = nextLesson?.id === lesson.id;
+                          return (
+                            <div
+                              key={lesson.id}
+                              className={`flex items-center justify-between gap-3 px-4 py-3 text-sm ${
+                                idx !== 0 ? 'border-t border-border' : ''
+                              } ${isNext ? 'bg-primary/5' : ''}`}
+                            >
+                              <span className="flex min-w-0 items-center gap-2.5">
+                                {isDone ? (
+                                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                                ) : lesson.locked ? (
+                                  <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                ) : (
+                                  <PlayCircle className={`h-4 w-4 shrink-0 ${isNext ? 'text-primary' : 'text-muted-foreground'}`} />
+                                )}
+                                <span
+                                  className={`truncate ${isDone ? 'text-muted-foreground line-through' : 'text-foreground'} ${isNext ? 'font-semibold' : ''}`}
+                                >
+                                  {lesson.title}
+                                </span>
+                              </span>
+                              {lesson.durationSec != null && (
+                                <span className="shrink-0 text-xs text-muted-foreground">{formatDuration(lesson.durationSec)}</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <EmptyState
@@ -582,8 +970,15 @@ function CertificatesSection({ data }: { data: StudentData }) {
   );
 }
 
-function QuizzesSection({ data, stats }: { data: StudentData; stats: Stats }) {
+function QuizzesSection({ data, stats, content }: { data: StudentData; stats: Stats; content: CourseContent | null }) {
   const { quizPassRate, passedQuizzes, totalQuizAttempts } = stats;
+
+  const quizTitleById = new Map<string, string>();
+  for (const courseModule of content?.modules ?? []) {
+    for (const lesson of courseModule.lessons) {
+      if (lesson.quiz) quizTitleById.set(lesson.quiz.id, lesson.title);
+    }
+  }
 
   return (
     <motion.section initial="hidden" animate="show" custom={0} variants={fadeUp}>
@@ -611,7 +1006,7 @@ function QuizzesSection({ data, stats }: { data: StudentData; stats: Stats }) {
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-2.5 text-left font-semibold">Attempt</th>
+                    <th className="px-4 py-2.5 text-left font-semibold">Quiz</th>
                     <th className="px-4 py-2.5 text-left font-semibold">Score</th>
                     <th className="px-4 py-2.5 text-left font-semibold">Result</th>
                     <th className="px-4 py-2.5 text-left font-semibold">Date</th>
@@ -623,7 +1018,7 @@ function QuizzesSection({ data, stats }: { data: StudentData; stats: Stats }) {
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                     .map((attempt) => (
                       <tr key={attempt.id}>
-                        <td className="px-4 py-2.5 font-medium">{attempt.quizId}</td>
+                        <td className="px-4 py-2.5 font-medium">{quizTitleById.get(attempt.quizId) ?? attempt.quizId}</td>
                         <td className="px-4 py-2.5">{attempt.scorePct}%</td>
                         <td className="px-4 py-2.5">
                           {attempt.passed ? (
