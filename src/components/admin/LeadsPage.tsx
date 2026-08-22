@@ -6,6 +6,7 @@ import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Lead {
   id: string;
@@ -34,15 +35,15 @@ export function LeadsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), ...(search ? { search } : {}), ...(status ? { status } : {}) });
-    const res = await fetch(`/api/admin/leads?${params}`);
-    setData(await res.json());
+    const res = await authedFetch(`/api/admin/leads?${params}`);
+    setData(res.ok ? await res.json() : null);
     setLoading(false);
   }, [page, search, status]);
 
   useEffect(() => { load(); }, [load]);
 
   async function updateStatus(id: string, newStatus: string) {
-    const res = await fetch(`/api/admin/leads/${id}`, {
+    const res = await authedFetch(`/api/admin/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),

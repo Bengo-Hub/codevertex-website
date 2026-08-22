@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Contact {
   id: string;
@@ -28,8 +29,8 @@ export function ContactsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), ...(search ? { search } : {}) });
-    const res = await fetch(`/api/admin/contacts?${params}`);
-    setData(await res.json());
+    const res = await authedFetch(`/api/admin/contacts?${params}`);
+    setData(res.ok ? await res.json() : null);
     setLoading(false);
   }, [page, search]);
 

@@ -5,6 +5,7 @@ import { Search, RefreshCw } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import Link from 'next/link';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Student {
   id: string;
@@ -27,8 +28,8 @@ export function StudentsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), ...(search ? { search } : {}) });
-    const res = await fetch(`/api/admin/students?${params}`);
-    setData(await res.json());
+    const res = await authedFetch(`/api/admin/students?${params}`);
+    setData(res.ok ? await res.json() : null);
     setLoading(false);
   }, [page, search]);
 
