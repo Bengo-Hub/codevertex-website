@@ -49,7 +49,14 @@ export async function GET(req: NextRequest) {
 
   const recentEnrollments = await prisma.enrollment.findMany({
     where: { createdAt: { gte: sixMonthsAgo } },
-    select: { createdAt: true, amount: true, paymentStatus: true },
+    select: {
+      id: true,
+      createdAt: true,
+      amount: true,
+      paymentStatus: true,
+      fullName: true,
+      courseName: true,
+    },
     orderBy: { createdAt: 'asc' },
   });
 
@@ -64,6 +71,6 @@ export async function GET(req: NextRequest) {
     contacts: { total: totalContacts },
     installments: { overdue: overdueInstallments, upcomingWeek: upcomingInstallments },
     revenue: { collected: revenueCollected, currency: 'KES' },
-    recentEnrollments,
+    recentEnrollments: recentEnrollments.map((e: (typeof recentEnrollments)[number]) => ({ ...e, id: e.id.toString() })),
   });
 }

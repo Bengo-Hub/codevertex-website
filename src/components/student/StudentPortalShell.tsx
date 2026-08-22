@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { StudentSidebar } from './StudentSidebar';
 import { StudentTopBar } from './StudentTopBar';
 import { useStudentIdentity } from './student-identity-context';
+import { StudentSectionProvider } from './student-section-context';
 
 export function StudentPortalShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -20,19 +21,21 @@ export function StudentPortalShell({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <StudentSidebar
-        studentName={identity?.name}
-        studentInitials={identity?.initials}
-        mobileOpen={mobileOpen}
-        onCloseMobile={() => setMobileOpen(false)}
-        onLogout={logout}
-      />
+    <StudentSectionProvider>
+      <div className="min-h-screen bg-background">
+        <StudentSidebar
+          studentName={identity?.name}
+          studentInitials={identity?.initials}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
+          onLogout={logout}
+        />
 
-      <div className="lg:pl-72">
-        <StudentTopBar onOpenMenu={() => setMobileOpen(true)} />
-        {children}
+        <div className="lg:pl-72">
+          <StudentTopBar onOpenMenu={() => setMobileOpen(true)} />
+          {children}
+        </div>
       </div>
-    </div>
+    </StudentSectionProvider>
   );
 }
