@@ -37,18 +37,30 @@ export async function PATCH(
   if ('response' in guard) return guard.response;
 
   const { id } = await params;
-  const body = await req.json();
-  const data = patchSchema.parse(body);
 
-  if (data.published === true && data.publishedAt === undefined) {
-    const existing = await prisma.blogPost.findUnique({ where: { id: BigInt(id) } });
-    if (existing && !existing.publishedAt) {
-      (data as { publishedAt?: Date }).publishedAt = new Date();
+  try {
+    const body = await req.json();
+    const data = patchSchema.parse(body);
+
+    if (data.published === true && data.publishedAt === undefined) {
+      const existing = await prisma.blogPost.findUnique({ where: { id: BigInt(id) } });
+      if (existing && !existing.publishedAt) {
+        (data as { publishedAt?: Date }).publishedAt = new Date();
+      }
     }
-  }
 
-  const updated = await prisma.blogPost.update({ where: { id: BigInt(id) }, data });
-  return NextResponse.json({ ...updated, id: updated.id.toString() });
+    const updated = await prisma.blogPost.update({ where: { id: BigInt(id) }, data });
+    return NextResponse.json({ ...updated, id: updated.id.toString() });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return NextResponse.json({ error: err.issues }, { status: 400 });
+    }
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
+      return NextResponse.json({ error: [{ message: 'A post with this slug already exists' }] }, { status: 409 });
+    }
+    console.error('[admin/blog PATCH]', err);
+    return NextResponse.json({ error: [{ message: 'Failed to update post' }] }, { status: 500 });
+  }
 }
 
 export async function DELETE(

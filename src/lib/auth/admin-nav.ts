@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, BookOpen, GraduationCap, MessageSquare, Mail,
-  Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound,
+  Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound, Newspaper,
 } from 'lucide-react';
 import { DIGITIKA_MODULES, digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
@@ -22,6 +22,7 @@ const MODULE_UI: Record<string, { href: string; icon: typeof LayoutDashboard; ex
   leads: { href: '/admin/leads', icon: MessageSquare },
   contacts: { href: '/admin/contacts', icon: Mail },
   courses: { href: '/admin/courses', icon: Library },
+  blog: { href: '/admin/blog', icon: Newspaper },
   cohorts: { href: '/admin/cohorts', icon: Calendar },
   installments: { href: '/admin/installments', icon: CreditCard },
   discounts: { href: '/admin/discounts', icon: BadgePercent },
