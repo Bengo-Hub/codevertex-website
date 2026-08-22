@@ -7,6 +7,7 @@ import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface InstallmentItem {
   id: string;
@@ -48,8 +49,8 @@ export function InstallmentsPage() {
       daysAhead: String(daysAhead),
       ...(status ? { status } : {}),
     });
-    const res = await fetch(`/api/admin/installments?${params}`);
-    setData(await res.json());
+    const res = await authedFetch(`/api/admin/installments?${params}`);
+    setData(res.ok ? await res.json() : null);
     setLoading(false);
   }, [page, status, daysAhead]);
 
@@ -58,7 +59,7 @@ export function InstallmentsPage() {
   async function sendReminder(installmentId: string) {
     setSending(installmentId);
     const id = toast.loading('Sending reminder…');
-    const res = await fetch('/api/admin/installments?action=send-reminder', {
+    const res = await authedFetch('/api/admin/installments?action=send-reminder', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ installmentId }),

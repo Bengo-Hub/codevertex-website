@@ -7,6 +7,7 @@ import {
 import { AdminPageHeader } from './AdminPageHeader';
 import { StatusBadge } from './StatusBadge';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface DiscountRule {
   id: string;
@@ -77,7 +78,8 @@ export function DiscountsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/discounts');
+      const res = await authedFetch('/api/admin/discounts');
+      if (!res.ok) throw new Error(`discounts fetch failed: ${res.status}`);
       setData(await res.json());
     } catch {
       toast.error('Failed to load discount rules');
@@ -91,8 +93,8 @@ export function DiscountsPage() {
   // Load courses when modal opens
   useEffect(() => {
     if (!showModal) return;
-    fetch('/api/admin/courses?includeInactive=true')
-      .then((r) => r.json())
+    authedFetch('/api/admin/courses?includeInactive=true')
+      .then((r) => (r.ok ? r.json() : []))
       .then(setCourses)
       .catch(() => {});
   }, [showModal]);
@@ -104,8 +106,8 @@ export function DiscountsPage() {
       return;
     }
     setCohortsLoading(true);
-    fetch(`/api/admin/cohorts?courseId=${form.courseId}`)
-      .then((r) => r.json())
+    authedFetch(`/api/admin/cohorts?courseId=${form.courseId}`)
+      .then((r) => (r.ok ? r.json() : []))
       .then((data: Cohort[]) => {
         // Only show open/upcoming cohorts at the top; include all for editing
         setCohorts(data);
@@ -189,7 +191,7 @@ export function DiscountsPage() {
 
       const url = editing ? `/api/admin/discounts/${editing.id}` : '/api/admin/discounts';
       const method = editing ? 'PATCH' : 'POST';
-      const res = await fetch(url, {
+      const res = await authedFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -208,7 +210,8 @@ export function DiscountsPage() {
   async function handleDelete(rule: DiscountRule) {
     if (!confirm(`Delete discount "${rule.name}" (${rule.code})?`)) return;
     try {
-      const res = await fetch(`/api/admin/discounts/${rule.id}`, { method: 'DELETE' });
+      const res = await authedFetch(`/api/admin/discounts/${rule.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error();
       const body = await res.json();
       toast.success(body.deactivated ? 'Discount deactivated (has enrollments)' : 'Discount deleted');
       load();
@@ -219,7 +222,7 @@ export function DiscountsPage() {
 
   async function handleToggleActive(rule: DiscountRule) {
     try {
-      const res = await fetch(`/api/admin/discounts/${rule.id}`, {
+      const res = await authedFetch(`/api/admin/discounts/${rule.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ active: !rule.active }),

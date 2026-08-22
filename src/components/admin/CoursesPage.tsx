@@ -5,6 +5,7 @@ import { RefreshCw, Pencil, X, Search, ChevronLeft, ChevronRight, Plus, Trash2 }
 import { AdminPageHeader } from './AdminPageHeader';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface InstallmentPayment {
   amount: number;
@@ -422,8 +423,8 @@ export function CoursesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ includeInactive: String(includeInactive) });
-    const res = await fetch(`/api/admin/courses?${params}`);
-    setCourses(await res.json());
+    const res = await authedFetch(`/api/admin/courses?${params}`);
+    setCourses(res.ok ? await res.json() : []);
     setLoading(false);
   }, [includeInactive]);
 
@@ -431,7 +432,7 @@ export function CoursesPage() {
   useEffect(() => { setPage(1); }, [search, categoryFilter, includeInactive]);
 
   async function saveEdit(id: string, data: Record<string, unknown>) {
-    const res = await fetch(`/api/admin/courses/${id}`, {
+    const res = await authedFetch(`/api/admin/courses/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -446,7 +447,7 @@ export function CoursesPage() {
 
   async function toggleField(courseId: string, field: 'featured' | 'isActive' | 'installmentsEnabled', current: boolean) {
     setToggling(courseId);
-    const res = await fetch(`/api/admin/courses/${courseId}`, {
+    const res = await authedFetch(`/api/admin/courses/${courseId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ [field]: !current }),

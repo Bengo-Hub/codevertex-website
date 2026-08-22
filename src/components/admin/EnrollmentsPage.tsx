@@ -7,6 +7,7 @@ import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Enrollment {
   id: string;
@@ -49,16 +50,15 @@ export function EnrollmentsPage() {
       ...(search ? { search } : {}),
       ...(status ? { status } : {}),
     });
-    const res = await fetch(`/api/admin/enrollments?${params}`);
-    const json = await res.json();
-    setData(json);
+    const res = await authedFetch(`/api/admin/enrollments?${params}`);
+    setData(res.ok ? await res.json() : null);
     setLoading(false);
   }, [page, search, status]);
 
   useEffect(() => { load(); }, [load]);
 
   async function updateStatus(id: string, newStatus: string) {
-    const res = await fetch(`/api/admin/enrollments/${id}`, {
+    const res = await authedFetch(`/api/admin/enrollments/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentStatus: newStatus }),

@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, X, Check, ChevronLeft, ChevronRight } from 'lucid
 import { AdminPageHeader } from './AdminPageHeader';
 import { StatusBadge } from './StatusBadge';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Cohort {
   id: string;
@@ -65,12 +66,11 @@ export function CohortsPage() {
     setLoading(true);
     const params = new URLSearchParams(filterCourse ? { courseId: filterCourse } : {});
     const [cohortsRes, coursesRes] = await Promise.all([
-      fetch(`/api/admin/cohorts?${params}`),
-      fetch('/api/admin/courses?includeInactive=true'),
+      authedFetch(`/api/admin/cohorts?${params}`),
+      authedFetch('/api/admin/courses?includeInactive=true'),
     ]);
-    const [cohortsData, coursesData] = await Promise.all([cohortsRes.json(), coursesRes.json()]);
-    setCohorts(cohortsData);
-    setCourses(coursesData);
+    setCohorts(cohortsRes.ok ? await cohortsRes.json() : []);
+    setCourses(coursesRes.ok ? await coursesRes.json() : []);
     setLoading(false);
   }, [filterCourse]);
 
@@ -118,12 +118,12 @@ export function CohortsPage() {
     };
 
     const res = editId
-      ? await fetch(`/api/admin/cohorts/${editId}`, {
+      ? await authedFetch(`/api/admin/cohorts/${editId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-      : await fetch('/api/admin/cohorts', {
+      : await authedFetch('/api/admin/cohorts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -153,7 +153,7 @@ export function CohortsPage() {
       action: {
         label: 'Delete',
         onClick: async () => {
-          const res = await fetch(`/api/admin/cohorts/${id}`, { method: 'DELETE' });
+          const res = await authedFetch(`/api/admin/cohorts/${id}`, { method: 'DELETE' });
           if (res.ok) {
             toast.success('Cohort deleted');
             load();
