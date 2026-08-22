@@ -31,6 +31,7 @@ const MODULE_UI: Record<
 
   content: { href: '/admin/content', icon: BookOpen },
   certificates: { href: '/admin/certificates', icon: GraduationCap },
+  blog: { href: '/admin/blog', icon: Newspaper },
 
 >>>>>>> 969b46b (feat: polish website)
   cohorts: { href: '/admin/cohorts', icon: Calendar },
