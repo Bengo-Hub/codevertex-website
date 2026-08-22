@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Award,
+  Bell,
   BookOpen,
   Calendar,
   CheckCircle2,
@@ -16,6 +17,7 @@ import {
   AlertCircle,
   PlayCircle,
   Phone,
+  Search,
   Sparkles,
   Target,
   Trophy,
@@ -137,6 +139,13 @@ function formatDuration(totalSeconds: number): string {
   return `${hrs} hr ${mins} min`;
 }
 
+function getTimeOfDayGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 12 },
   show: (i: number) => ({
@@ -147,7 +156,7 @@ const fadeUp: Variants = {
 };
 
 const SECTION_META: Record<string, { title: string; description: string }> = {
-  overview: { title: 'Overview', description: 'Your learning snapshot at a glance' },
+  overview: { title: 'Dashboard', description: 'Your learning snapshot at a glance' },
   course: { title: 'My Course', description: 'Track progress on your active enrollment' },
   payments: { title: 'Payments', description: 'Installments and payment history' },
   certificates: { title: 'Certificates', description: 'Credentials you have earned' },
@@ -156,7 +165,6 @@ const SECTION_META: Record<string, { title: string; description: string }> = {
 };
 
 export function StudentDashboard() {
-  const router = useRouter();
   const setIdentity = useSetStudentIdentity();
   const { activeSection } = useStudentSection();
 
@@ -327,11 +335,12 @@ export function StudentDashboard() {
   const meta = SECTION_META[activeSection] ?? SECTION_META.overview;
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <TopBar title={meta.title} initials={fullNameToInitials(data.student.fullName)} />
+
       {activeSection !== 'overview' && (
         <div className="mb-6">
-          <h1 className="text-2xl font-black text-foreground">{meta.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{meta.description}</p>
+          <p className="text-sm text-muted-foreground">{meta.description}</p>
         </div>
       )}
 
@@ -353,6 +362,26 @@ export function StudentDashboard() {
       {activeSection === 'referrals' && <ReferralCard studentId={data.student.id} />}
       {activeSection === 'quizzes' && <QuizzesSection data={data} stats={stats} content={content} />}
     </main>
+  );
+}
+
+function TopBar({ title, initials }: { title: string; initials: string }) {
+  return (
+    <div className="mb-6 flex items-center justify-between gap-4">
+      <h1 className="text-2xl font-black text-foreground">{title}</h1>
+      <div className="flex items-center gap-2">
+        <button className="hidden h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground sm:flex">
+          <Search className="h-4 w-4" />
+        </button>
+        <button className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground">
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-destructive" />
+        </button>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
+          {initials}
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -445,232 +474,300 @@ function OverviewSection({
 }) {
   const router = useRouter();
   const { setActiveSection } = useStudentSection();
-  const { completedLessons, quizPassRate, courseProgressPct } = stats;
+  const { completedLessons, courseProgressPct } = stats;
+  const totalLessons = content?.totalLessons ?? 0;
+  const remainingLessons = Math.max(totalLessons - completedLessons, 0);
+
+  const today = new Date();
+  const monthLabel = today.toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+  const calendarDays = useMemo(() => buildCalendarWeeks(today), []);
+  const nextDue = data.enrollment ? findNextDueInstallment(data.enrollment.installments) : undefined;
+
+  // Split bar: completed vs in-progress vs untouched, as % of total lessons.
+  const completedPct = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  const inProgressPct = totalLessons ? Math.min(100 - completedPct, remainingLessons > 0 ? 8 : 0) : 0;
+
+  const scheduleItems = useMemo(() => {
+    const items: { id: string; title: string; subtitle: string; icon: React.ReactNode; tone: string }[] = [];
+    if (nextLesson) {
+      items.push({
+        id: 'next-lesson',
+        title: nextLesson.title,
+        subtitle: `${nextLesson.moduleTitle} · Up next`,
+        icon: <PlayCircle className="h-4 w-4" />,
+        tone: 'bg-primary/10 text-primary',
+      });
+    }
+    if (nextDue) {
+      items.push({
+        id: 'next-due',
+        title: `Installment due — ${formatCurrency(nextDue.amount, nextDue.currency)}`,
+        subtitle: nextDue.dueDate ? new Date(nextDue.dueDate).toLocaleDateString() : 'Date pending',
+        icon: <CreditCard className="h-4 w-4" />,
+        tone: 'bg-amber-500/10 text-amber-600',
+      });
+    }
+    for (const event of recentActivity.slice(0, 3)) {
+      items.push({
+        id: event.id,
+        title: event.label,
+        subtitle: new Date(event.date).toLocaleDateString(),
+        icon: event.type === 'quiz' ? <Trophy className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />,
+        tone: event.type === 'quiz'
+          ? event.passed ? 'bg-emerald-500/10 text-emerald-600' : 'bg-destructive/10 text-destructive'
+          : 'bg-primary/10 text-primary',
+      });
+    }
+    return items.slice(0, 5);
+  }, [nextLesson, nextDue, recentActivity]);
 
   return (
-    <div className="space-y-8">
-      {/* Payment reminder */}
+    <div className="space-y-5">
       <PaymentDueBanner data={data} />
 
-      {/* Hero */}
-      <motion.section initial="hidden" animate="show" custom={0} variants={fadeUp}>
-        <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary via-primary to-accent-foreground p-6 text-primary-foreground sm:p-8">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-          <div className="pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-
-          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
-                <GraduationCap className="h-7 w-7" />
-              </div>
-              <div>
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-white/70">
-                  <Sparkles className="h-3.5 w-3.5" /> Welcome back
-                </p>
-                <h1 className="text-2xl font-black sm:text-3xl">Hi, {data.student.fullName.split(' ')[0]} 👋</h1>
-                <p className="mt-1 text-sm text-white/75">
-                  {nextLesson
-                    ? `Up next: ${nextLesson.title}`
-                    : data.enrollment
-                      ? `Continue your ${data.enrollment.courseName} journey`
-                      : 'Ready to start learning?'}
-                </p>
-              </div>
+      {/* Row 1: activity chart + calendar */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <motion.div
+          className="rounded-2xl border border-border bg-card p-6 lg:col-span-2"
+          initial="hidden"
+          animate="show"
+          custom={0}
+          variants={fadeUp}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-foreground">My Learning Activity</h2>
+              <p className="text-xs text-muted-foreground">
+                {formatDuration(timeInvestedSec)} invested so far
+              </p>
             </div>
-
-            {data.enrollment && (
-              <button
-                onClick={() => router.push(`/digitika/${data.enrollment?.courseId}/learn`)}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-lg transition-transform hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                <BookOpen className="h-4 w-4" />
-                {nextLesson ? 'Resume Learning' : 'Continue Learning'}
-              </button>
-            )}
+            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+              This course
+            </span>
           </div>
-        </div>
+          <ActivitySparkline completed={completedLessons} total={Math.max(totalLessons, 1)} />
+        </motion.div>
 
-        {/* Stat cards */}
-        <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard
-            index={0}
-            icon={<BookOpen className="h-5 w-5" />}
-            title="Course"
-            value={data.enrollment?.courseName ?? 'Not enrolled'}
-            accent="from-violet-500/15 to-violet-500/5 text-violet-600 dark:text-violet-400"
-          />
-          <StatCard
-            index={1}
-            icon={<CheckCircle2 className="h-5 w-5" />}
-            title="Lessons Completed"
-            value={content ? `${completedLessons} / ${content.totalLessons}` : completedLessons.toString()}
-            accent="from-emerald-500/15 to-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-          />
-          <StatCard
-            index={2}
-            icon={<Clock className="h-5 w-5" />}
-            title="Time Invested"
-            value={formatDuration(timeInvestedSec)}
-            accent="from-blue-500/15 to-blue-500/5 text-blue-600 dark:text-blue-400"
-          />
-          <StatCard
-            index={3}
-            icon={<Award className="h-5 w-5" />}
-            title="Certificates"
-            value={data.certificates.length.toString()}
-            accent="from-amber-500/15 to-amber-500/5 text-amber-600 dark:text-amber-400"
-          />
-        </div>
-      </motion.section>
-
-      {/* Progress + quick jump */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <motion.button
-          type="button"
-          onClick={() => setActiveSection('course')}
-          className="text-left lg:col-span-2"
+        <motion.div
+          className="rounded-2xl border border-border bg-card p-5"
           initial="hidden"
           animate="show"
           custom={1}
           variants={fadeUp}
         >
-          <div className="h-full rounded-2xl border border-border bg-card p-6 transition-colors hover:border-primary/30">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold">Course Progress</h2>
-                <p className="text-sm text-muted-foreground">
-                  {data.enrollment ? data.enrollment.courseName : 'No active enrollment'}
-                </p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Target className="h-5 w-5" />
-              </div>
-            </div>
-
-            {data.enrollment ? (
-              <div>
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-medium text-muted-foreground">
-                    {content ? `${completedLessons} of ${content.totalLessons} lessons completed` : `${completedLessons} lessons completed`}
-                  </span>
-                  <span className="font-semibold text-foreground">{courseProgressPct}%</span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-muted">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent-foreground"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${courseProgressPct}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                  />
-                </div>
-                {nextLesson && (
-                  <p className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                    <PlayCircle className="h-3.5 w-3.5 text-primary" />
-                    Next: {nextLesson.title} <span className="text-muted-foreground/70">({nextLesson.moduleTitle})</span>
-                  </p>
-                )}
-                <p className="mt-3 text-xs font-medium text-primary">View full course details →</p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Browse courses to get started.</p>
-            )}
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-foreground">{today.toLocaleDateString(undefined, { month: 'long' })}</h2>
+            <Calendar className="h-4 w-4 text-primary" />
           </div>
-        </motion.button>
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-muted-foreground">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+              <span key={`${d}-${i}`}>{d}</span>
+            ))}
+          </div>
+          <div className="mt-1 grid grid-cols-7 gap-1">
+            {calendarDays.map((day, i) => (
+              <span
+                key={i}
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs ${
+                  day === null
+                    ? ''
+                    : day === today.getDate()
+                      ? 'bg-primary font-bold text-primary-foreground'
+                      : 'text-foreground hover:bg-muted'
+                }`}
+              >
+                {day ?? ''}
+              </span>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted-foreground">Today, {monthLabel}</p>
+        </motion.div>
+      </div>
 
-        <motion.div initial="hidden" animate="show" custom={2} variants={fadeUp}>
-          <div className="h-full rounded-2xl border border-border bg-card p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              <h2 className="font-bold">Quiz Pass Rate</h2>
+      {/* Row 2: progress stats + upcoming schedule */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <motion.div
+          className="rounded-2xl border border-border bg-card p-6"
+          initial="hidden"
+          animate="show"
+          custom={2}
+          variants={fadeUp}
+        >
+          <h2 className="text-sm font-bold text-foreground">Progress Statistics</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Total activity</p>
+          <p className="mt-2 text-4xl font-black text-foreground">{courseProgressPct}%</p>
+
+          {/* Split bar: completed (primary) + in-progress (amber) + remaining (muted) */}
+          <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
+            <motion.div
+              className="h-full bg-primary"
+              initial={{ width: 0 }}
+              animate={{ width: `${completedPct}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+            />
+            <motion.div
+              className="h-full bg-amber-400"
+              initial={{ width: 0 }}
+              animate={{ width: `${inProgressPct}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+            />
+          </div>
+          <div className="mt-1.5 flex justify-between text-[10px] font-medium text-muted-foreground">
+            <span>{completedPct}%</span>
+            <span>{100 - completedPct}%</span>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-primary/10 px-3 py-3 text-center">
+              <p className="text-lg font-bold text-primary">{remainingLessons}</p>
+              <p className="text-[11px] font-medium text-primary/80">In progress</p>
             </div>
-            {stats.totalQuizAttempts === 0 ? (
-              <p className="text-sm text-muted-foreground">No quiz attempts yet.</p>
-            ) : (
-              <div className="flex items-center gap-4">
-                <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                  <span className="text-xl font-black text-primary">{quizPassRate}%</span>
-                </div>
-                <div>
-                  <p className="font-semibold">{stats.passedQuizzes} passed</p>
-                  <p className="text-sm text-muted-foreground">{stats.totalQuizAttempts} attempts</p>
-                </div>
-              </div>
-            )}
-            <button
-              onClick={() => setActiveSection('quizzes')}
-              className="mt-4 text-xs font-medium text-primary hover:underline"
-            >
-              View quiz history →
+            <div className="rounded-xl bg-emerald-500/10 px-3 py-3 text-center">
+              <p className="text-lg font-bold text-emerald-600">{completedLessons}</p>
+              <p className="text-[11px] font-medium text-emerald-600/80">Completed</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="rounded-2xl border border-border bg-card p-5 lg:col-span-2"
+          initial="hidden"
+          animate="show"
+          custom={3}
+          variants={fadeUp}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-foreground">Upcoming Schedule</h2>
+            <button onClick={() => setActiveSection('course')} className="text-xs font-medium text-primary hover:underline">
+              View all →
             </button>
           </div>
-        </motion.div>
-      </div>
-
-      {/* Recent activity + profile */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <motion.div className="lg:col-span-2" initial="hidden" animate="show" custom={3} variants={fadeUp}>
-          <div className="h-full rounded-2xl border border-border bg-card p-6">
-            <h2 className="mb-4 font-bold">Recent Activity</h2>
-            {recentActivity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nothing recorded yet — complete a lesson or take a quiz to see activity here.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {recentActivity.map((event) => (
-                  <li key={event.id} className="flex items-start gap-3">
-                    <span
-                      className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
-                        event.type === 'quiz'
-                          ? event.passed
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-destructive/10 text-destructive'
-                          : 'bg-primary/10 text-primary'
-                      }`}
-                    >
-                      {event.type === 'quiz' ? <Trophy className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{event.label}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(event.date).toLocaleString()}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </motion.div>
-
-        <motion.div initial="hidden" animate="show" custom={4} variants={fadeUp}>
-          <div className="h-full rounded-2xl border border-border bg-card p-6">
-            <h2 className="mb-4 font-bold">Profile</h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <Mail className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">{data.student.email}</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <Phone className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">{data.student.phone}</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <Calendar className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">Member since {new Date(data.student.createdAt).toLocaleDateString()}</span>
-              </div>
-              {data.enrollment?.cohort?.startDate && (
-                <div className="flex items-center gap-2.5 text-muted-foreground">
-                  <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
-                  <span className="truncate">
-                    Cohort starts {new Date(data.enrollment.cohort.startDate).toLocaleDateString()}
+          {scheduleItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nothing scheduled — you're all caught up.</p>
+          ) : (
+            <ul className="space-y-2">
+              {scheduleItems.map((item) => (
+                <li key={item.id} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${item.tone}`}>
+                    {item.icon}
                   </span>
-                </div>
-              )}
-            </div>
-          </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.subtitle}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </motion.div>
       </div>
+
+      {/* Row 3: My Courses */}
+      <motion.div initial="hidden" animate="show" custom={4} variants={fadeUp}>
+        <MyCoursesCard data={data} stats={stats} content={content} router={router} />
+      </motion.div>
     </div>
   );
+}
+
+function MyCoursesCard({
+  data,
+  stats,
+  content,
+  router,
+}: {
+  data: StudentData;
+  stats: Stats;
+  content: CourseContent | null;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const [tab, setTab] = useState<'all' | 'ongoing' | 'completed'>('all');
+  const { completedLessons, courseProgressPct } = stats;
+  const isCompleted = courseProgressPct >= 100;
+  const visible = !data.enrollment
+    ? false
+    : tab === 'all' || (tab === 'ongoing' && !isCompleted) || (tab === 'completed' && isCompleted);
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-bold text-foreground">My Courses</h2>
+        <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+          {(['all', 'ongoing', 'completed'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`rounded-md px-2.5 py-1 text-xs font-semibold capitalize transition-colors ${
+                tab === t ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {visible && data.enrollment ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <BookOpen className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-foreground">{data.enrollment.courseName}</p>
+              <p className="text-xs text-muted-foreground">
+                {content ? `${completedLessons} of ${content.totalLessons} lessons` : `${completedLessons} lessons completed`}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-primary" style={{ width: `${courseProgressPct}%` }} />
+            </div>
+            <span className="text-xs font-semibold text-foreground">{courseProgressPct}%</span>
+            <button
+              onClick={() => router.push(`/digitika/${data.enrollment?.courseId}/learn`)}
+              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90"
+            >
+              View Course
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {data.enrollment ? 'No courses match this filter.' : 'No active course yet.'}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ActivitySparkline({ completed, total }: { completed: number; total: number }) {
+  const pct = Math.min(Math.max(completed / total, 0), 1);
+  const points = [0, 0.2, 0.4, 0.6, 0.8, 1].map((t) => {
+    const eased = pct * (0.4 + 0.6 * t);
+    return 60 - eased * 45;
+  });
+  const path = points.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 56} ${y}`).join(' ');
+  const areaPath = `${path} L 280 60 L 0 60 Z`;
+
+  return (
+    <svg viewBox="0 0 280 60" className="h-24 w-full" preserveAspectRatio="none">
+      <path d={areaPath} fill="var(--color-primary)" opacity="0.12" />
+      <path d={path} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function buildCalendarWeeks(today: Date): (number | null)[] {
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = Array(firstDay).fill(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
 }
 
 function CourseSection({
@@ -742,7 +839,7 @@ function CourseSection({
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-muted">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent-foreground"
+                  className="h-full rounded-full bg-primary"
                   initial={{ width: 0 }}
                   animate={{ width: `${courseProgressPct}%` }}
                   transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -1043,39 +1140,6 @@ function QuizzesSection({ data, stats, content }: { data: StudentData; stats: St
         )}
       </div>
     </motion.section>
-  );
-}
-
-function StatCard({
-  icon,
-  title,
-  value,
-  accent,
-  index,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  value: string;
-  accent: string;
-  index: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.15 + index * 0.05 }}
-      className="rounded-2xl border border-border bg-card p-4 sm:p-5"
-    >
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${accent}`}>
-          {icon}
-        </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{title}</p>
-          <p className="truncate font-bold capitalize">{value}</p>
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
