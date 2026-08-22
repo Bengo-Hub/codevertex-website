@@ -1,0 +1,441 @@
+From 6adb7463e19e4a61a46be9b43ee6cfe59cd5fe45 Mon Sep 17 00:00:00 2001
+From: Meshack Isava <carson-jpg@users.noreply.github.com>
+Date: Sat, 22 Aug 2026 05:05:27 +0000
+Subject: [PATCH 5/5] =?UTF-8?q?fix:=20crash=20on=20/admin=20=E2=80=94=20MO?=
+ =?UTF-8?q?DULE=5FUI=20missing=20'blog'=20entry,=20plus=20build=20the=20ac?=
+ =?UTF-8?q?tual=20/admin/blog=20page?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+You hit this live: adding 'blog' to DIGITIKA_MODULES (in an earlier commit
+of mine) without a matching entry in admin-nav.ts's MODULE_UI map meant
+MODULE_UI['blog'] was undefined, and .href on undefined crashed the entire
+admin sidebar (AdminSidebar -> admin/layout.tsx), taking down every /admin/*
+page, not just blog. My bug from patch 0001.
+
+- admin-nav.ts: added the missing 'blog' MODULE_UI entry
+- Built the actual /admin/blog page + BlogAdminPage.tsx (list, create/edit
+  modal, publish/unpublish toggle, delete) — this was flagged as a
+  'follow-up, not built yet' two sessions ago; building it now since the nav
+  literally points at it and you're the one hitting the gap live.
+- Fixed a real bug in the API routes while wiring the UI to them:
+  POST/PATCH /api/admin/blog were calling schema.parse() unguarded, so a
+  validation error or duplicate slug (unique constraint) would 500 instead
+  of returning a clean 400/409 the UI could show.
+---
+ src/app/admin/blog/page.tsx            |   5 +
+ src/app/api/admin/blog/[id]/route.ts   |  30 ++-
+ src/app/api/admin/blog/route.ts        |  21 +-
+ src/components/admin/BlogAdminPage.tsx | 291 +++++++++++++++++++++++++
+ src/lib/auth/admin-nav.ts              |   3 +-
+ 5 files changed, 335 insertions(+), 15 deletions(-)
+ create mode 100644 src/app/admin/blog/page.tsx
+ create mode 100644 src/components/admin/BlogAdminPage.tsx
+
+diff --git a/src/app/admin/blog/page.tsx b/src/app/admin/blog/page.tsx
+new file mode 100644
+index 0000000..8b6e35c
+--- /dev/null
++++ b/src/app/admin/blog/page.tsx
+@@ -0,0 +1,5 @@
++import type { Metadata } from 'next';
++import { BlogAdminPage } from '@/components/admin/BlogAdminPage';
++
++export const metadata: Metadata = { title: 'Blog' };
++export default function Page() { return <BlogAdminPage />; }
+diff --git a/src/app/api/admin/blog/[id]/route.ts b/src/app/api/admin/blog/[id]/route.ts
+index 11de4f3..611158a 100644
+--- a/src/app/api/admin/blog/[id]/route.ts
++++ b/src/app/api/admin/blog/[id]/route.ts
+@@ -37,18 +37,30 @@ export async function PATCH(
+   if ('response' in guard) return guard.response;
+ 
+   const { id } = await params;
+-  const body = await req.json();
+-  const data = patchSchema.parse(body);
+ 
+-  if (data.published === true && data.publishedAt === undefined) {
+-    const existing = await prisma.blogPost.findUnique({ where: { id: BigInt(id) } });
+-    if (existing && !existing.publishedAt) {
+-      (data as { publishedAt?: Date }).publishedAt = new Date();
++  try {
++    const body = await req.json();
++    const data = patchSchema.parse(body);
++
++    if (data.published === true && data.publishedAt === undefined) {
++      const existing = await prisma.blogPost.findUnique({ where: { id: BigInt(id) } });
++      if (existing && !existing.publishedAt) {
++        (data as { publishedAt?: Date }).publishedAt = new Date();
++      }
+     }
+-  }
+ 
+-  const updated = await prisma.blogPost.update({ where: { id: BigInt(id) }, data });
+-  return NextResponse.json({ ...updated, id: updated.id.toString() });
++    const updated = await prisma.blogPost.update({ where: { id: BigInt(id) }, data });
++    return NextResponse.json({ ...updated, id: updated.id.toString() });
++  } catch (err) {
++    if (err instanceof z.ZodError) {
++      return NextResponse.json({ error: err.issues }, { status: 400 });
++    }
++    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
++      return NextResponse.json({ error: [{ message: 'A post with this slug already exists' }] }, { status: 409 });
++    }
++    console.error('[admin/blog PATCH]', err);
++    return NextResponse.json({ error: [{ message: 'Failed to update post' }] }, { status: 500 });
++  }
+ }
+ 
+ export async function DELETE(
+diff --git a/src/app/api/admin/blog/route.ts b/src/app/api/admin/blog/route.ts
+index fd01a19..d79c7c5 100644
+--- a/src/app/api/admin/blog/route.ts
++++ b/src/app/api/admin/blog/route.ts
+@@ -34,10 +34,21 @@ export async function POST(req: NextRequest) {
+   const guard = await requirePermission(req, digitikaPerm('blog', 'manage'));
+   if ('response' in guard) return guard.response;
+ 
+-  const body = await req.json();
+-  const data = createSchema.parse(body);
+-  const publishedAt = data.published ? (data.publishedAt ?? new Date()) : null;
++  try {
++    const body = await req.json();
++    const data = createSchema.parse(body);
++    const publishedAt = data.published ? (data.publishedAt ?? new Date()) : null;
+ 
+-  const post = await prisma.blogPost.create({ data: { ...data, publishedAt } });
+-  return NextResponse.json({ ...post, id: post.id.toString() }, { status: 201 });
++    const post = await prisma.blogPost.create({ data: { ...data, publishedAt } });
++    return NextResponse.json({ ...post, id: post.id.toString() }, { status: 201 });
++  } catch (err) {
++    if (err instanceof z.ZodError) {
++      return NextResponse.json({ error: err.issues }, { status: 400 });
++    }
++    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'P2002') {
++      return NextResponse.json({ error: [{ message: 'A post with this slug already exists' }] }, { status: 409 });
++    }
++    console.error('[admin/blog POST]', err);
++    return NextResponse.json({ error: [{ message: 'Failed to create post' }] }, { status: 500 });
++  }
+ }
+diff --git a/src/components/admin/BlogAdminPage.tsx b/src/components/admin/BlogAdminPage.tsx
+new file mode 100644
+index 0000000..09be163
+--- /dev/null
++++ b/src/components/admin/BlogAdminPage.tsx
+@@ -0,0 +1,291 @@
++'use client';
++
++import { useEffect, useState, useCallback } from 'react';
++import { Plus, Pencil, Trash2, X, Eye, EyeOff, Newspaper } from 'lucide-react';
++import { AdminPageHeader } from './AdminPageHeader';
++import { toast } from 'sonner';
++
++interface BlogPost {
++  id: string;
++  slug: string;
++  title: string;
++  excerpt: string | null;
++  content: string;
++  author: string;
++  coverImage: string | null;
++  tags: string[];
++  published: boolean;
++  publishedAt: string | null;
++  createdAt: string;
++}
++
++const inputCls =
++  'w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50';
++
++function slugify(title: string) {
++  return title
++    .toLowerCase()
++    .trim()
++    .replace(/[^a-z0-9\s-]/g, '')
++    .replace(/\s+/g, '-')
++    .replace(/-+/g, '-');
++}
++
++function PostForm({
++  post,
++  onSaved,
++  onCancel,
++}: {
++  post: BlogPost | null;
++  onSaved: () => void;
++  onCancel: () => void;
++}) {
++  const [title, setTitle] = useState(post?.title ?? '');
++  const [slug, setSlug] = useState(post?.slug ?? '');
++  const [slugTouched, setSlugTouched] = useState(!!post);
++  const [excerpt, setExcerpt] = useState(post?.excerpt ?? '');
++  const [content, setContent] = useState(post?.content ?? '');
++  const [author, setAuthor] = useState(post?.author ?? 'Codevertex Team');
++  const [coverImage, setCoverImage] = useState(post?.coverImage ?? '');
++  const [tags, setTags] = useState(post?.tags.join(', ') ?? '');
++  const [published, setPublished] = useState(post?.published ?? false);
++  const [saving, setSaving] = useState(false);
++
++  function handleTitleChange(value: string) {
++    setTitle(value);
++    if (!slugTouched) setSlug(slugify(value));
++  }
++
++  async function handleSave() {
++    if (!title.trim() || !slug.trim() || !content.trim() || !author.trim()) {
++      toast.error('Title, slug, content, and author are required');
++      return;
++    }
++    setSaving(true);
++    const body = {
++      title,
++      slug,
++      excerpt: excerpt || undefined,
++      content,
++      author,
++      coverImage: coverImage || undefined,
++      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
++      published,
++    };
++    const res = post
++      ? await fetch(`/api/admin/blog/${post.id}`, {
++          method: 'PATCH',
++          headers: { 'Content-Type': 'application/json' },
++          body: JSON.stringify(body),
++        })
++      : await fetch('/api/admin/blog', {
++          method: 'POST',
++          headers: { 'Content-Type': 'application/json' },
++          body: JSON.stringify(body),
++        });
++    setSaving(false);
++    if (res.ok) {
++      toast.success(post ? 'Post updated' : 'Post created');
++      onSaved();
++    } else {
++      const data = await res.json().catch(() => ({}));
++      toast.error(data.error?.[0]?.message ?? 'Failed to save post');
++    }
++  }
++
++  return (
++    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
++      <div className="w-full max-w-2xl bg-card rounded-2xl border border-border shadow-xl flex flex-col max-h-[90vh]">
++        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
++          <h2 className="text-base font-semibold text-foreground">{post ? 'Edit Post' : 'New Post'}</h2>
++          <button onClick={onCancel} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
++            <X className="h-4 w-4" />
++          </button>
++        </div>
++
++        <div className="overflow-y-auto px-6 py-4 space-y-3">
++          <div>
++            <label className="block text-xs font-medium text-muted-foreground mb-1">Title</label>
++            <input value={title} onChange={(e) => handleTitleChange(e.target.value)} className={inputCls} />
++          </div>
++          <div className="grid grid-cols-2 gap-3">
++            <div>
++              <label className="block text-xs font-medium text-muted-foreground mb-1">Slug</label>
++              <input
++                value={slug}
++                onChange={(e) => {
++                  setSlug(e.target.value);
++                  setSlugTouched(true);
++                }}
++                className={`${inputCls} font-mono`}
++              />
++            </div>
++            <div>
++              <label className="block text-xs font-medium text-muted-foreground mb-1">Author</label>
++              <input value={author} onChange={(e) => setAuthor(e.target.value)} className={inputCls} />
++            </div>
++          </div>
++          <div>
++            <label className="block text-xs font-medium text-muted-foreground mb-1">Excerpt</label>
++            <input value={excerpt} onChange={(e) => setExcerpt(e.target.value)} placeholder="One-line summary shown on the blog list" className={inputCls} />
++          </div>
++          <div>
++            <label className="block text-xs font-medium text-muted-foreground mb-1">Content (Markdown)</label>
++            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={10} className={`${inputCls} font-mono`} />
++          </div>
++          <div className="grid grid-cols-2 gap-3">
++            <div>
++              <label className="block text-xs font-medium text-muted-foreground mb-1">Cover image URL</label>
++              <input value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="/images/blog/..." className={inputCls} />
++            </div>
++            <div>
++              <label className="block text-xs font-medium text-muted-foreground mb-1">Tags (comma separated)</label>
++              <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="Product, Engineering" className={inputCls} />
++            </div>
++          </div>
++          <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer select-none pt-1">
++            <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="rounded border-border" />
++            Published
++          </label>
++        </div>
++
++        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-border">
++          <button onClick={onCancel} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted">
++            Cancel
++          </button>
++          <button
++            onClick={handleSave}
++            disabled={saving}
++            className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-50"
++          >
++            {saving ? 'Saving…' : 'Save post'}
++          </button>
++        </div>
++      </div>
++    </div>
++  );
++}
++
++export function BlogAdminPage() {
++  const [posts, setPosts] = useState<BlogPost[]>([]);
++  const [loading, setLoading] = useState(true);
++  const [editing, setEditing] = useState<BlogPost | 'new' | null>(null);
++
++  const load = useCallback(async () => {
++    setLoading(true);
++    const res = await fetch('/api/admin/blog?includeUnpublished=true');
++    if (res.ok) setPosts(await res.json());
++    setLoading(false);
++  }, []);
++
++  useEffect(() => { load(); }, [load]);
++
++  async function togglePublished(post: BlogPost) {
++    const res = await fetch(`/api/admin/blog/${post.id}`, {
++      method: 'PATCH',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ published: !post.published }),
++    });
++    if (res.ok) {
++      toast.success(post.published ? 'Unpublished' : 'Published');
++      load();
++    } else {
++      toast.error('Update failed');
++    }
++  }
++
++  async function handleDelete(post: BlogPost) {
++    if (!confirm(`Delete "${post.title}"? This can't be undone.`)) return;
++    const res = await fetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
++    if (res.ok) {
++      toast.success('Post deleted');
++      load();
++    } else {
++      toast.error('Delete failed');
++    }
++  }
++
++  return (
++    <div>
++      <AdminPageHeader
++        title="Blog"
++        description="Posts shown on the public /blog page."
++        actions={
++          <button
++            onClick={() => setEditing('new')}
++            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
++          >
++            <Plus className="h-4 w-4" /> New post
++          </button>
++        }
++      />
++
++      <div className="rounded-xl border border-border bg-card overflow-hidden">
++        <table className="w-full text-sm">
++          <thead className="bg-muted/50 text-xs text-muted-foreground uppercase tracking-wide">
++            <tr>
++              <th className="text-left px-4 py-2.5 font-semibold">Title</th>
++              <th className="text-left px-4 py-2.5 font-semibold">Author</th>
++              <th className="text-left px-4 py-2.5 font-semibold">Tags</th>
++              <th className="text-left px-4 py-2.5 font-semibold">Status</th>
++              <th className="text-right px-4 py-2.5 font-semibold">Actions</th>
++            </tr>
++          </thead>
++          <tbody className="divide-y divide-border">
++            {loading ? (
++              <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground text-xs">Loading…</td></tr>
++            ) : posts.length === 0 ? (
++              <tr>
++                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground text-xs">
++                  <Newspaper className="h-6 w-6 mx-auto mb-2 opacity-40" />
++                  No posts yet.
++                </td>
++              </tr>
++            ) : (
++              posts.map((post) => (
++                <tr key={post.id}>
++                  <td className="px-4 py-3 font-medium text-foreground">{post.title}</td>
++                  <td className="px-4 py-3 text-muted-foreground">{post.author}</td>
++                  <td className="px-4 py-3 text-muted-foreground text-xs">{post.tags.join(', ') || '—'}</td>
++                  <td className="px-4 py-3">
++                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${post.published ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
++                      {post.published ? 'Published' : 'Draft'}
++                    </span>
++                  </td>
++                  <td className="px-4 py-3">
++                    <div className="flex items-center justify-end gap-1">
++                      <button
++                        onClick={() => togglePublished(post)}
++                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
++                        title={post.published ? 'Unpublish' : 'Publish'}
++                      >
++                        {post.published ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
++                      </button>
++                      <button onClick={() => setEditing(post)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
++                        <Pencil className="h-3.5 w-3.5" />
++                      </button>
++                      <button onClick={() => handleDelete(post)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive">
++                        <Trash2 className="h-3.5 w-3.5" />
++                      </button>
++                    </div>
++                  </td>
++                </tr>
++              ))
++            )}
++          </tbody>
++        </table>
++      </div>
++
++      {editing && (
++        <PostForm
++          post={editing === 'new' ? null : editing}
++          onSaved={() => {
++            setEditing(null);
++            load();
++          }}
++          onCancel={() => setEditing(null)}
++        />
++      )}
++    </div>
++  );
++}
+diff --git a/src/lib/auth/admin-nav.ts b/src/lib/auth/admin-nav.ts
+index 099a95a..7230cf6 100644
+--- a/src/lib/auth/admin-nav.ts
++++ b/src/lib/auth/admin-nav.ts
+@@ -1,6 +1,6 @@
+ import {
+   LayoutDashboard, BookOpen, GraduationCap, MessageSquare, Mail,
+-  Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound,
++  Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound, Newspaper,
+ } from 'lucide-react';
+ import { DIGITIKA_MODULES, digitikaPerm } from '@/lib/digitika-rbac-catalog';
+ 
+@@ -28,6 +28,7 @@ const MODULE_UI: Record<
+ 
+   content: { href: '/admin/content', icon: BookOpen },
+   certificates: { href: '/admin/certificates', icon: GraduationCap },
++  blog: { href: '/admin/blog', icon: Newspaper },
+ 
+   cohorts: { href: '/admin/cohorts', icon: Calendar },
+   installments: { href: '/admin/installments', icon: CreditCard },
+-- 
+2.43.0
+
