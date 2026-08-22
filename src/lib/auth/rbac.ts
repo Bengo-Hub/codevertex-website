@@ -5,6 +5,7 @@ import {
   extractProfileName,
   extractProfileAvatar,
 } from '@/lib/auth/sso-profile';
+import { verifySessionPayload } from '@/lib/auth/session-crypto';
 
 export const AUTH_API_URL =
   process.env.NEXT_PUBLIC_AUTH_SERVICE_URL ||
@@ -75,7 +76,7 @@ export async function resolvePlatformTenantId(): Promise<string | null> {
  * In local development, the cv_session cookie is converted into
  * one of the local development tokens.
  */
-function extractBearerToken(req: NextRequest): string | null {
+async function extractBearerToken(req: NextRequest): Promise<string | null> {
   const authorization = req.headers.get('authorization');
 
   if (authorization?.startsWith('Bearer ')) {
@@ -96,30 +97,21 @@ function extractBearerToken(req: NextRequest): string | null {
       return null;
     }
 
-    try {
-      const payload = JSON.parse(
-        Buffer.from(
-          sessionCookie,
-          'base64url'
-        ).toString('utf8')
-      );
-
-      if (
-        typeof payload?.exp !== 'number' ||
-        payload.exp <= Math.floor(Date.now() / 1000)
-      ) {
-        return null;
-      }
-
-      if (payload.userId === 'local-admin') {
-        return 'local-development-admin-token';
-      }
-
-      if (payload.userId === 'student-1') {
-        return 'local-development-student-token';
-      }
-    } catch {
+    // Was: JSON.parse(Buffer.from(sessionCookie, 'base64url')) — trusted the
+    // cookie's contents with no signature check, so any request could set
+    // its own cv_session cookie with userId:'local-admin' and get treated
+    // as the admin bypass token below. Now verified via HMAC.
+    const payload = await verifySessionPayload(sessionCookie);
+    if (!payload) {
       return null;
+    }
+
+    if (payload.userId === 'local-admin') {
+      return 'local-development-admin-token';
+    }
+
+    if (payload.userId === 'student-1') {
+      return 'local-development-student-token';
     }
   }
 
@@ -149,24 +141,13 @@ async function resolveCookieSession(
   }
 
   try {
-    const payload = JSON.parse(
-      Buffer.from(
-        sessionCookie,
-        'base64url'
-      ).toString('utf8')
-    );
+    // Was: JSON.parse(Buffer.from(sessionCookie, 'base64url')) — this is the
+    // route that let a forged cv_session cookie (any {userId,role,exp} JSON,
+    // base64url-encoded, no signature) grant real admin access in production.
+    // Everything below this line is unchanged; only the decode is now verified.
+    const payload = await verifySessionPayload(sessionCookie);
 
-    if (
-      typeof payload?.userId !== 'string' ||
-      !payload.userId
-    ) {
-      return null;
-    }
-
-    if (
-      typeof payload?.exp !== 'number' ||
-      payload.exp <= Math.floor(Date.now() / 1000)
-    ) {
+    if (!payload) {
       return null;
     }
 
@@ -316,7 +297,7 @@ export async function resolveDigitikaSession(
    * First try the normal SSO Bearer token.
    */
   const accessToken =
-    extractBearerToken(req);
+    await extractBearerToken(req);
 
   /**
    * Local development authentication.
