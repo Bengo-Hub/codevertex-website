@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Plus, Pencil, Trash2, X, Eye, EyeOff, Newspaper } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface BlogPost {
   id: string;
@@ -73,12 +74,12 @@ function PostForm({
       published,
     };
     const res = post
-      ? await fetch(`/api/admin/blog/${post.id}`, {
+      ? await authedFetch(`/api/admin/blog/${post.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-      : await fetch('/api/admin/blog', {
+      : await authedFetch('/api/admin/blog', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -173,7 +174,7 @@ export function BlogAdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/admin/blog?includeUnpublished=true');
+    const res = await authedFetch('/api/admin/blog?includeUnpublished=true');
     if (res.ok) setPosts(await res.json());
     setLoading(false);
   }, []);
@@ -181,7 +182,7 @@ export function BlogAdminPage() {
   useEffect(() => { load(); }, [load]);
 
   async function togglePublished(post: BlogPost) {
-    const res = await fetch(`/api/admin/blog/${post.id}`, {
+    const res = await authedFetch(`/api/admin/blog/${post.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ published: !post.published }),
@@ -196,7 +197,7 @@ export function BlogAdminPage() {
 
   async function handleDelete(post: BlogPost) {
     if (!confirm(`Delete "${post.title}"? This can't be undone.`)) return;
-    const res = await fetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
+    const res = await authedFetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
     if (res.ok) {
       toast.success('Post deleted');
       load();
