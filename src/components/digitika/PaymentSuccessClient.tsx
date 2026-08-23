@@ -7,10 +7,11 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle2, AlertCircle, CreditCard, Calendar, BookOpen,
   ArrowRight, MessageCircle, GraduationCap, Clock, ChevronRight,
-  Sparkles, Wallet, BadgeCheck, Bookmark, Share2, Copy, Check,
+  Sparkles, Wallet, BadgeCheck, Bookmark, Share2, Copy, Check, LogIn,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { SITE, TREASURY } from '@/lib/constants';
+import { useAuth } from '@/hooks/use-auth';
 
 interface InstallmentRow {
   installmentNo: number;
@@ -26,6 +27,7 @@ interface EnrollmentSummary {
   courseName: string;
   category: string;
   fullName: string;
+  email: string;
   paymentPlan: string;
   firstPaymentAmount: number;
   totalAmount: number;
@@ -45,6 +47,7 @@ function ordinal(n: number) {
 
 export function PaymentSuccessClient() {
   const searchParams = useSearchParams();
+  const { login } = useAuth();
   const [summary, setSummary] = useState<EnrollmentSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -252,6 +255,25 @@ export function PaymentSuccessClient() {
             <BadgeCheck className="h-4 w-4 text-emerald-300" />
             <span className="text-emerald-200 text-xs">Student ID:</span>
             <span className="font-mono font-bold tracking-wider text-white text-sm">{summary.studentId}</span>
+          </motion.div>
+
+          {/* Portal access CTA — the actual answer to "how do I get in?" */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.34 }}
+            className="mt-6"
+          >
+            <button
+              onClick={() => login('/student', 'student', summary.email)}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white text-emerald-700 font-bold text-sm shadow-lg shadow-black/10 hover:opacity-90 transition-opacity"
+            >
+              <LogIn className="h-4 w-4" />
+              Log In to Your Student Portal
+            </button>
+            <p className="mt-2.5 text-xs text-emerald-100/80">
+              First time? Use <span className="font-semibold text-white">{summary.email}</span> to sign in or create your account.
+            </p>
           </motion.div>
         </div>
       </div>
@@ -518,9 +540,16 @@ export function PaymentSuccessClient() {
           transition={{ delay: 0.38 }}
           className="flex flex-col sm:flex-row gap-3"
         >
+          <button
+            onClick={() => login('/student', 'student', summary.email)}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
+          >
+            <LogIn className="h-4 w-4" />
+            Access Student Portal
+          </button>
           <Link
             href="/digitika"
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-border bg-card text-foreground font-bold text-sm hover:bg-muted transition-colors"
           >
             Explore More Courses <ChevronRight className="h-4 w-4" />
           </Link>

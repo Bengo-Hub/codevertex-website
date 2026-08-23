@@ -54,7 +54,8 @@ interface AuthState {
 
   login: (
     returnTo?: string,
-    localRole?: 'admin' | 'student'
+    localRole?: 'admin' | 'student',
+    loginHint?: string
   ) => Promise<void>;
 
   handleCallback: (code: string, callbackUrl: string) => Promise<void>;
@@ -168,7 +169,8 @@ export const useAuthStore = create<AuthState>()(
        */
       login: async (
         returnTo?: string,
-        localRole?: 'admin' | 'student'
+        localRole?: 'admin' | 'student',
+        loginHint?: string
       ) => {
         try {
           if (isLocalDevelopment()) {
@@ -275,7 +277,8 @@ export const useAuthStore = create<AuthState>()(
             buildAuthorizeUrl(
               challenge,
               state,
-              callbackUrl
+              callbackUrl,
+              loginHint
             );
         } catch (error) {
           console.error('Login failed:', error);
