@@ -9,6 +9,7 @@ const createSchema = z.object({
   type: z.enum(['VIDEO', 'TEXT', 'QUIZ', 'RESOURCE']).default('TEXT'),
   content: z.string().optional(),
   videoUrl: z.string().optional(),
+  videoUrlSd: z.string().optional(),
   durationSec: z.number().int().optional(),
   resourceUrl: z.string().optional(),
   resourceName: z.string().optional(),

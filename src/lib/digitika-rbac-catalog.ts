@@ -30,6 +30,10 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
 <<<<<<< HEAD
 =======
   { key: 'content', label: 'Course Content' },
+  // Grading (manual progress overrides + quiz score visibility), course Q&A moderation,
+  // and course announcements — deliberately kept as one more admin-dashboard module
+  // rather than a separate instructor portal/role. See ClassroomPage.tsx.
+  { key: 'classroom', label: 'Classroom' },
   { key: 'certificates', label: 'Certificates' },
 >>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
   { key: 'blog', label: 'Blog' },
@@ -84,6 +88,8 @@ export interface DigitikaRoleDef {
 const INSTRUCTOR_PERMISSION_CODES = [
   digitikaPerm('content', 'view'),
   digitikaPerm('content', 'manage'),
+  digitikaPerm('classroom', 'view'),
+  digitikaPerm('classroom', 'manage'),
   digitikaPerm('certificates', 'view'),
   digitikaPerm('courses', 'view'),
   digitikaPerm('cohorts', 'view'),

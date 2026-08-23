@@ -46,6 +46,7 @@ export async function GET(
         lastPositionSec: l.progress[0]?.lastPositionSec ?? null,
         content: locked ? null : l.content,
         videoUrl: locked ? null : l.videoUrl,
+        videoUrlSd: locked ? null : l.videoUrlSd,
         resourceUrl: locked ? null : l.resourceUrl,
         resourceName: l.resourceName,
         quiz: locked || !l.quiz ? null : {

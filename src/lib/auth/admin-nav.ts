@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, BookOpen, GraduationCap, MessageSquare, Mail,
   Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound, Newspaper,
+  School,
 } from 'lucide-react';
 import { DIGITIKA_MODULES, digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
@@ -30,6 +31,7 @@ const MODULE_UI: Record<
 =======
 
   content: { href: '/admin/content', icon: BookOpen },
+  classroom: { href: '/admin/classroom', icon: School },
   certificates: { href: '/admin/certificates', icon: GraduationCap },
   blog: { href: '/admin/blog', icon: Newspaper },
 
