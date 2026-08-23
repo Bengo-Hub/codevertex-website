@@ -57,9 +57,71 @@ model StudentUser {
   progress    LessonProgress[]
   quizAttempts QuizAttempt[]
   certificates Certificate[]
+  threads      CourseThread[]
+  replies      CourseReply[]
 
   @@index([email])
   @@map("student_users")
+}
+
+// ---------------------------------------------------------------------------
+// Course announcements — admin-posted updates for a course's enrolled students.
+// Managed from the admin dashboard (Classroom page), not a separate instructor
+// portal — see docs note in ClassroomPage.tsx.
+// ---------------------------------------------------------------------------
+model CourseAnnouncement {
+  id        String   @id @default(cuid())
+  courseId  String   @map("course_id")
+  title     String
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([createdAt(sort: Desc)])
+  @@map("course_announcements")
+}
+
+// ---------------------------------------------------------------------------
+// Course Q&A / discussion — one thread per student question, replies from
+// either the asking student, other students, or an admin (isAdminReply).
+// Admins moderate/answer from the admin dashboard Classroom page.
+// ---------------------------------------------------------------------------
+model CourseThread {
+  id            String   @id @default(cuid())
+  courseId      String   @map("course_id")
+  studentUserId String   @map("student_user_id")
+  title         String
+  body          String   @db.Text
+  pinned        Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  course      Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentUser StudentUser   @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+  replies     CourseReply[]
+
+  @@index([courseId])
+  @@index([studentUserId])
+  @@index([pinned])
+  @@map("course_threads")
+}
+
+model CourseReply {
+  id            String   @id @default(cuid())
+  threadId      String   @map("thread_id")
+  studentUserId String?  @map("student_user_id")  // null when isAdminReply is true
+  isAdminReply  Boolean  @default(false) @map("is_admin_reply")
+  adminName     String?  @map("admin_name")        // snapshot of the replying admin's display name
+  body          String   @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  thread      CourseThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  studentUser StudentUser? @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@map("course_replies")
 }
 
 // ---------------------------------------------------------------------------
@@ -206,8 +268,10 @@ model Course {
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   @@index([categoryId])
-  modules      CourseModule[]
-  certificates Certificate[]
+  modules       CourseModule[]
+  certificates  Certificate[]
+  announcements CourseAnnouncement[]
+  threads       CourseThread[]
 
   @@index([featured])
   @@index([isActive])
@@ -258,6 +322,10 @@ model Lesson {
   // Downloadable resource (RESOURCE type) — path under /public or an external file URL.
   resourceUrl  String?    @map("resource_url")
   resourceName String?    @map("resource_name")
+  // Optional lower-bitrate/smaller alternate for VIDEO lessons. When set, the student-facing
+  // player offers a "Data saver" toggle that plays this instead of `videoUrl` and never
+  // preloads bytes until the student explicitly presses play — see LearnClient.tsx.
+  videoUrlSd   String?    @map("video_url_sd")
   // Free-preview lessons are visible to anyone, even without a paid enrollment.
   isPreview    Boolean    @default(false) @map("is_preview")
   sortOrder    Int        @default(0) @map("sort_order")

@@ -34,6 +34,7 @@ interface Lesson {
   type: LessonType;
   content: string | null;
   videoUrl: string | null;
+  videoUrlSd: string | null;
   durationSec: number | null;
   resourceUrl: string | null;
   resourceName: string | null;
@@ -256,6 +257,7 @@ function LessonForm({
   const [type, setType] = useState<LessonType>(lesson?.type ?? 'TEXT');
   const [content, setContent] = useState(lesson?.content ?? '');
   const [videoUrl, setVideoUrl] = useState(lesson?.videoUrl ?? '');
+  const [videoUrlSd, setVideoUrlSd] = useState(lesson?.videoUrlSd ?? '');
   const [durationSec, setDurationSec] = useState(lesson?.durationSec?.toString() ?? '');
   const [resourceUrl, setResourceUrl] = useState(lesson?.resourceUrl ?? '');
   const [resourceName, setResourceName] = useState(lesson?.resourceName ?? '');
@@ -274,6 +276,7 @@ function LessonForm({
       type,
       content: type === 'TEXT' ? content : undefined,
       videoUrl: type === 'VIDEO' ? videoUrl : undefined,
+      videoUrlSd: type === 'VIDEO' ? videoUrlSd : undefined,
       durationSec: type === 'VIDEO' && durationSec ? Number(durationSec) : undefined,
       resourceUrl: type === 'RESOURCE' ? resourceUrl : undefined,
       resourceName: type === 'RESOURCE' ? resourceName : undefined,
@@ -340,6 +343,12 @@ function LessonForm({
             onChange={(e) => setDurationSec(e.target.value)}
             placeholder="Duration (sec)"
             className={inputCls}
+          />
+          <input
+            value={videoUrlSd}
+            onChange={(e) => setVideoUrlSd(e.target.value)}
+            placeholder="Low-bandwidth video URL (optional — smaller file, used in Data Saver mode)"
+            className={`${inputCls} col-span-3`}
           />
         </div>
       )}
