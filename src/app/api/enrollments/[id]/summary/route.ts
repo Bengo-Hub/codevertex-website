@@ -32,6 +32,7 @@ export async function GET(
       courseName: enrollment.courseName,
       category: enrollment.category,
       fullName: enrollment.fullName,
+      email: enrollment.email,
       paymentPlan: enrollment.paymentPlan ?? 'upfront',
       firstPaymentAmount: enrollment.amount,
       totalAmount,

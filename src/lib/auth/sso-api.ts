@@ -10,7 +10,7 @@ export interface TokenExchangeParams {
   redirectUri: string;
 }
 
-export function buildAuthorizeUrl(codeChallenge: string, state: string, redirectUri: string): string {
+export function buildAuthorizeUrl(codeChallenge: string, state: string, redirectUri: string, loginHint?: string): string {
   const url = new URL('/api/v1/authorize', SSO_API_URL);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', SSO_CLIENT_ID);
@@ -19,6 +19,10 @@ export function buildAuthorizeUrl(codeChallenge: string, state: string, redirect
   url.searchParams.set('state', state);
   url.searchParams.set('code_challenge', codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
+  // Prefills the email field on the SSO login/register page — reduces the chance a
+  // student signs up with a different email than the one their enrollment is under,
+  // which would otherwise leave /student unable to find their StudentUser record.
+  if (loginHint) url.searchParams.set('login_hint', loginHint);
   return url.toString();
 }
 
