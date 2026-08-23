@@ -1,11 +1,15 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Megaphone, MessagesSquare, GraduationCap, Plus, Trash2, Pin, PinOff,
-  Send, CheckCircle2, Loader2,
+  Send, CheckCircle2, Loader2, Users,
 } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // This page intentionally lives in the general admin dashboard rather than a
@@ -51,7 +55,19 @@ interface RosterRow {
 type Tab = 'announcements' | 'qa' | 'grades';
 
 const inputCls =
-  'w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50';
+  'w-full h-10 text-sm rounded-lg border border-input bg-background px-3.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background';
+
+function timeAgo(iso: string) {
+  const d = new Date(iso);
+  const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
 
 export function ClassroomPage() {
   const [courses, setCourses] = useState<CourseOption[]>([]);
@@ -69,46 +85,56 @@ export function ClassroomPage() {
     })();
   }, []);
 
+  const tabs = [
+    { key: 'announcements' as const, label: 'Announcements', icon: Megaphone },
+    { key: 'qa' as const, label: 'Q&A', icon: MessagesSquare },
+    { key: 'grades' as const, label: 'Grades', icon: GraduationCap },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto">
       <AdminPageHeader
         title="Classroom"
         description="Announcements, student Q&A, and progress/grades — per course."
-        actions={
-          <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className={`${inputCls} w-64`}>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        }
       />
 
-      <div className="flex gap-1 mb-5 border-b border-border">
-        {([
-          { key: 'announcements', label: 'Announcements', icon: Megaphone },
-          { key: 'qa', label: 'Q&A', icon: MessagesSquare },
-          { key: 'grades', label: 'Grades', icon: GraduationCap },
-        ] as const).map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-              tab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Icon className="h-4 w-4" /> {label}
-          </button>
-        ))}
+      <div className="mt-5 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="inline-flex rounded-xl border border-border bg-card p-1 gap-1 w-fit">
+          {tabs.map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors',
+                tab === key ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Icon className="h-4 w-4" /> {label}
+            </button>
+          ))}
+        </div>
+
+        <select
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+          className="h-10 w-full sm:w-64 rounded-lg border border-input bg-card px-3.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
       </div>
 
       {!courseId ? (
         <p className="text-sm text-muted-foreground">Select a course to continue.</p>
-      ) : tab === 'announcements' ? (
-        <AnnouncementsTab courseId={courseId} />
-      ) : tab === 'qa' ? (
-        <QaTab courseId={courseId} />
       ) : (
-        <GradesTab courseId={courseId} />
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+            {tab === 'announcements' && <AnnouncementsTab courseId={courseId} />}
+            {tab === 'qa' && <QaTab courseId={courseId} />}
+            {tab === 'grades' && <GradesTab courseId={courseId} />}
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );
@@ -164,39 +190,57 @@ function AnnouncementsTab({ courseId }: { courseId: string }) {
   return (
     <div className="space-y-4">
       {!showForm ? (
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90"
-        >
+        <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4" /> New announcement
-        </button>
+        </Button>
       ) : (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2.5">
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3"
+        >
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className={inputCls} />
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Message to students…" rows={3} className={inputCls} />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Message to students…"
+            rows={3}
+            className="w-full text-sm rounded-lg border border-input bg-background px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          />
           <div className="flex gap-2">
-            <button onClick={post} disabled={saving} className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 disabled:opacity-50">
-              {saving ? 'Posting…' : 'Post'}
-            </button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm rounded-lg border border-border">Cancel</button>
+            <Button onClick={post} disabled={saving} size="sm">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Post'}
+            </Button>
+            <Button onClick={() => setShowForm(false)} size="sm" variant="ghost">Cancel</Button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No announcements yet for this course.</p>
+        <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+          <Megaphone className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+          <p className="text-sm text-muted-foreground">No announcements yet for this course.</p>
+        </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           {items.map((a) => (
-            <div key={a.id} className="rounded-lg border border-border bg-card p-4 flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">{a.title}</p>
-                <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{a.body}</p>
-                <p className="text-xs text-muted-foreground mt-2">{new Date(a.createdAt).toLocaleString('en-GB')}</p>
+            <div key={a.id} className="rounded-xl border border-border bg-card p-4 flex items-start justify-between gap-4">
+              <div className="min-w-0 flex gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Megaphone className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground">{a.title}</p>
+                  <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">{a.body}</p>
+                  <p className="text-[11px] text-muted-foreground mt-2 font-medium">{timeAgo(a.createdAt)}</p>
+                </div>
               </div>
-              <button onClick={() => remove(a.id)} className="shrink-0 p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+              <button
+                onClick={() => remove(a.id)}
+                className="shrink-0 p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -252,38 +296,47 @@ function QaTab({ courseId }: { courseId: string }) {
   }
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (threads.length === 0) return <p className="text-sm text-muted-foreground">No questions posted for this course yet.</p>;
+  if (threads.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+        <MessagesSquare className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">No questions posted for this course yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
       {threads.map((t) => (
-        <div key={t.id} className="rounded-lg border border-border bg-card p-4">
+        <div key={t.id} className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-foreground">{t.title}</p>
-                {t.unanswered && (
-                  <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                    Unanswered
-                  </span>
-                )}
+                <p className="text-sm font-bold text-foreground">{t.title}</p>
+                {t.unanswered && <Badge variant="warning">Unanswered</Badge>}
               </div>
-              <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{t.body}</p>
-              <p className="text-xs text-muted-foreground mt-2">{t.authorName} · {new Date(t.createdAt).toLocaleString('en-GB')}</p>
+              <p className="text-sm text-muted-foreground mt-1.5 whitespace-pre-wrap leading-relaxed">{t.body}</p>
+              <p className="text-[11px] text-muted-foreground mt-2 font-medium">{t.authorName} · {timeAgo(t.createdAt)}</p>
             </div>
-            <button onClick={() => togglePin(t.id, t.pinned)} className="shrink-0 p-1.5 rounded-md hover:bg-muted text-muted-foreground" title={t.pinned ? 'Unpin' : 'Pin'}>
+            <button
+              onClick={() => togglePin(t.id, t.pinned)}
+              className="shrink-0 p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+              title={t.pinned ? 'Unpin' : 'Pin'}
+            >
               {t.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
             </button>
           </div>
 
           {t.replies.length > 0 && (
-            <div className="mt-3 pl-4 border-l-2 border-border space-y-2">
+            <div className="mt-3 pl-3.5 border-l-2 border-border space-y-2.5">
               {t.replies.map((r) => (
                 <div key={r.id} className="text-sm">
-                  <span className={`font-medium ${r.isAdminReply ? 'text-primary' : 'text-foreground'}`}>{r.authorName}</span>
-                  {r.isAdminReply && <CheckCircle2 className="inline h-3.5 w-3.5 ml-1 text-primary" />}
-                  <span className="text-muted-foreground"> · {new Date(r.createdAt).toLocaleString('en-GB')}</span>
-                  <p className="text-foreground/90 mt-0.5 whitespace-pre-wrap">{r.body}</p>
+                  <span className="flex items-center gap-1.5">
+                    <span className={cn('font-semibold', r.isAdminReply ? 'text-primary' : 'text-foreground')}>{r.authorName}</span>
+                    {r.isAdminReply && <CheckCircle2 className="h-3.5 w-3.5 text-primary" />}
+                    <span className="text-[11px] text-muted-foreground font-medium">· {timeAgo(r.createdAt)}</span>
+                  </span>
+                  <p className="text-foreground/90 mt-0.5 whitespace-pre-wrap leading-relaxed">{r.body}</p>
                 </div>
               ))}
             </div>
@@ -297,13 +350,15 @@ function QaTab({ courseId }: { courseId: string }) {
               className={inputCls}
               onKeyDown={(e) => { if (e.key === 'Enter') reply(t.id); }}
             />
-            <button
+            <Button
+              size="icon"
+              variant="secondary"
               onClick={() => reply(t.id)}
               disabled={busyId === t.id}
-              className="shrink-0 px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              className="shrink-0 h-10 w-10"
             >
               {busyId === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
         </div>
       ))}
@@ -327,61 +382,74 @@ function GradesTab({ courseId }: { courseId: string }) {
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (roster.length === 0) return <p className="text-sm text-muted-foreground">No paid-enrolled students for this course yet.</p>;
+  if (roster.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+        <Users className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground">No paid-enrolled students for this course yet.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/40">
-          <tr>
-            <th className="text-left font-semibold px-4 py-2.5">Student</th>
-            <th className="text-left font-semibold px-4 py-2.5">Progress</th>
-            <th className="text-left font-semibold px-4 py-2.5">Quiz scores</th>
-          </tr>
-        </thead>
-        <tbody>
-          {roster.map((r) => (
-            <tr key={r.studentId} className="border-t border-border">
-              <td className="px-4 py-3">
-                <p className="font-medium text-foreground">{r.fullName}</p>
-                <p className="text-xs text-muted-foreground">{r.email} · {r.studentId}</p>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center gap-2 min-w-32">
-                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${r.progressPct}%` }} />
-                  </div>
-                  <span className="text-xs text-muted-foreground shrink-0">{r.completedLessons}/{r.totalLessons}</span>
-                </div>
-              </td>
-              <td className="px-4 py-3">
-                {r.quizScores.length === 0 ? (
-                  <span className="text-xs text-muted-foreground">No quizzes</span>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {r.quizScores.map((q, i) => (
-                      <span
-                        key={i}
-                        title={q.lessonTitle}
-                        className={`text-[11px] font-semibold px-1.5 py-0.5 rounded ${
-                          q.scorePct === null
-                            ? 'bg-muted text-muted-foreground'
-                            : q.passed
-                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-destructive/10 text-destructive'
-                        }`}
-                      >
-                        {q.scorePct === null ? '—' : `${q.scorePct}%`}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </td>
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 border-b border-border">
+            <tr>
+              <th className="text-left font-bold text-xs uppercase tracking-wider text-muted-foreground px-4 py-3">Student</th>
+              <th className="text-left font-bold text-xs uppercase tracking-wider text-muted-foreground px-4 py-3">Progress</th>
+              <th className="text-left font-bold text-xs uppercase tracking-wider text-muted-foreground px-4 py-3">Quiz scores</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <p className="text-xs text-muted-foreground px-4 py-2.5 bg-muted/20">
+          </thead>
+          <tbody className="divide-y divide-border">
+            {roster.map((r) => (
+              <tr key={r.studentId} className="hover:bg-muted/20 transition-colors">
+                <td className="px-4 py-3.5">
+                  <p className="font-semibold text-foreground">{r.fullName}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{r.email} · {r.studentId}</p>
+                </td>
+                <td className="px-4 py-3.5">
+                  <div className="flex items-center gap-2.5 min-w-36">
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={cn('h-full rounded-full', r.progressPct === 100 ? 'bg-emerald-500' : 'bg-primary')}
+                        style={{ width: `${r.progressPct}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-muted-foreground shrink-0">{r.completedLessons}/{r.totalLessons}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3.5">
+                  {r.quizScores.length === 0 ? (
+                    <span className="text-xs text-muted-foreground">No quizzes</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {r.quizScores.map((q, i) => (
+                        <span
+                          key={i}
+                          title={q.lessonTitle}
+                          className={cn(
+                            'text-[11px] font-bold px-2 py-1 rounded-md',
+                            q.scorePct === null
+                              ? 'bg-muted text-muted-foreground'
+                              : q.passed
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-destructive/10 text-destructive'
+                          )}
+                        >
+                          {q.scorePct === null ? '—' : `${q.scorePct}%`}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted-foreground px-4 py-3 bg-muted/20 border-t border-border">
         To manually credit or reopen a specific lesson for a student, use the override endpoint from the student&apos;s record, or ask engineering to wire a per-lesson control here if this becomes a frequent need.
       </p>
     </div>
