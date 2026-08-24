@@ -4,6 +4,8 @@
 // Stream: treasury  Subject: treasury.payment.succeeded  Consumer: codevertex-website-treasury
 
 import { prisma } from './db';
+import { publishInstallmentPaid } from './events';
+import { buildPortalLink } from './notifications';
 
 interface TreasuryEventEnvelope {
   id: string;
@@ -189,14 +191,48 @@ async function updateEnrollmentPayment(
     }
   }
 
-  await prisma.enrollment.update({
+  const updatedEnrollment = await prisma.enrollment.update({
     where: { id: enrollmentId },
     data: {
       paymentStatus: 'succeeded',
       paymentRef: paymentRef ?? null,
       notifiedAt: new Date(),
     },
+    include: {
+      installments: { orderBy: { installmentNo: 'asc' } },
+      studentUser: true,
+    },
   });
+
+  // Publish the receipt domain event (consumed by notifications-api's digitika_consumer,
+  // subject digitika.payment.succeeded) so the student gets a payment confirmation email.
+  if (nextInst && updatedEnrollment.studentUser) {
+    const remaining = updatedEnrollment.installments.filter((i) => i.status !== 'paid');
+    const nextUnpaid = remaining[0];
+    const totalAmount = updatedEnrollment.totalAmount ?? updatedEnrollment.amount;
+    const totalPaid = updatedEnrollment.installments
+      .filter((i) => i.status === 'paid')
+      .reduce((s, i) => s + i.amount, 0);
+    const studentId = updatedEnrollment.studentUser.id;
+
+    publishInstallmentPaid({
+      studentName: updatedEnrollment.fullName,
+      studentEmail: updatedEnrollment.email,
+      courseName: updatedEnrollment.courseName,
+      installmentNo: nextInst.installmentNo,
+      totalInstallments: updatedEnrollment.installments.length,
+      amountPaid: paidAmount > 0 ? paidAmount : nextInst.amount,
+      currency: updatedEnrollment.currency,
+      paymentRef: paymentRef ?? undefined,
+      studentId,
+      enrollmentId: enrollmentId.toString(),
+      remainingBalance: Math.max(0, totalAmount - totalPaid),
+      nextInstallmentDate: nextUnpaid ? nextUnpaid.dueDate.toISOString().split('T')[0] : undefined,
+      nextInstallmentAmount: nextUnpaid ? nextUnpaid.amount : undefined,
+      portalLink: buildPortalLink(enrollmentId, studentId),
+      tenantId: 'codevertex',
+    }).catch((err) => console.error('[treasury-subscriber] publishInstallmentPaid failed:', err));
+  }
 
   console.log(`[treasury-subscriber] enrollment ${enrollmentId} payment recorded (ref=${paymentRef})`);
 }

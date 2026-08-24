@@ -14,7 +14,7 @@ Enrollment Modal (Step 2)
 → POST /api/enrollments (saves pending record to DB)
 → window.open(TREASURY_PAY_URL + queryParams, '_blank')
 → User pays via M-Pesa or Paystack on Treasury UI
-→ Treasury webhook → updates enrollment payment_status
+→ treasury.payment.succeeded (NATS) → treasury-subscriber.ts updates enrollment payment_status
 ```
 
 ### URL Construction
@@ -42,17 +42,26 @@ NEXT_PUBLIC_TREASURY_TENANT=codevertex
 # TREASURY.payUrl = 'https://books.codevertexafrica.com/pay'
 ```
 
-### Webhook Handler (Future — Sprint 8)
+### Payment Confirmation (NATS, not HTTP webhook)
 
-Currently payment status is NOT automatically updated from Treasury webhooks. The website should add:
+treasury-api has no outbound HTTP webhook dispatcher — it only publishes events over NATS
+JetStream via the shared-events transactional outbox. Payment confirmation is consumed here by
+`src/lib/treasury-subscriber.ts`, a durable JetStream consumer (`codevertex-website-treasury`)
+filtered on subject `treasury.payment.succeeded`, started from `instrumentation.ts` when
+`EVENTS_NATS_URL` is set.
 
-```typescript
-// POST /api/webhooks/treasury
-// Validate X-Treasury-Signature header
-// Update enrollments SET payment_status = 'succeeded' WHERE payment_ref = ?
-```
+On a matching event (`reference_type: "digitika_enrollment"`), the subscriber marks the next
+installment paid, updates the enrollment, and publishes `digitika.payment.succeeded` (consumed
+by notifications-api's `digitika_consumer` to send the payment receipt email).
 
-Reference: Treasury webhook signature verification pattern from `ordering-service/ordering-backend/internal/platform/treasury/webhook.go`
+**Idempotency note**: the event payload's `provider_reference` field is not guaranteed present
+(omitted for cash/manual/till settlements) or unique — do not key dedup logic on it. The event
+envelope's `id` is the reliable dedup key; see
+[docs.codevertexafrica.com/platform-standards/idempotency-and-outbox](https://docs.codevertexafrica.com/platform-standards/idempotency-and-outbox).
+
+There is no `/api/webhooks/treasury` HTTP route — an earlier version of this integration assumed
+one, but treasury never called it, and the working payment-confirmation path is the NATS
+subscriber described above.
 
 ---
 
@@ -222,24 +231,13 @@ Registry: `https://npm.pkg.github.com` (requires `NPM_TOKEN` / `GH_PAT`)
 
 ---
 
-## 6. Email Notifications (Planned Sprint 8)
+## 6. Email Notifications
 
-On successful enrollment, send confirmation email via notifications-api:
+Implemented via `src/lib/events.ts` (`publishInstallmentPaid` / `publishEnrollmentConfirmed`),
+which publishes platform-standard envelope events to NATS subject `digitika.{event_type}`,
+consumed by notifications-api's `digitika_consumer` for email dispatch. When `EVENTS_NATS_URL`
+is unset, routes fall back to a direct S2S call via `src/lib/notifications.ts` to
+`POST {NOTIFICATIONS_API_URL}/api/v1/notifications/messages` with `X-API-Key: INTERNAL_SERVICE_KEY`.
 
-```typescript
-// S2S call to notifications-api
-await fetch('https://notificationsapi.codevertexafrica.com/api/v1/s2s/email', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': process.env.INTERNAL_SERVICE_KEY,
-  },
-  body: JSON.stringify({
-    to: enrollment.email,
-    template: 'digitika_enrollment_confirmed',
-    data: { courseName, studentName, amount },
-  }),
-});
-```
-
-Trigger: Treasury webhook `payment_status: succeeded`
+Trigger for the payment-receipt email: `treasury.payment.succeeded` (NATS) →
+`treasury-subscriber.ts` → `publishInstallmentPaid`.
