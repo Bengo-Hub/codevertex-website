@@ -153,7 +153,7 @@ function AnnouncementsTab({ courseId }: { courseId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/admin/courses/${courseId}/announcements`);
+    const res = await authedFetch(`/api/admin/courses/${courseId}/announcements`);
     if (res.ok) setItems((await res.json()).announcements);
     setLoading(false);
   }, [courseId]);
@@ -163,7 +163,7 @@ function AnnouncementsTab({ courseId }: { courseId: string }) {
   async function post() {
     if (!title.trim() || !body.trim()) return;
     setSaving(true);
-    const res = await fetch(`/api/admin/courses/${courseId}/announcements`, {
+    const res = await authedFetch(`/api/admin/courses/${courseId}/announcements`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, body }),
@@ -181,7 +181,7 @@ function AnnouncementsTab({ courseId }: { courseId: string }) {
   }
 
   async function remove(id: string) {
-    const res = await fetch(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+    const res = await authedFetch(`/api/admin/announcements/${id}`, { method: 'DELETE' });
     if (res.ok) {
       toast.success('Announcement removed');
       load();
@@ -262,7 +262,7 @@ function QaTab({ courseId }: { courseId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/admin/courses/${courseId}/threads`);
+    const res = await authedFetch(`/api/admin/courses/${courseId}/threads`);
     if (res.ok) setThreads((await res.json()).threads);
     setLoading(false);
   }, [courseId]);
@@ -270,7 +270,7 @@ function QaTab({ courseId }: { courseId: string }) {
   useEffect(() => { load(); }, [load]);
 
   async function togglePin(id: string, pinned: boolean) {
-    await fetch(`/api/admin/threads/${id}`, {
+    await authedFetch(`/api/admin/threads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pinned: !pinned }),
@@ -282,7 +282,7 @@ function QaTab({ courseId }: { courseId: string }) {
     const body = replyDrafts[id]?.trim();
     if (!body) return;
     setBusyId(id);
-    const res = await fetch(`/api/admin/threads/${id}/replies`, {
+    const res = await authedFetch(`/api/admin/threads/${id}/replies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ body }),
@@ -375,7 +375,7 @@ function GradesTab({ courseId }: { courseId: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/admin/courses/${courseId}/grades`);
+    const res = await authedFetch(`/api/admin/courses/${courseId}/grades`);
     if (res.ok) setRoster((await res.json()).roster);
     setLoading(false);
   }, [courseId]);

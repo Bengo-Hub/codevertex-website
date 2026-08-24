@@ -1,6 +1,12 @@
 // Codevertex Website — Prisma Schema
 // Prisma 7 — connection URL is in prisma.config.ts, not here
-
+// Schema sync: this project uses `prisma db push` (see scripts/entrypoint.sh),
+// not `prisma migrate`. There is no prisma/migrations/ folder — schema changes
+// are applied directly at container startup, retried until the DB is reachable.
+// Do NOT run `prisma migrate dev` against this schema expecting normal
+// migration-history behavior; it has none. If this project ever moves to
+// migrate-based deploys, `prisma migrate dev --create-only` will need to be
+// run once to establish a fresh baseline migration.
 generator client {
   provider = "prisma-client-js"
 }
