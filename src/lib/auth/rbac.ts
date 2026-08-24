@@ -226,13 +226,13 @@ async function resolveCookieSession(
         ) ?? [];
     }
 
-    const isBypass =
-      role === 'platform_admin' ||
-      role === 'superadmin' ||
-      role === 'superuser' ||
-      role === 'global_admin' ||
-      role === 'admin' &&
-        siteUser.tenantSlug === PLATFORM_TENANT_SLUG;
+      const isBypass =
+      (role === 'platform_admin' ||
+        role === 'superadmin' ||
+        role === 'superuser' ||
+        role === 'global_admin' ||
+        role === 'admin') &&
+            siteUser.tenantSlug === PLATFORM_TENANT_SLUG;
 
     return {
       userId,

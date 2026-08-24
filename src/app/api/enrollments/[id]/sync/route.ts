@@ -7,31 +7,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-
+import { resolveDigitikaSession } from '@/lib/auth/rbac';
 const bodySchema = z.object({
   paymentRef: z.string().optional(),
   amount: z.number().optional(),
   currency: z.string().optional(),
 });
-
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const session = await resolveDigitikaSession(req);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { id } = await params;
     const enrollmentId = BigInt(id);
-
     const body = await req.json().catch(() => ({}));
     const { paymentRef, amount } = bodySchema.parse(body);
-
     const enrollment = await prisma.enrollment.findUnique({
       where: { id: enrollmentId },
       include: { installments: { orderBy: { installmentNo: 'asc' } } },
     });
-
     if (!enrollment) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    const isOwner = enrollment.email.toLowerCase() === session.email.toLowerCase();
+    if (!isOwner && !session.isBypass) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Idempotency: already succeeded
