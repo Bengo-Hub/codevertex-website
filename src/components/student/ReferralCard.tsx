@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Gift, Copy, Check } from 'lucide-react';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface ReferralData {
   code: string;
@@ -19,7 +20,7 @@ export function ReferralCard({ studentId }: { studentId: string }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/students/${encodeURIComponent(studentId)}/referral-code`);
+        const res = await authedFetch(`/api/students/${encodeURIComponent(studentId)}/referral-code`);
         if (res.ok && !cancelled) setData(await res.json());
       } finally {
         if (!cancelled) setLoading(false);
