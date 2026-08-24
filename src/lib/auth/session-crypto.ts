@@ -22,11 +22,15 @@ function toB64Url(bytes: Uint8Array): string {
   return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function fromB64Url(b64url: string): Uint8Array {
+function fromB64Url(b64url: string): Uint8Array<ArrayBuffer> {
   const pad = (4 - (b64url.length % 4)) % 4;
   const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat(pad);
   const str = atob(b64);
-  return Uint8Array.from(str, (c) => c.charCodeAt(0));
+  const bytes = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    bytes[i] = str.charCodeAt(i);
+  }
+  return bytes;
 }
 
 // Local dev needs to work without any secret being configured (the whole
