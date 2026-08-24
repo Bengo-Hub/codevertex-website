@@ -6,6 +6,7 @@ import { StudentSidebar } from './StudentSidebar';
 import { StudentTopBar } from './StudentTopBar';
 import { useStudentIdentity } from './student-identity-context';
 import { StudentSectionProvider } from './student-section-context';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 export function StudentPortalShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -14,7 +15,7 @@ export function StudentPortalShell({ children }: { children: React.ReactNode }) 
 
   async function logout() {
     try {
-      await fetch('/api/auth/session', { method: 'DELETE' });
+      await authedFetch('/api/auth/session', { method: 'DELETE' });
     } finally {
       router.push('/');
     }

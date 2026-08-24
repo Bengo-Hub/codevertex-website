@@ -7,6 +7,8 @@ import {
   Layers, BookOpen, ListChecks,
 } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
+import { authedFetch } from '@/lib/auth/authed-fetch';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 
 // ── Types ────────────────────────────────────────────────────────────────
@@ -141,7 +143,7 @@ function QuizEditor({
       return;
     }
     setSaving(true);
-    const res = await fetch(`/api/admin/lessons/${lessonId}/quiz`, {
+    const res = await authedFetch(`/api/admin/lessons/${lessonId}/quiz`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, passingScore, questions }),
@@ -312,12 +314,12 @@ function LessonForm({
       sortOrder: Number(sortOrder) || 0,
     };
     const res = lesson
-      ? await fetch(`/api/admin/lessons/${lesson.id}`, {
+      ? await authedFetch(`/api/admin/lessons/${lesson.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-      : await fetch(`/api/admin/modules/${moduleId}/lessons`, {
+      : await authedFetch(`/api/admin/modules/${moduleId}/lessons`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -440,12 +442,12 @@ function LessonRow({
   const Icon = LESSON_TYPE_ICON[lesson.type];
   const style = LESSON_TYPE_STYLE[lesson.type];
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const duration = formatDuration(lesson.durationSec);
 
   async function handleDelete() {
-    if (!confirm(`Delete lesson "${lesson.title}"? This can't be undone.`)) return;
     setDeleting(true);
-    const res = await fetch(`/api/admin/lessons/${lesson.id}`, { method: 'DELETE' });
+    const res = await authedFetch(`/api/admin/lessons/${lesson.id}`, { method: 'DELETE' });
     if (res.ok) {
       toast.success('Lesson deleted');
       onDeleted();
@@ -453,6 +455,7 @@ function LessonRow({
       toast.error('Delete failed');
       setDeleting(false);
     }
+    setConfirmOpen(false);
   }
 
   return (
@@ -477,10 +480,18 @@ function LessonRow({
         <button onClick={onEdit} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
           <Pencil className="h-3 w-3" />
         </button>
-        <button onClick={handleDelete} disabled={deleting} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive">
+        <button onClick={() => setConfirmOpen(true)} disabled={deleting} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive">
           <Trash2 className="h-3 w-3" />
         </button>
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        title={`Delete lesson "${lesson.title}"?`}
+        description="This can't be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
@@ -510,7 +521,7 @@ function ModuleBlock({
       setEditingTitle(false);
       return;
     }
-    const res = await fetch(`/api/admin/modules/${mod.id}`, {
+    const res = await authedFetch(`/api/admin/modules/${mod.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title }),
@@ -524,15 +535,17 @@ function ModuleBlock({
     setEditingTitle(false);
   }
 
+   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   async function deleteModule() {
-    if (!confirm(`Delete module "${mod.title}" and all its lessons? This can't be undone.`)) return;
-    const res = await fetch(`/api/admin/modules/${mod.id}`, { method: 'DELETE' });
+    const res = await authedFetch(`/api/admin/modules/${mod.id}`, { method: 'DELETE' });
     if (res.ok) {
       toast.success('Module deleted');
       onReload();
     } else {
       toast.error('Delete failed');
     }
+    setConfirmDeleteOpen(false);
   }
 
   const videoCount = mod.lessons.filter((l) => l.type === 'VIDEO').length;
@@ -581,7 +594,7 @@ function ModuleBlock({
               )}
             </div>
             <span className="text-xs text-muted-foreground shrink-0">{mod.lessons.length} lesson{mod.lessons.length === 1 ? '' : 's'}</span>
-            <button onClick={deleteModule} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shrink-0">
+            <button onClick={() => setConfirmDeleteOpen(true)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shrink-0">
               <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -645,6 +658,14 @@ function ModuleBlock({
           onClose={() => setQuizLesson(null)}
         />
       )}
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title={`Delete module "${mod.title}"?`}
+        description="This deletes all its lessons too. This can't be undone."
+        confirmLabel="Delete"
+        onConfirm={deleteModule}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </div>
   );
 }
@@ -723,7 +744,7 @@ export function ContentPage() {
 
   useEffect(() => {
     (async () => {
-      const res = await fetch('/api/admin/courses?includeInactive=true');
+      const res = await authedFetch('/api/admin/courses?includeInactive=true');
       if (res.ok) {
         const data: CourseOption[] = await res.json();
         setCourses(data);
@@ -735,7 +756,7 @@ export function ContentPage() {
   const loadModules = useCallback(async () => {
     if (!selectedCourseId) return;
     setLoadingModules(true);
-    const res = await fetch(`/api/admin/courses/${selectedCourseId}/modules`);
+    const res = await authedFetch(`/api/admin/courses/${selectedCourseId}/modules`);
     if (res.ok) {
       const data: CourseModule[] = await res.json();
       setModules(data);
@@ -756,7 +777,7 @@ export function ContentPage() {
 
   async function addModule() {
     if (!newModuleTitle.trim()) return;
-    const res = await fetch(`/api/admin/courses/${selectedCourseId}/modules`, {
+    const res = await authedFetch(`/api/admin/courses/${selectedCourseId}/modules`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: newModuleTitle, sortOrder: modules.length }),

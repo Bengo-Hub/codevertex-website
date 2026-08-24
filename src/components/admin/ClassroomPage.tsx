@@ -7,6 +7,7 @@ import {
   Send, CheckCircle2, Loader2, Users,
 } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -76,7 +77,7 @@ export function ClassroomPage() {
 
   useEffect(() => {
     (async () => {
-      const res = await fetch('/api/admin/courses?includeInactive=true');
+      const res = await authedFetch('/api/admin/courses?includeInactive=true')
       if (res.ok) {
         const data: CourseOption[] = await res.json();
         setCourses(data);

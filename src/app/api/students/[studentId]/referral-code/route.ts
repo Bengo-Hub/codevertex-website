@@ -39,15 +39,16 @@ export async function GET(
 
   if (!rule) {
     const code = `REF-${id.replace('DGT-', '')}`;
-    rule = await prisma.discountRule.create({
+     rule = await prisma.discountRule.create({
       data: {
-        name: `Referral — ${student.fullName}`,
+        name: `Referral â€” ${student.fullName}`,
         code,
         description: `Referral code for ${student.fullName} (${id})`,
         discountPct: 10, // default; admins can adjust in the Discounts panel like any other code
         isReferral: true,
         referrerStudentId: id,
         active: true,
+        maxUses: 20, // default cap; admins can raise/remove it in the Discounts panel like any other code
       },
     });
   }

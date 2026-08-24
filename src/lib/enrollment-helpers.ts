@@ -39,13 +39,17 @@ export async function upsertStudentUser(input: {
   });
 }
 
-const ACTIVE_ENROLLMENT_STATUSES = new Set(['succeeded', 'paid']);
-
-/** True if this email already has a confirmed (paid/succeeded) enrollment in this course. */
+const ACTIVE_ENROLLMENT_STATUSES = ['succeeded', 'paid'];
+/**
+ * True if this email has ANY confirmed (paid/succeeded) enrollment in this course —
+ * checked across every row, not just the most recent. A student who abandons
+ * checkout and retries ends up with multiple enrollment rows for the same course;
+ * only looking at the newest one meant a still-pending retry could mask an
+ * already-paid earlier attempt and let a duplicate enrollment through.
+ */
 export async function hasActiveEnrollment(email: string, courseId: string): Promise<boolean> {
   const existing = await prisma.enrollment.findFirst({
-    where: { email, courseId },
-    orderBy: { createdAt: 'desc' },
+    where: { email, courseId, paymentStatus: { in: ACTIVE_ENROLLMENT_STATUSES } },
   });
-  return Boolean(existing && ACTIVE_ENROLLMENT_STATUSES.has(existing.paymentStatus));
+  return Boolean(existing);
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { X, Search, Loader2, UserPlus, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface CourseOption {
   id: string;
@@ -61,7 +62,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
 
   // Load course list once.
   useEffect(() => {
-    fetch('/api/admin/courses')
+    authedFetch('/api/admin/courses')
       .then((r) => r.json())
       .then((list: CourseOption[]) => setCourses(list))
       .catch(() => setCourses([]));
@@ -77,7 +78,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
   // Load cohorts for the selected course.
   useEffect(() => {
     if (!courseId) return;
-    fetch(`/api/admin/cohorts?courseId=${encodeURIComponent(courseId)}`)
+    authedFetch(`/api/admin/cohorts?courseId=${encodeURIComponent(courseId)}`)
       .then((r) => r.json())
       .then((list: CohortOption[]) => setCohorts(list.filter((c) => c.status === 'open')))
       .catch(() => setCohorts([]));
@@ -91,7 +92,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
     }
     setSearching(true);
     const handle = setTimeout(() => {
-      fetch(`/api/admin/students?search=${encodeURIComponent(studentQuery)}&limit=6`)
+      authedFetch(`/api/admin/students?search=${encodeURIComponent(studentQuery)}&limit=6`)
         .then((r) => r.json())
         .then((json) => setStudentResults(json.items ?? []))
         .catch(() => setStudentResults([]))
@@ -110,7 +111,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
     setSubmitting(true);
     setError('');
     try {
-      const res = await fetch('/api/admin/enrollments', {
+      const res = await authedFetch('/api/admin/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { X, CheckCircle2, CreditCard, BadgePercent, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addDays, addWeeks, format } from 'date-fns';
-import { type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
+import { type CourseCategory, TREASURY_PAY_URL, computeDueDates } from '@/config/courses';
 import { type DbCourse, type InstallmentPlan } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
@@ -48,21 +48,7 @@ interface Props {
   onClose: () => void;
 }
 
-// Derive due dates from plan payment labels (e.g. "Week 6" → 6 weeks from now)
-function computeDueDates(plan: InstallmentPlan): Date[] {
-  const today = new Date();
-  return plan.payments.map((_, i) => {
-    if (i === 0) return today;
-    // Try to parse "Week N" from the label
-    const label = plan.payments[i].label;
-    const weekMatch = label.match(/week\s+(\d+)/i);
-    if (weekMatch) {
-      return addWeeks(today, parseInt(weekMatch[1], 10) - 1);
-    }
-    // Fallback: 4 weeks apart
-    return addDays(today, 28 * i);
-  });
-}
+
 
 export function EnrollmentModal({ course, category, cohortId, onClose }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);

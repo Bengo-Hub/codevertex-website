@@ -44,6 +44,11 @@ export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
 
+    // TEMPORARY — confirms the real payload shape (flat vs TreasuryEventEnvelope)
+    // against docs.codevertexafrica.com/platform-standards/idempotency-and-outbox.
+    // Remove once one real delivery has been inspected in logs.
+    console.info('[treasury-webhook] raw payload for shape verification:', rawBody);
+
     const webhookSecret = process.env.TREASURY_WEBHOOK_SECRET;
     if (!webhookSecret) {
       console.error('[treasury-webhook] TREASURY_WEBHOOK_SECRET not configured â€” refusing request');
@@ -55,8 +60,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    const body = JSON.parse(rawBody);
-    const { event, reference_id, reference_type, payment_ref, status, amount } = body;
+       const body = JSON.parse(rawBody);
+    // Treasury's webhook body may be flat (matching the older comment above) or the
+    // full TreasuryEventEnvelope (matching treasury-subscriber.ts's NATS path) — the
+    // envelope's `id` is what platform-standards/idempotency-and-outbox specifies as
+    // the dedup key. Support both shapes rather than assuming one.
+    const eventId: string | undefined = body.id ?? body.event_id;
+    const payload = body.payload ?? body;
+    const { event, reference_id, reference_type, payment_ref, status, amount } = payload;
 
     // Only handle Digitika enrollment payments
     if (reference_type !== 'digitika_enrollment') {
@@ -74,11 +85,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Idempotency claim: this exact (reference_id, payment_ref) pair may only
-    // be processed once. A retried webhook delivery hits the unique constraint
-    // and is treated as already-handled, instead of paying a second
-    // installment off the same underlying payment.
-    const eventKey = `${reference_id}:${payment_ref ?? 'no-ref'}`;
+       // Idempotency claim, per platform-standards/idempotency-and-outbox: dedup on
+    // the Treasury event envelope's id, which is stable across outbox retries and
+    // NATS redelivery — unlike provider_reference/payment_ref, which is absent
+    // for cash/manual/till/COD settlements and not DB-unique even when present.
+    if (!eventId) {
+      console.error('[treasury-webhook] payload has no event id â€” cannot dedup safely, rejecting');
+      return NextResponse.json({ error: 'Missing event id' }, { status: 400 });
+    }
+    const eventKey = eventId;
     try {
       await prisma.processedWebhookEvent.create({
         data: { eventKey, source: 'treasury' },
