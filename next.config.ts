@@ -47,9 +47,16 @@ const nextConfig: NextConfig = {
         destination: `/digitika/${to}`,
         permanent: true,
       })),
-      // Safety net: a stray nested course path (e.g. /digitika/icdl-l3/l5) is not a
-      // real route and would 404 — collapse it to the base course page instead.
-      { source: '/digitika/:courseId/:rest+', destination: '/digitika/:courseId', permanent: false },
+         // Safety net: a stray nested course path (e.g. /digitika/icdl-l3/l5) is not a
+      // real route and would 404 â€” collapse it to the base course page instead.
+      // Excludes /learn specifically, since that's a real route
+      // (/digitika/[courseId]/learn — the lesson viewer) and this catch-all was
+      // previously swallowing it before it ever reached that page.
+      {
+        source: '/digitika/:courseId/:rest((?!learn$).+)',
+        destination: '/digitika/:courseId',
+        permanent: false,
+      },
     ];
   },
 };

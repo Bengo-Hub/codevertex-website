@@ -6,7 +6,7 @@ import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
-import { findCourse } from '@/config/courses';
+import { findCourse, computeDueDates } from '@/config/courses';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
 
@@ -178,7 +178,36 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const enrollmentId = enrollment.id.toString();
+        const enrollmentId = enrollment.id.toString();
+
+ 
+    // Create InstallmentSchedule rows to match paymentPlan —  mirrors the public
+    // checkout flow (POST /api/enrollments), which does this from course.installmentPlans
+    // via the same computeDueDates() helper. Without this, an admin-created
+    // installment enrollment has paymentPlan set but zero real installment rows,
+    // which breaks progress display, the "Pay Now" block, and the reminder cron.
+    if (!isFree && !data.markAsPaid && data.paymentPlan !== 'upfront') {
+      const planSlug = data.paymentPlan;
+      const matchedPlan = findCourse(data.courseId)?.course.installmentPlans?.find(
+        (p) => p.label.toLowerCase().replace(/\s+/g, '-') === planSlug
+      );
+      if (matchedPlan) {
+        const dueDates = computeDueDates(matchedPlan);
+        // Scale the plan's stock amounts proportionally if the admin overrode totalAmount
+        const scale = totalAmount / matchedPlan.totalAmount;
+        await prisma.installmentSchedule.createMany({
+          data: matchedPlan.payments.map((p, i) => ({
+            enrollmentId: enrollment.id,
+            installmentNo: i + 1,
+            amount: Math.round(p.amount * scale),
+            currency: course.currency,
+            dueDate: dueDates[i],
+            status: 'pending',
+          })),
+        });
+      }
+    }
+
     const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;
     const portalLink = `${SITE_URL}/digitika/success?reference=${invoiceRef}`;
 

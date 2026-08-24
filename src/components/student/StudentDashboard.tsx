@@ -30,6 +30,7 @@ import { fullNameToInitials, useSetStudentIdentity } from './student-identity-co
 import { useStudentSection } from './student-section-context';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface StudentData {
   student: {
@@ -83,7 +84,7 @@ interface StudentData {
 }
 
 async function fetchStudentData(): Promise<StudentData> {
-  const response = await fetch('/api/students/me', { cache: 'no-store' });
+  const response = await authedFetch('/api/students/me', { cache: 'no-store' });
   const result = await response.json();
   if (!response.ok) {
     throw new Error(result.error ?? 'Unable to load student portal.');

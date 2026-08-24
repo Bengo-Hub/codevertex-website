@@ -6,8 +6,12 @@ import { AdminPageHeader } from './AdminPageHeader';
 import { toast } from 'sonner';
 <<<<<<< HEAD
 import { authedFetch } from '@/lib/auth/authed-fetch';
+<<<<<<< HEAD
 =======
 >>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
+=======
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+>>>>>>> de67c34 (fix: a11y)
 
 interface BlogPost {
   id: string;
@@ -214,6 +218,7 @@ export function BlogAdminPage() {
     }
   }
 
+<<<<<<< HEAD
   async function handleDelete(post: BlogPost) {
     if (!confirm(`Delete "${post.title}"? This can't be undone.`)) return;
 <<<<<<< HEAD
@@ -221,12 +226,20 @@ export function BlogAdminPage() {
 =======
     const res = await fetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
 >>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
+=======
+  const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const res = await authedFetch(`/api/admin/blog/${deleteTarget.id}`, { method: 'DELETE' });
+>>>>>>> de67c34 (fix: a11y)
     if (res.ok) {
       toast.success('Post deleted');
       load();
     } else {
       toast.error('Delete failed');
     }
+    setDeleteTarget(null);
   }
 
   return (
@@ -288,7 +301,7 @@ export function BlogAdminPage() {
                       <button onClick={() => setEditing(post)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(post)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive">
+                      <button onClick={() => setDeleteTarget(post)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -310,6 +323,14 @@ export function BlogAdminPage() {
           onCancel={() => setEditing(null)}
         />
       )}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Delete "${deleteTarget?.title}"?`}
+        description="This can't be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

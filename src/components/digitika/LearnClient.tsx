@@ -323,21 +323,30 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
             onSubmit={handleLookup}
             className="w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-sm space-y-4"
           >
-            <div>
-              <label className="text-sm font-semibold text-foreground">Student ID</label>
+                   <div>
+              <label htmlFor="student-id-input" className="text-sm font-semibold text-foreground">Student ID</label>
               <input
+                id="student-id-input"
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 placeholder="DGT-XXXXXXXX"
+                aria-describedby="student-id-hint"
                 className="mt-1.5 w-full h-11 rounded-xl border border-input bg-background px-3.5 text-sm tracking-wide focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
               />
-              <p className="mt-1.5 text-xs text-muted-foreground">Sent to you by email after enrollment.</p>
+              <p id="student-id-hint" className="mt-1.5 text-xs text-muted-foreground">Sent to you by email after enrollment.</p>
             </div>
-            {lookupError && (
-              <p className="text-sm text-destructive flex items-center gap-1.5"><AlertCircle className="h-4 w-4 shrink-0" /> {lookupError}</p>
+                   {lookupError && (
+              <p role="alert" className="text-sm text-destructive flex items-center gap-1.5"><AlertCircle aria-hidden="true" className="h-4 w-4 shrink-0" /> {lookupError}</p>
             )}
-            <Button type="submit" disabled={lookupLoading} size="lg" className="w-full">
-              {lookupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Access Course <ChevronRight className="h-4 w-4" /></>}
+                      <Button type="submit" disabled={lookupLoading} size="lg" className="w-full">
+              {lookupLoading ? (
+                <>
+                  <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                  <span className="sr-only">Looking up your course…</span>
+                </>
+              ) : (
+                <>Access Course <ChevronRight aria-hidden="true" className="h-4 w-4" /></>
+              )}
             </Button>
           </motion.form>
         </div>
@@ -367,15 +376,16 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                 <p className="text-[11px] font-bold uppercase tracking-wider text-primary">Course</p>
                 <h1 className="text-lg font-black text-foreground leading-tight mt-0.5 truncate">{courseName}</h1>
               </div>
-              <button
+                       <button
                 onClick={toggleDataSaver}
-                title={dataSaver ? 'Data saver on — video needs a tap to load' : 'Turn on data saver for slower connections'}
+                title={dataSaver ? 'Data saver on â€” video needs a tap to load' : 'Turn on data saver for slower connections'}
+                aria-pressed={dataSaver}
                 className={cn(
                   'shrink-0 flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold border transition-colors',
                   dataSaver ? 'border-primary/30 bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:text-foreground'
                 )}
               >
-                {dataSaver ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
+                              {dataSaver ? <WifiOff aria-hidden="true" className="h-3 w-3" /> : <Wifi aria-hidden="true" className="h-3 w-3" />}
                 Data saver
               </button>
             </div>
@@ -412,8 +422,15 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                     View your certificate <ChevronRight className="h-3 w-3" />
                   </a>
                 ) : (
-                  <Button size="sm" disabled={busy} onClick={issueCertificate} className="w-full">
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Get Certificate'}
+                                 <Button size="sm" disabled={busy} onClick={issueCertificate} className="w-full">
+                    {busy ? (
+                      <>
+                        <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                        <span className="sr-only">Issuing certificate…</span>
+                      </>
+                    ) : (
+                      'Get Certificate'
+                    )}
                   </Button>
                 )}
               </div>
@@ -427,9 +444,10 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
               { key: 'announcements' as const, label: 'Updates', icon: Megaphone, count: announcements?.length },
               { key: 'discussion' as const, label: 'Q&A', icon: MessagesSquare },
             ]).map(({ key, label, icon: Icon, count }) => (
-              <button
+                    <button
                 key={key}
                 onClick={() => setPanel(key)}
+                aria-pressed={panel === key}
                 className={cn(
                   'flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-[11px] font-semibold transition-colors',
                   panel === key
@@ -437,7 +455,7 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                     : 'border-border bg-card text-muted-foreground hover:text-foreground'
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon aria-hidden="true" className="h-4 w-4" />
                 {label}{count ? ` (${count})` : ''}
               </button>
             ))}
@@ -455,9 +473,10 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                         const duration = formatDuration(l.durationSec);
                         return (
                           <li key={l.id}>
-                            <button
+                                             <button
                               onClick={() => { setActiveLessonId(l.id); setQuizResult(null); setQuizAnswers({}); }}
                               disabled={l.locked}
+                              aria-current={l.id === activeLessonId ? 'true' : undefined}
                               className={cn(
                                 'w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors',
                                 l.id === activeLessonId ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted/60 text-foreground',
@@ -465,12 +484,13 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                               )}
                             >
                               {l.locked ? (
-                                <Lock className="h-3.5 w-3.5 shrink-0" />
+                                <Lock aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                               ) : l.completedAt ? (
-                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                                <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                               ) : (
-                                <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                <Icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               )}
+                              <span className="sr-only">{l.locked ? 'Locked: ' : l.completedAt ? 'Completed: ' : ''}</span>
                               <span className="truncate flex-1">{l.title}</span>
                               {duration && <span className="text-[10px] text-muted-foreground shrink-0">{duration}</span>}
                             </button>
@@ -599,14 +619,15 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                               className="flex-1 text-xs h-9 rounded-lg border border-input bg-background px-3 focus:outline-none focus:ring-2 focus:ring-ring"
                               onKeyDown={(e) => { if (e.key === 'Enter') postReply(t.id); }}
                             />
-                            <Button
+                                                   <Button
                               size="icon"
                               variant="secondary"
                               onClick={() => postReply(t.id)}
                               disabled={replyingId === t.id}
+                              aria-label={replyingId === t.id ? 'Posting reply…' : 'Post reply'}
                               className="h-9 w-9 shrink-0"
                             >
-                              {replyingId === t.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                              {replyingId === t.id ? <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" /> : <Send aria-hidden="true" className="h-3.5 w-3.5" />}
                             </Button>
                           </div>
                         )}
@@ -703,15 +724,29 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                         Score: {quizResult.scorePct}% — {quizResult.passed ? 'Passed!' : `Needs ${quizResult.passingScore}% to pass, try again.`}
                       </div>
                     )}
-                    <Button onClick={submitQuiz} disabled={busy}>
-                      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit Quiz'}
+                                    <Button onClick={submitQuiz} disabled={busy}>
+                      {busy ? (
+                        <>
+                          <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                          <span className="sr-only">Submitting quiz…</span>
+                        </>
+                      ) : (
+                        'Submit Quiz'
+                      )}
                     </Button>
                   </div>
                 )}
 
                 {activeLesson.type !== 'QUIZ' && !activeLesson.completedAt && (
-                  <Button onClick={() => markComplete(activeLesson.id)} disabled={busy} variant="outline">
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark as complete'}
+                               <Button onClick={() => markComplete(activeLesson.id)} disabled={busy} variant="outline">
+                    {busy ? (
+                      <>
+                        <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
+                        <span className="sr-only">Marking complete…</span>
+                      </>
+                    ) : (
+                      'Mark as complete'
+                    )}
                   </Button>
                 )}
                 {activeLesson.completedAt && activeLesson.type !== 'QUIZ' && (

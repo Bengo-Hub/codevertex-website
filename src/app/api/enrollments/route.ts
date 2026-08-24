@@ -12,6 +12,7 @@ const TREASURY_TENANT =
   process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex';
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
+const INTERNAL_SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
 
 // Pre-create a treasury payment intent so the success URL goes directly to our
 // /digitika/success page (bypasses treasury-ui's own success page wrapper).
@@ -24,6 +25,10 @@ async function createTreasuryIntent(opts: {
   returnUrl: string;
   requestId?: string;
 }): Promise<{ initiateUrl: string } | null> {
+  if (!INTERNAL_SERVICE_KEY) {
+    console.warn('[enrollments] INTERNAL_SERVICE_KEY not set — skipping treasury intent pre-creation');
+    return null;
+  }
   try {
     const res = await fetch(
       `${TREASURY_API_URL}/api/v1/pay/${TREASURY_TENANT}/intents`,
@@ -31,6 +36,7 @@ async function createTreasuryIntent(opts: {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': INTERNAL_SERVICE_KEY,
           'X-Request-ID': opts.requestId ?? crypto.randomUUID(),
         },
         body: JSON.stringify({
@@ -188,7 +194,7 @@ export async function POST(req: NextRequest) {
           : course.price;
     }
 
-    if (data.totalAmount !== canonicalTotal) {
+      if (data.totalAmount !== canonicalTotal) {
       return NextResponse.json(
         { error: 'Price mismatch — please refresh and try again.' },
         { status: 400 }
@@ -197,6 +203,9 @@ export async function POST(req: NextRequest) {
     if (data.firstPaymentAmount > data.totalAmount || data.firstPaymentAmount < 0) {
       return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
     }
+
+    // Self-referral guard: a referral code's owner may not redeem their own code.
+
 
     // 1. Upsert student user â€” one record per unique email
     const studentUser = await upsertStudentUser({

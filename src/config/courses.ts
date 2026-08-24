@@ -1,4 +1,5 @@
 // Digitika Academy course catalog
+import { addDays, addWeeks } from 'date-fns';
 
 export interface InstallmentPlan {
   label: string;
@@ -707,6 +708,22 @@ export function getFirstInstallmentAmount(course: Course, planLabel?: string): n
     p => p.label.toLowerCase().replace(/\s+/g, '-') === planLabel
   );
   return plan?.payments[0]?.amount ?? course.price;
+}
+
+// --- Helper: derive due dates for a plan's payments — shared by the public
+// checkout modal and the admin manual-enrollment route, so both generate
+// identical schedules from the same InstallmentPlan data. ---
+export function computeDueDates(plan: InstallmentPlan): Date[] {
+  const today = new Date();
+  return plan.payments.map((_, i) => {
+    if (i === 0) return today;
+    const label = plan.payments[i].label;
+    const weekMatch = label.match(/week\s+(\d+)/i);
+    if (weekMatch) {
+      return addWeeks(today, parseInt(weekMatch[1], 10) - 1);
+    }
+    return addDays(today, 28 * i);
+  });
 }
 
 export const TREASURY_PAY_URL = 'https://books.codevertexafrica.com/pay';
