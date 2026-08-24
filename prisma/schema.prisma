@@ -534,3 +534,19 @@ model DigitikaRolePermission {
   @@id([roleId, permissionId])
   @@map("digitika_role_permissions")
 }
+// ---------------------------------------------------------------------------
+// Idempotency guard for webhook-driven side effects (payments). Per the
+// platform's Idempotency & Outbox Pattern standard: irreversible side effects
+// must be claimed before acting, not after. One row per successfully
+// processed treasury webhook event, keyed on (reference_id + payment_ref) —
+// the treasury payload has no explicit event id, so that pair is the natural
+// unique key for "this exact payment, this exact webhook delivery."
+// ---------------------------------------------------------------------------
+model ProcessedWebhookEvent {
+  id        String   @id @default(cuid())
+  eventKey  String   @unique @map("event_key")
+  source    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("processed_webhook_events")
+}

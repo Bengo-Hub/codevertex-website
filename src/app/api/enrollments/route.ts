@@ -138,7 +138,67 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 1. Upsert student user — one record per unique email
+      // 0c. Server-side price validation: never trust client-supplied totalAmount/
+    // firstPaymentAmount. Look up the course's real price and, if a discount was
+    // applied, recompute the discounted price the same way /api/discounts/validate
+    // does — then require the client's totals to match exactly.
+    const course = await prisma.course.findUnique({
+      where: { id: data.courseId, isActive: true },
+      select: { price: true, currency: true },
+    });
+    if (!course) {
+      return NextResponse.json({ error: 'Course not found or not available' }, { status: 400 });
+    }
+
+    let canonicalTotal = course.price;
+
+    if (data.discountRuleId || data.discountCode) {
+      const rule = data.discountRuleId
+        ? await prisma.discountRule.findUnique({
+            where: { id: BigInt(data.discountRuleId) },
+            include: { _count: { select: { enrollments: true } } },
+          })
+        : await prisma.discountRule.findUnique({
+            where: { code: (data.discountCode ?? '').toUpperCase() },
+            include: { _count: { select: { enrollments: true } } },
+          });
+
+      if (!rule || !rule.active) {
+        return NextResponse.json({ error: 'Invalid or expired discount code' }, { status: 400 });
+      }
+      const now = new Date();
+      if (rule.validFrom && now < rule.validFrom) {
+        return NextResponse.json({ error: 'Discount code is not yet active' }, { status: 400 });
+      }
+      if (rule.validUntil && now > rule.validUntil) {
+        return NextResponse.json({ error: 'Discount code has expired' }, { status: 400 });
+      }
+      if (rule.courseId && rule.courseId !== data.courseId) {
+        return NextResponse.json({ error: 'Discount code does not apply to this course' }, { status: 400 });
+      }
+      if (rule.maxUses != null && rule._count.enrollments >= rule.maxUses) {
+        return NextResponse.json({ error: 'Discount code has reached its usage limit' }, { status: 409 });
+      }
+
+      canonicalTotal =
+        rule.discountPct != null
+          ? Math.round(course.price * (1 - rule.discountPct / 100))
+          : rule.discountAmount != null
+          ? Math.max(0, course.price - rule.discountAmount)
+          : course.price;
+    }
+
+    if (data.totalAmount !== canonicalTotal) {
+      return NextResponse.json(
+        { error: 'Price mismatch — please refresh and try again.' },
+        { status: 400 }
+      );
+    }
+    if (data.firstPaymentAmount > data.totalAmount || data.firstPaymentAmount < 0) {
+      return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
+    }
+
+    // 1. Upsert student user â€” one record per unique email
     const studentUser = await upsertStudentUser({
       email: data.email,
       fullName: data.fullName,
@@ -146,8 +206,8 @@ export async function POST(req: NextRequest) {
       dob: data.dob,
     });
 
-    // A course with a total price of 0 needs no payment step — confirm it immediately.
-    const isFree = data.totalAmount === 0;
+    // A course with a total price of 0 needs no payment step â€” confirm it immediately.
+    const isFree = canonicalTotal === 0;
 
     // 2. Create enrollment (amount = first payment only)
     const enrollment = await prisma.enrollment.create({
