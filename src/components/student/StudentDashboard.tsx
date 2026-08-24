@@ -120,7 +120,7 @@ interface CourseContent {
 }
 
 async function fetchCourseContent(studentId: string, courseId: string): Promise<CourseContent> {
-  const response = await fetch(
+  const response = await authedFetch(
     `/api/students/${encodeURIComponent(studentId)}/courses/${encodeURIComponent(courseId)}/content`,
     { cache: 'no-store' }
   );

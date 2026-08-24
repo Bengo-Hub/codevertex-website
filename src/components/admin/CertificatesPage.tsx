@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Search, ShieldOff, ShieldCheck, ExternalLink, Award } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { toast } from 'sonner';
+import { authedFetch } from '@/lib/auth/authed-fetch';
 
 interface Certificate {
   id: string;
@@ -27,7 +28,7 @@ export function CertificatesPage() {
     setLoading(true);
     const params = new URLSearchParams({ includeRevoked: String(includeRevoked) });
     if (search) params.set('search', search);
-    const res = await fetch(`/api/admin/certificates?${params}`);
+    const res = await authedFetch(`/api/admin/certificates?${params}`);
     if (res.ok) setCertificates(await res.json());
     setLoading(false);
   }, [search, includeRevoked]);
@@ -39,7 +40,7 @@ export function CertificatesPage() {
 
   async function toggleRevoke(cert: Certificate) {
     setBusyId(cert.id);
-    const res = await fetch(`/api/admin/certificates/${cert.id}`, {
+    const res = await authedFetch(`/api/admin/certificates/${cert.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ revoked: !cert.revoked }),
