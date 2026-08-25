@@ -1,14 +1,11 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
 
-<<<<<<< HEAD
 // Rendered per-request: the build stage has no live DATABASE_URL, so a statically
 // generated sitemap here fails `next build` outright trying to reach a database
 // that isn't there yet at image-build time (same fix as /blog's list page).
 export const dynamic = 'force-dynamic';
 
-=======
->>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
 const BASE_URL = 'https://codevertexafrica.com';
 
 const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }> = [

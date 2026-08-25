@@ -4,14 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { Plus, Pencil, Trash2, X, Eye, EyeOff, Newspaper } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { toast } from 'sonner';
-<<<<<<< HEAD
 import { authedFetch } from '@/lib/auth/authed-fetch';
-<<<<<<< HEAD
-=======
->>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
-=======
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
->>>>>>> de67c34 (fix: a11y)
 
 interface BlogPost {
   id: string;
@@ -81,20 +75,12 @@ function PostForm({
       published,
     };
     const res = post
-<<<<<<< HEAD
       ? await authedFetch(`/api/admin/blog/${post.id}`, {
-=======
-      ? await fetch(`/api/admin/blog/${post.id}`, {
->>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         })
-<<<<<<< HEAD
       : await authedFetch('/api/admin/blog', {
-=======
-      : await fetch('/api/admin/blog', {
->>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -189,11 +175,7 @@ export function BlogAdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-<<<<<<< HEAD
     const res = await authedFetch('/api/admin/blog?includeUnpublished=true');
-=======
-    const res = await fetch('/api/admin/blog?includeUnpublished=true');
->>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
     if (res.ok) setPosts(await res.json());
     setLoading(false);
   }, []);
@@ -201,11 +183,7 @@ export function BlogAdminPage() {
   useEffect(() => { load(); }, [load]);
 
   async function togglePublished(post: BlogPost) {
-<<<<<<< HEAD
     const res = await authedFetch(`/api/admin/blog/${post.id}`, {
-=======
-    const res = await fetch(`/api/admin/blog/${post.id}`, {
->>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ published: !post.published }),
@@ -218,21 +196,11 @@ export function BlogAdminPage() {
     }
   }
 
-<<<<<<< HEAD
-  async function handleDelete(post: BlogPost) {
-    if (!confirm(`Delete "${post.title}"? This can't be undone.`)) return;
-<<<<<<< HEAD
-    const res = await authedFetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
-=======
-    const res = await fetch(`/api/admin/blog/${post.id}`, { method: 'DELETE' });
->>>>>>> d61bbfc (fix: crash on /admin — MODULE_UI missing 'blog' entry, plus build the actual /admin/blog page)
-=======
   const [deleteTarget, setDeleteTarget] = useState<BlogPost | null>(null);
 
   async function confirmDelete() {
     if (!deleteTarget) return;
     const res = await authedFetch(`/api/admin/blog/${deleteTarget.id}`, { method: 'DELETE' });
->>>>>>> de67c34 (fix: a11y)
     if (res.ok) {
       toast.success('Post deleted');
       load();
