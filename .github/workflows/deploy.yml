@@ -17,11 +17,6 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
-<<<<<<< HEAD
-        with:
-          version: '10'
-=======
->>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -32,14 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-<<<<<<< HEAD
-      # Lint is intentionally not wired in yet: there's no eslint.config.js/mjs in this
-      # repo (ESLint 10 requires flat config, ESLint v9+), so `pnpm lint` fails outright
-      # regardless of the code. Add it back once that config exists.
-=======
       - name: Lint
         run: pnpm lint
->>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
 
       - name: Generate Prisma client
         # Needed for typecheck — Prisma model types don't exist until generated.

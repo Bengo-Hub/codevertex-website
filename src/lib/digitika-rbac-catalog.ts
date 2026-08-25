@@ -27,15 +27,8 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
   { key: 'leads', label: 'Leads' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'courses', label: 'Courses' },
-<<<<<<< HEAD
-=======
   { key: 'content', label: 'Course Content' },
-  // Grading (manual progress overrides + quiz score visibility), course Q&A moderation,
-  // and course announcements — deliberately kept as one more admin-dashboard module
-  // rather than a separate instructor portal/role. See ClassroomPage.tsx.
-  { key: 'classroom', label: 'Classroom' },
   { key: 'certificates', label: 'Certificates' },
->>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
   { key: 'blog', label: 'Blog' },
   { key: 'cohorts', label: 'Cohorts' },
   { key: 'installments', label: 'Installments' },
@@ -82,21 +75,6 @@ export interface DigitikaRoleDef {
 // (additively) on every seed run — see prisma/seed/digitika-rbac.ts. `digitika_staff`'s
 // permission set only seeds on first creation; an admin may edit it afterwards via the
 // Roles page and that customization is preserved across restarts.
-// Instructor-facing modules only: authoring/grading content, and read-only visibility
-// into who's enrolled — no leads/contacts/discounts/installments (sales/ops territory),
-// no user or role administration.
-const INSTRUCTOR_PERMISSION_CODES = [
-  digitikaPerm('content', 'view'),
-  digitikaPerm('content', 'manage'),
-  digitikaPerm('classroom', 'view'),
-  digitikaPerm('classroom', 'manage'),
-  digitikaPerm('certificates', 'view'),
-  digitikaPerm('courses', 'view'),
-  digitikaPerm('cohorts', 'view'),
-  digitikaPerm('enrollments', 'view'),
-  digitikaPerm('students', 'view'),
-];
-
 export const DIGITIKA_ROLE_DEFAULTS: DigitikaRoleDef[] = [
   {
     code: 'digitika_admin',
@@ -109,12 +87,6 @@ export const DIGITIKA_ROLE_DEFAULTS: DigitikaRoleDef[] = [
     name: 'Digitika Staff',
     description: 'Manages Digitika LMS content (courses, cohorts, enrollments, students, leads, contacts, installments, discounts). No user or role administration.',
     permissionCodes: STAFF_PERMISSION_CODES,
-  },
-  {
-    code: 'digitika_instructor',
-    name: 'Digitika Instructor',
-    description: 'Authors and grades course content (modules, lessons, quizzes, certificates) and can see who is enrolled. No access to leads, discounts, installments, or user/role administration.',
-    permissionCodes: INSTRUCTOR_PERMISSION_CODES,
   },
 ];
 
