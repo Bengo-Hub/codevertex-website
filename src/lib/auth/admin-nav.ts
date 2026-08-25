@@ -26,16 +26,10 @@ const MODULE_UI: Record<
   leads: { href: '/admin/leads', icon: MessageSquare },
   contacts: { href: '/admin/contacts', icon: Mail },
   courses: { href: '/admin/courses', icon: Library },
-<<<<<<< HEAD
-  blog: { href: '/admin/blog', icon: Newspaper },
-=======
-
   content: { href: '/admin/content', icon: BookOpen },
   classroom: { href: '/admin/classroom', icon: School },
   certificates: { href: '/admin/certificates', icon: GraduationCap },
   blog: { href: '/admin/blog', icon: Newspaper },
-
->>>>>>> 969b46b (feat: polish website)
   cohorts: { href: '/admin/cohorts', icon: Calendar },
   installments: { href: '/admin/installments', icon: CreditCard },
   discounts: { href: '/admin/discounts', icon: BadgePercent },

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
-    "@bengo-hub/shared-ui-lib": "github:Bengo-Hub/shared-ui-lib#v0.1.73",
+    "@bengo-hub/shared-ui-lib": "github:Bengo-Hub/shared-ui-lib#v0.1.75",
     "sharp": "^0.34.5",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^5.2.2",
@@ -63,14 +63,5 @@
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
-<<<<<<< HEAD
-<<<<<<< HEAD
   "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
 }
-=======
-  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
-=======
-  "packageManager": "pnpm@10.34.5+sha512.a4ee05f2f73658255bd6a89859c065a45c28a57daefae2c893a168ee2b73168c37b91e83e57ea67654ad03f03031746430e8bce38e362e042605fb8abc80192e"
->>>>>>> 4f300d6 (fix: a11y)
-}
->>>>>>> c91a29e (fix: address PR review feedback)

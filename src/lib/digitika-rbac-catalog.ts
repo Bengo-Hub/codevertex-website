@@ -27,15 +27,12 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
   { key: 'leads', label: 'Leads' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'courses', label: 'Courses' },
-<<<<<<< HEAD
-=======
   { key: 'content', label: 'Course Content' },
   // Grading (manual progress overrides + quiz score visibility), course Q&A moderation,
   // and course announcements — deliberately kept as one more admin-dashboard module
   // rather than a separate instructor portal/role. See ClassroomPage.tsx.
   { key: 'classroom', label: 'Classroom' },
   { key: 'certificates', label: 'Certificates' },
->>>>>>> f0f752f (chore: SEO/legal/blog/CI polish pass, on top of the LMS content delivery work)
   { key: 'blog', label: 'Blog' },
   { key: 'cohorts', label: 'Cohorts' },
   { key: 'installments', label: 'Installments' },
