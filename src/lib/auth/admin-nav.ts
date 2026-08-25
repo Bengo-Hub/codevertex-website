@@ -13,6 +13,13 @@ export interface AdminNavItem {
   permission: string;
 }
 
+export interface AdminNavGroup {
+  label: string;
+  /** Matches library-ui's Sidebar `NavGroup.defaultCollapsed` — collapsed unless the active route is inside it. */
+  defaultCollapsed?: boolean;
+  items: AdminNavItem[];
+}
+
 // href/icon per module key — DIGITIKA_MODULES (src/lib/digitika-rbac-catalog.ts) is the
 // single source of truth for WHICH modules exist and their permission codes; this map only
 // adds the UI-specific bits (route + icon) so the two never drift out of sync.
@@ -37,20 +44,52 @@ const MODULE_UI: Record<
   roles: { href: '/admin/roles', icon: ShieldCheck },
 };
 
-// Single source of truth for the sidebar AND for gating direct URL navigation
-// (admin/layout.tsx) — every module maps to its own `digitika.<module>.view` code.
-export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  ...DIGITIKA_MODULES.map((mod) => ({
-    label: mod.label,
-    href: MODULE_UI[mod.key].href,
-    icon: MODULE_UI[mod.key].icon,
-    exact: MODULE_UI[mod.key].exact,
-    permission: digitikaPerm(mod.key, 'view'),
-  })),
-  // Permissions is a read-only catalog view, not its own module/action pair — it shares
-  // the "roles" module's view permission (same administrative area as Roles).
-  { label: 'Permissions', href: '/admin/permissions', icon: KeyRound, permission: digitikaPerm('roles', 'view') },
+function navItem(moduleKey: string): AdminNavItem {
+  const mod = DIGITIKA_MODULES.find((m) => m.key === moduleKey);
+  const ui = MODULE_UI[moduleKey];
+  if (!mod || !ui) {
+    throw new Error(`admin-nav: "${moduleKey}" is missing from DIGITIKA_MODULES or MODULE_UI`);
+  }
+  return { label: mod.label, href: ui.href, icon: ui.icon, exact: ui.exact, permission: digitikaPerm(moduleKey, 'view') };
+}
+
+// Sidebar grouping — adapted from library-ui's collapsible NavGroup sections
+// (library-service/library-ui/src/components/sidebar.tsx): a single-item "Overview" group,
+// a few domain groups, and a defaultCollapsed "Administration" group at the bottom. Purely
+// presentational — DIGITIKA_MODULES + MODULE_UI above stay the single source of truth for
+// which modules exist, their routes, and their permission codes; groups just organize them.
+export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
+  {
+    label: 'Overview',
+    items: ['dashboard'].map(navItem),
+  },
+  {
+    label: 'Academy',
+    items: ['courses', 'content', 'classroom', 'certificates', 'cohorts'].map(navItem),
+  },
+  {
+    label: 'Admissions',
+    items: ['enrollments', 'students', 'installments', 'discounts'].map(navItem),
+  },
+  {
+    label: 'Growth',
+    items: ['leads', 'contacts', 'blog'].map(navItem),
+  },
+  {
+    label: 'Administration',
+    defaultCollapsed: true,
+    items: [
+      ...['users', 'roles'].map(navItem),
+      // Permissions is a read-only catalog view, not its own module/action pair — it shares
+      // the "roles" module's view permission (same administrative area as Roles).
+      { label: 'Permissions', href: '/admin/permissions', icon: KeyRound, permission: digitikaPerm('roles', 'view') },
+    ],
+  },
 ];
+
+// Flat list, derived from the groups above so the two can never drift apart — kept for
+// requiredPermissionForPath's longest-prefix-match guard in admin/layout.tsx.
+export const ADMIN_NAV_ITEMS: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((g) => g.items);
 
 /** Longest-prefix match — returns the permission code guarding a given admin pathname. */
 export function requiredPermissionForPath(pathname: string): string | null {
