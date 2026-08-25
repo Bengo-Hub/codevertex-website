@@ -101,7 +101,7 @@ export async function startTreasuryEventSubscriber(): Promise<void> {
             const enrollmentId = BigInt(match[1]);
             const paidAmount = amount ? parseFloat(amount) : 0;
 
-            await updateEnrollmentPayment(enrollmentId, paidAmount, provider_reference ?? null);
+            await updateEnrollmentPayment(enrollmentId, paidAmount, provider_reference ?? null, event.id);
             msg.ack();
           } catch (err) {
             console.error('[treasury-subscriber] error processing message:', err);
@@ -132,7 +132,22 @@ async function updateEnrollmentPayment(
   enrollmentId: bigint,
   paidAmount: number,
   paymentRef: string | null,
+  eventId: string,
 ): Promise<void> {
+  // Idempotency claim per platform-standards/idempotency-and-outbox: dedup on the
+  // event envelope's own id, not on enrollment/installment state. The previous
+  // "paymentStatus === 'succeeded' && some installment paid" check correctly caught a
+  // *redelivery* of the same message, but also incorrectly swallowed a genuinely new,
+  // later payment on a multi-installment enrollment (e.g. installment #2's real payment
+  // arriving after #1 already flipped paymentStatus to 'succeeded') — silently dropping
+  // a real payment with no receipt, no event, no error.
+  try {
+    await prisma.processedWebhookEvent.create({ data: { eventKey: eventId, source: 'treasury-nats' } });
+  } catch {
+    console.log(`[treasury-subscriber] duplicate delivery ignored: ${eventId}`);
+    return;
+  }
+
   const enrollment = await prisma.enrollment.findUnique({
     where: { id: enrollmentId },
     include: { installments: { orderBy: { installmentNo: 'asc' } } },
@@ -143,8 +158,8 @@ async function updateEnrollmentPayment(
     return;
   }
 
-  if (enrollment.paymentStatus === 'succeeded' && enrollment.installments.some((i) => i.status === 'paid')) {
-    console.log(`[treasury-subscriber] enrollment ${enrollmentId} already recorded — skipping`);
+  if (enrollment.installments.length > 0 && enrollment.installments.every((i) => i.status === 'paid')) {
+    console.log(`[treasury-subscriber] enrollment ${enrollmentId} already fully paid — skipping`);
     return;
   }
 
