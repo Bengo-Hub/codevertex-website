@@ -16,6 +16,13 @@ export const metadata: Metadata = {
     title: 'Digitika Academy | Codevertex Africa Limited',
     description: "Closing Africa's digital skills gap. Courses in coding, AI, networking, and data analytics.",
     url: 'https://codevertexafrica.com/digitika',
+    images: [{ url: '/images/og-image.png', width: 1200, height: 630, alt: 'Digitika Academy by Codevertex Africa Limited' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Digitika Academy | Codevertex Africa Limited',
+    description: "Closing Africa's digital skills gap. Courses in coding, AI, networking, and data analytics.",
+    images: ['/images/og-image.png'],
   },
 };
 
