@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 const CLIENTS = [
   { name: 'Maseno University (MUCISA)', detail: '120+ students upskilled in coding & digital entrepreneurship' },
@@ -37,7 +38,7 @@ export function TrustSection() {
                 &ldquo;Built in Kisumu. Engineered for Africa. Designed for the world.&rdquo;
               </blockquote>
               <cite className="not-italic text-sm text-white/60 font-medium">
-                Codevertex Africa Limited — Pioneer House, Oginga Street, Kisumu
+                Codevertex Africa Limited — Pioneer House, Oginga-Odinga Road, Kisumu
               </cite>
             </div>
           </div>
@@ -67,6 +68,11 @@ export function TrustSection() {
                 <div key={a.title} className="p-5 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors">
                   <p className="font-bold text-foreground text-sm mb-2">{a.title}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
+                  {a.title === 'Security & Compliance' && (
+                    <Link href="/security" className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">
+                      Read our security practices →
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

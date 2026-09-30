@@ -21,7 +21,7 @@ export function CTASection() {
                 <span className="text-primary">digital infrastructure?</span>
               </h2>
               <p className="text-white/65 dark:text-muted-foreground text-base font-medium max-w-md mb-8 leading-relaxed">
-                Join hundreds of businesses across Africa transforming their operations with the Codevertex ecosystem.
+                Join the growing number of businesses across Africa transforming their operations with the Codevertex ecosystem.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button size="lg" asChild>
@@ -41,7 +41,7 @@ export function CTASection() {
                 </Button>
               </div>
               <p className="text-white/40 dark:text-muted-foreground text-xs mt-5 font-medium">
-                +254 743 793 901 · Pioneer House, Oginga Street, Kisumu
+                +254 743 793 901 · Pioneer House, Oginga-Odinga Road, Kisumu
               </p>
             </div>
 

@@ -7,11 +7,13 @@ import { ArrowRight, ChevronRight, CircleCheck as CheckCircle } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { SSO_URL } from '@/lib/constants';
 
+const FOUNDED_YEAR = 2020;
+
 const STATS = [
   { value: '200+', label: 'Staff trained' },
   { value: '120+', label: 'Certified' },
   { value: '14+', label: 'Products live' },
-  { value: '5yr', label: 'In Kisumu, KE' },
+  { value: `${new Date().getFullYear() - FOUNDED_YEAR}yr`, label: 'In Kisumu, KE' },
 ];
 
 const SLIDES = [
