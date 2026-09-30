@@ -16,13 +16,15 @@ const CAREERS_API = '/api/erp';
 
 export function CareersListingClient({ subtitle }: { subtitle?: string }) {
   return (
-    <CareersListing
-      orgSlug={ERP.tenant}
-      apiBaseUrl={CAREERS_API}
-      linkToPosting={(postingSlug) => `/careers/${postingSlug}`}
-      subtitle={subtitle}
-      poweredByHref="/services"
-    />
+    <div className="[&_header]:hidden">  {/* or [&_section:first-of-type]:hidden */}
+      <CareersListing
+        orgSlug={ERP.tenant}
+        apiBaseUrl={CAREERS_API}
+        linkToPosting={(postingSlug) => `/careers/${postingSlug}`}
+        subtitle={subtitle}
+        poweredByHref="/services"
+      />
+    </div>
   );
 }
 
