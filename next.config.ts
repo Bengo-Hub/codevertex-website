@@ -40,6 +40,19 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ['pg', 'pg-pool', '@prisma/adapter-pg', '@prisma/client'],
 
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
+
   async redirects() {
     return [
       ...Object.entries(COURSE_SLUG_REDIRECTS).map(([from, to]) => ({

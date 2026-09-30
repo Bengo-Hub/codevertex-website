@@ -27,7 +27,6 @@ export const metadata: Metadata = {
   },
   description:
     "Architecting Africa's Digital Renaissance. Enterprise software, AI, cloud infrastructure, and Digitika Academy talent development from Kisumu, Kenya.",
-  keywords: ['Codevertex', 'IT Solutions', 'Kenya', 'Africa', 'Software Development', 'AI', 'Cloud', 'Digitika'],
   authors: [{ name: 'Codevertex Africa Limited', url: 'https://codevertexafrica.com' }],
   metadataBase: new URL('https://codevertexafrica.com'),
   openGraph: {
@@ -38,11 +37,13 @@ export const metadata: Metadata = {
     title: "Codevertex Africa Limited — Architecting Africa's Digital Renaissance",
     description:
       'Premier technology firm in Kisumu, Kenya. Enterprise software, AI analytics, cloud infrastructure, and Digitika Academy.',
+    images: [{ url: '/images/og-image.png', width: 1200, height: 630, alt: 'Codevertex Africa Limited — Architecting Africa\'s Digital Renaissance' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Codevertex Africa Limited',
     description: "Architecting Africa's Digital Renaissance.",
+    images: ['/images/og-image.png'],
   },
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/images/logo.png' }],
