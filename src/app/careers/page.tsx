@@ -1,24 +1,16 @@
 import type { Metadata } from 'next';
-import { CareersListing } from '@bengo-hub/shared-ui-lib/careers';
+import { CareersListingClient } from '@/components/careers/CareersClient';
 import { Button } from '@/components/ui/button';
-import { ERP } from '@/lib/constants';
 
 export const metadata: Metadata = { title: 'Careers', description: 'Join Codevertex Africa Limited and build Africa\'s digital future.' };
 
-// Live data from erp-api — never statically prerender (also sidesteps a build-time SSR
-// quirk in the shared careers-portal client component during static generation).
+// Job data is fetched in the browser from erp-api by CareersListingClient.
 export const dynamic = 'force-dynamic';
 
 export default function CareersPage() {
   return (
     <div className="pt-20">
-      <CareersListing
-        orgSlug={ERP.tenant}
-        apiBaseUrl={ERP.apiBaseUrl}
-        linkToPosting={(postingSlug) => `/careers/${postingSlug}`}
-        subtitle="Join a purpose-driven team building the infrastructure for Africa's digital economy."
-        poweredByHref="/services"
-      />
+      <CareersListingClient subtitle="Join a purpose-driven team building the infrastructure for Africa's digital economy." />
 
       <section className="py-10 px-4 sm:px-6 lg:px-8 bg-background">
         <div className="max-w-4xl mx-auto">
