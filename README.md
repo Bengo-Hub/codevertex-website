@@ -9,14 +9,14 @@ Full-featured marketing website for Codevertex Africa Limited built with the **l
 | **Next.js** | `^16.2.4` | App Router, Turbopack default, React Compiler stable |
 | **React** | `^19.2.5` | Latest stable — `ref` as prop, `use()`, Actions, View Transitions |
 | **React DOM** | `^19.2.5` | |
-| **Tailwind CSS** | `^3.4.17` | CSS tokens matching accounts/auth-ui exactly |
+| **Tailwind CSS** | `^4.2.4` | CSS tokens matching accounts/auth-ui exactly |
 | **Framer Motion** | `^12.9.4` | Latest — View Transitions compatible |
-| **Lucide React** | `^0.511.0` | Latest icon set |
+| **Lucide React** | `^1.14.0` | Latest icon set |
 | **React Hook Form** | `^7.56.4` | |
-| **Zod** | `^3.24.4` | Schema validation |
+| **Zod** | `^4.4.2` | Schema validation |
 | **Sonner** | `^2.3.4` | Toast notifications |
 | **next-themes** | `^0.4.6` | Dark/light mode |
-| **pg** | `^8.14.1` | PostgreSQL driver |
+| **Prisma** | `^7.8.0` | ORM and schema (`prisma/schema.prisma`) on PostgreSQL |
 | **tailwind-merge** | `^3.3.0` | |
 
 ## Next.js 16.2 Key Changes Applied
@@ -27,7 +27,7 @@ Full-featured marketing website for Codevertex Africa Limited built with the **l
 - ✅ **`reactCompiler`** option promoted to stable top-level config (disabled by default)
 - ✅ **Adapters API stable** — `adapterPath` promoted to top-level in 16.2
 - ✅ **`cacheLife`/`cacheTag` stable** — no `unstable_` prefix required
-- ✅ **No `eslint-config-next`** — Next.js 16 removed built-in ESLint integration
+- ✅ **ESLint** — `eslint-config-next` 16.2.4 is installed; `pnpm lint` needs an `eslint.config.mjs` (flat config) before it runs
 - ✅ **`--turbopack` flag removed** from scripts (it's the default now)
 
 ## React 19.2 Key Changes Applied
@@ -72,14 +72,11 @@ Theme switcher is in the navbar (Sun/Moon icon).
 
 ## Database
 
-PostgreSQL with 3 tables:
-- `contact_submissions` — contact form entries
-- `enrollments` — Digitika course enrollments (pending payment)
-- `leads` — chatbot lead captures
+PostgreSQL through Prisma. The schema is defined in `prisma/schema.prisma` (contact submissions, leads, enrollments, courses, cohorts, blog posts and more). `scripts/schema.sql` is a legacy raw-SQL copy and is not the source of truth.
 
 ```bash
-# Create tables
-psql $DATABASE_URL -f scripts/schema.sql
+pnpm exec prisma generate
+pnpm exec prisma db push
 ```
 
 ## Getting Started
@@ -87,7 +84,7 @@ psql $DATABASE_URL -f scripts/schema.sql
 ```bash
 # 1. Install dependencies
 pnpm install
-# or: npm install
+# This project uses pnpm only (see packageManager in package.json)
 
 # 2. Configure environment
 cp .env.example .env.local
@@ -99,33 +96,15 @@ cp .env.example .env.local
 # seed it (`cd ../auth-service/auth-api && go run ./cmd/seed`), and set
 # NEXT_PUBLIC_AUTH_SERVICE_URL=http://localhost:4000
 
-# 3. Run DB migrations
-psql $DATABASE_URL -f scripts/schema.sql
+# 3. Create the database tables
+pnpm exec prisma generate
+pnpm exec prisma db push
 
 # 4. Start dev server (Turbopack is automatic in Next.js 16)
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
-
-## Upgrade from Next.js 15
-
-If you had a Next.js 15 project:
-
-```bash
-# Automated codemods
-npx @next/codemod@canary upgrade latest
-
-# Or manually:
-npm install next@latest react@latest react-dom@latest
-```
-
-Key breaking changes to be aware of:
-1. Remove `--turbopack` from dev script (it's the default now)
-2. Remove `eslint-config-next` dependency
-3. Replace `serverComponentsExternalPackages` with `serverExternalPackages`
-4. Remove `experimental.ppr` flag
-5. `next lint` command no longer exists — use ESLint directly
 
 ## Payment Flow (Digitika)
 
@@ -138,18 +117,11 @@ Follows the Codevertex treasury invoice-first pattern:
 
 ## Deployment
 
+Production runs as a Docker image (`Dockerfile`, `output: 'standalone'`) built and deployed by `.github/workflows/deploy.yml` on every push to `main`. The container entrypoint (`scripts/entrypoint.sh`) syncs the database schema and seeds data on start.
+
+To run a production build locally:
+
 ```bash
 pnpm build
 pnpm start
-```
-
-Deploy to **Vercel** (recommended):
-1. Push to GitHub
-2. Import repo in Vercel dashboard
-3. Set env vars: `DATABASE_URL`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_TREASURY_TENANT`
-4. Deploy — Vercel auto-detects Next.js 16
-
-Place the project in your monorepo at:
-```
-D:\Projects\Codevertex\codevertex-website\
 ```
