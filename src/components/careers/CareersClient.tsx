@@ -10,11 +10,15 @@
 import { CareersListing, CareersPostingDetail } from '@bengo-hub/shared-ui-lib/careers';
 import { ERP } from '@/lib/constants';
 
+// Same-origin proxy (src/app/api/erp) so the browser never makes a cross-origin call to
+// erp-api, which is blocked by CORS.
+const CAREERS_API = '/api/erp';
+
 export function CareersListingClient({ subtitle }: { subtitle?: string }) {
   return (
     <CareersListing
       orgSlug={ERP.tenant}
-      apiBaseUrl={ERP.apiBaseUrl}
+      apiBaseUrl={CAREERS_API}
       linkToPosting={(postingSlug) => `/careers/${postingSlug}`}
       subtitle={subtitle}
       poweredByHref="/services"
@@ -27,7 +31,7 @@ export function CareersPostingDetailClient({ postingSlug }: { postingSlug: strin
     <CareersPostingDetail
       orgSlug={ERP.tenant}
       postingSlug={postingSlug}
-      apiBaseUrl={ERP.apiBaseUrl}
+      apiBaseUrl={CAREERS_API}
       backHref="/careers"
       poweredByHref="/services"
     />
