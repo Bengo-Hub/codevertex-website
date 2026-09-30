@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner';
+import { VeraWidget } from '@/components/layout/VeraWidget';
 import { JsonLd, organizationJsonLd } from '@/lib/json-ld';
 
 const poppins = Poppins({
@@ -73,21 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Toaster richColors position="top-right" />
           <CookieConsentBanner />
         </ThemeProvider>
-        {/* Vera AI widget — loaded as a plain async script so document.currentScript works */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
-          async
-          src="https://marketflow.codevertexafrica.com/widget/chat.js"
-          data-tenant="codevertex"
-          data-mode="platform"
-          data-business-type="codevertex"
-          data-api-url="https://marketflowai.codevertexafrica.com"
-          data-primary-color="#9100B0"
-          data-accent-color="#b800e0"
-          data-widget-title="Vera"
-          data-whatsapp="254743793901"
-          data-phone="+254743793901"
-        />
+        <VeraWidget />
       </body>
     </html>
   );
