@@ -24,7 +24,7 @@ const GALLERY_ITEMS = [
 
 const HIGHLIGHTS = [
   { stat: '3×', label: 'Evenings per week, in-person or online' },
-  { stat: '4–8', label: 'Weeks to a recognised certificate' },
+  { stat: '2–12', label: 'Weeks to a recognised certificate' },
   { stat: '100%', label: 'Hands-on project-based curriculum' },
   { stat: 'KES', label: 'M-Pesa, card, or installment plans' },
 ];
@@ -140,10 +140,10 @@ export function LifeAtDigitika() {
         {/* Enrolment info strip */}
         <div className="flex flex-col sm:flex-row items-stretch gap-0 rounded-2xl overflow-hidden border border-border">
           {[
-            { label: 'Next intake', value: 'June 2026', sub: 'Applications open now' },
-            { label: 'Location', value: 'Kisumu + Online', sub: 'Pioneer House, Oginga St' },
+            { label: 'Next intake', value: 'Rolling intake', sub: 'See each course for start dates' },
+            { label: 'Location', value: 'Kisumu + Online', sub: 'Pioneer House, Oginga-Odinga Road' },
             { label: 'Payment', value: 'M-Pesa / Card', sub: 'Paybill 542542 · Acc 87660' },
-            { label: 'Duration', value: '4–16 weeks', sub: 'Depending on programme' },
+            { label: 'Duration', value: '2–12 weeks', sub: 'Depending on programme' },
           ].map(item => (
             <div key={item.label} className="flex-1 px-6 py-5 bg-card border-r border-border last:border-r-0">
               <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mb-1">{item.label}</p>

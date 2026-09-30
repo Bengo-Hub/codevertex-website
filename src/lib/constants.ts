@@ -33,5 +33,6 @@ export const NAV_LINKS = [
   { label: 'Digitika', href: '/digitika' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
+  { label: 'Careers', href: '/careers' },
   { label: 'Contact', href: '/contact' },
 ] as const;
