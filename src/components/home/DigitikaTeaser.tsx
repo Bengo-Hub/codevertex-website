@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { COURSE_CATEGORIES } from '@/config/courses';
 
 const PREVIEW_IMAGES = [
-  { src: '/images/MUSICA%20HACKATHON/SPK_6504.jpg', alt: 'Instructor presenting at MUCISA Hackathon', className: 'col-span-2 row-span-1' },
-  { src: '/images/MUSICA%20HACKATHON/SPK_6506.jpg', alt: 'Students at MUCISA Hackathon', className: 'col-span-1 row-span-1' },
-  { src: '/images/MUSICA%20HACKATHON/SPK_6501.jpg', alt: 'Student coding at MUCISA Hackathon', className: 'col-span-1 row-span-1' },
+  // One tall feature image on the left, two stacked on the right: fills the grid with no gaps.
+  { src: '/images/MUSICA%20HACKATHON/SPK_6504.jpg', alt: 'Instructor presenting at MUCISA Hackathon', className: 'row-span-2', position: 'object-top' },
+  { src: '/images/MUSICA%20HACKATHON/SPK_6506.jpg', alt: 'Students at MUCISA Hackathon', className: '', position: 'object-top' },
+  { src: '/images/MUSICA%20HACKATHON/SPK_6501.jpg', alt: 'Student coding at MUCISA Hackathon', className: '', position: 'object-center' },
 ];
 
 export function DigitikaTeaser() {
@@ -28,10 +29,16 @@ export function DigitikaTeaser() {
             </p>
 
             {/* Image preview grid */}
-            <div className="grid grid-cols-3 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-48 mb-6">
+            <div className="grid grid-cols-2 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-64 sm:h-72 mb-6">
               {PREVIEW_IMAGES.map((img, i) => (
                 <div key={i} className={`relative ${img.className} overflow-hidden bg-secondary`}>
-                  <Image src={img.src} alt={img.alt} fill className="object-cover" sizes="200px" />
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    className={`object-cover ${img.position}`}
+                    sizes="(max-width: 1024px) 50vw, 320px"
+                  />
                 </div>
               ))}
             </div>

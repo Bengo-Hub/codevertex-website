@@ -3,10 +3,10 @@ export const SITE = {
   tagline: "Architecting Africa's Digital Renaissance",
   url: 'https://codevertexafrica.com',
   email: 'info@codevertexafrica.com',
-  phone1: '+254 742 201 368',
+  phone1: '+254 743 793 901',
   phone2: '+254 743 793 901',
   phone3: '+254 792 548 766',
-  whatsapp: 'https://wa.me/254742201368',
+  whatsapp: 'https://wa.me/254743793901',
   address: 'Pioneer House, Oginga-Odinga Road, Kisumu CBD, Kenya',
   socials: {
     linkedin: 'https://linkedin.com/company/codevertex-africa',
@@ -33,6 +33,7 @@ export const NAV_LINKS = [
   { label: 'Digitika', href: '/digitika' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
+  { label: 'Projects', href: '/projects' },
   { label: 'Careers', href: '/careers' },
   { label: 'Contact', href: '/contact' },
 ] as const;

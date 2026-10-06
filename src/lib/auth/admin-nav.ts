@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, BookOpen, GraduationCap, MessageSquare, Mail,
   Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound, Newspaper,
-  School,
+  School, Images,
 } from 'lucide-react';
 import { DIGITIKA_MODULES, digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
@@ -37,6 +37,7 @@ const MODULE_UI: Record<
   classroom: { href: '/admin/classroom', icon: School },
   certificates: { href: '/admin/certificates', icon: GraduationCap },
   blog: { href: '/admin/blog', icon: Newspaper },
+  projects: { href: '/admin/projects', icon: Images },
   cohorts: { href: '/admin/cohorts', icon: Calendar },
   installments: { href: '/admin/installments', icon: CreditCard },
   discounts: { href: '/admin/discounts', icon: BadgePercent },
@@ -73,7 +74,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     label: 'Growth',
-    items: ['leads', 'contacts', 'blog'].map(navItem),
+    items: ['leads', 'contacts', 'blog', 'projects'].map(navItem),
   },
   {
     label: 'Administration',
