@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { POWER_SUITE } from '@/config/services';
 
 export const metadata: Metadata = { title: 'About Us', description: 'Architecting Africa\'s Digital Renaissance from Kisumu, Kenya since 2020.' };
 
@@ -30,7 +31,7 @@ export default function AboutPage() {
             </div>
             <div className="hidden lg:flex flex-col gap-3">
               {[
-                { val: '14+', label: 'SaaS products built' },
+                { val: String(POWER_SUITE.length), label: 'SaaS products built' },
                 { val: '200+', label: 'Staff trained' },
                 { val: '120+', label: 'Students certified' },
                 { val: '5+', label: 'Years of impact' },

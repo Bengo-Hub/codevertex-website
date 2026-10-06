@@ -22,22 +22,23 @@ export function TrustSection() {
       <div className="max-w-7xl mx-auto space-y-10">
 
         {/* Team photo + pull quote */}
-        <div className="relative rounded-2xl overflow-hidden h-80 border border-border">
+        <div className="relative rounded-2xl overflow-hidden h-80 sm:h-96 lg:h-[30rem] border border-border">
           <Image
             src="/images/team.jpg"
             alt="Codevertex Africa Limited team at an event, wearing company t-shirts"
             fill
-            className="object-cover object-[center_50%]"
+            className="object-cover object-[center_25%]"
             sizes="(max-width: 1280px) 100vw, 1280px"
           />
-          <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/60 to-black/20" />
-          <div className="absolute inset-0 flex items-center px-10">
-            <div className="max-w-xl">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">The team</p>
-              <blockquote className="text-3xl sm:text-4xl font-black text-white leading-snug tracking-tight mb-4">
+          {/* Gradient only at the bottom so faces stay clear */}
+          <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
+            <div className="max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">The team</p>
+              <blockquote className="text-2xl sm:text-3xl font-black text-white leading-snug tracking-tight mb-3">
                 &ldquo;Built in Kisumu. Engineered for Africa. Designed for the world.&rdquo;
               </blockquote>
-              <cite className="not-italic text-sm text-white/60 font-medium">
+              <cite className="not-italic text-sm text-white/70 font-medium">
                 Codevertex Africa Limited — Pioneer House, Oginga-Odinga Road, Kisumu
               </cite>
             </div>

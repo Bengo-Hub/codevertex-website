@@ -34,6 +34,7 @@ export const DIGITIKA_MODULES: DigitikaModuleDef[] = [
   { key: 'classroom', label: 'Classroom' },
   { key: 'certificates', label: 'Certificates' },
   { key: 'blog', label: 'Blog' },
+  { key: 'projects', label: 'Projects' },
   { key: 'cohorts', label: 'Cohorts' },
   { key: 'installments', label: 'Installments' },
   { key: 'discounts', label: 'Discounts' },
