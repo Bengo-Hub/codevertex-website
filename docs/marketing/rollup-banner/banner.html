@@ -6,149 +6,282 @@
 <!-- Canvas: 850 x 2000 mm roll-up. 1 CSS px = 1 mm. -->
 <style>
   :root{
-    --plum:#801E68;
-    --plum-deep:#4A0F3C;
-    --orchid:#E7B9D6;
-    --ink:#14101A;
-    --paper:#FBF8F5;
-    --grey:#5E5866;
-    --line:#E4DCE2;
+    --plum:#7A1D63;
+    --plum-2:#9A2C7F;
+    --plum-deep:#3E0E33;
+    --ink:#1A0F18;
+    --gold:#C8963E;
+    --gold-lt:#E7C27A;
+    --gold-dk:#9A6B1F;
+    --orange:#D9661F;
+    --orange-dk:#B4500F;
+    --paper:#FCF9F4;
+    --cream:#F6EEDF;
+    --grey:#5C5560;
+    --line:#E7DCCD;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   @page{size:850mm 2000mm;margin:0}
   html,body{width:850px;height:2000px;background:var(--paper)}
-  body{font-family:"Helvetica Neue",Helvetica,"Inter","Arial",sans-serif;color:var(--ink);
-       -webkit-font-smoothing:antialiased;font-feature-settings:"kern" 1;}
+  body{font-family:"Helvetica Neue",Helvetica,"Inter","Arial",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
   .banner{position:relative;width:850px;height:2000px;overflow:hidden;background:var(--paper)}
-  .pad{padding:0 64px}
-  .eyebrow{font-size:15px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--plum)}
+  .pad{padding:0 60px}
+  .eyebrow{font-size:14px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:var(--plum)}
 
-  /* ── 1. Brand header ── */
-  .topstrip{height:10px;background:linear-gradient(90deg,var(--plum-deep),var(--plum) 60%,#B0478F)}
-  .brand{height:198px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-  .brand img{width:370px;height:auto;display:block;margin-top:-4px}
-  .brand .tag{font-size:13.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--grey);font-weight:500;margin-top:-22px}
+  /* modern colour strip: plum block + angled gold + orange slices */
+  .strip{position:relative;height:22px;background:var(--plum)}
+  .strip::before{content:"";position:absolute;top:0;bottom:0;right:0;width:360px;
+    background:linear-gradient(100deg,transparent 0 18%,var(--gold) 18% 54%,transparent 54% 58%,var(--orange) 58% 100%)}
+  .strip::after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:3px;
+    background:linear-gradient(90deg,var(--gold),var(--gold-lt) 40%,var(--orange))}
 
-  /* ── 2. Headline ── */
-  .headline{padding-top:24px;margin-top:16px;border-top:1.5px solid var(--line);margin-left:64px;margin-right:64px;padding-left:0;padding-right:0}
-  .headline h1{font-size:68px;line-height:1;font-weight:800;letter-spacing:-.035em;margin-top:14px;white-space:nowrap}
-  .headline h1 em{font-style:normal;color:var(--plum)}
-  .headline p{font-size:20px;line-height:1.35;color:var(--grey);margin-top:16px;max-width:640px;font-weight:400}
+  /* ── Brand ── */
+  .brand{height:166px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:8px}
+  .brand img{width:330px;height:auto;display:block}
+  .brand .tag{display:flex;align-items:center;gap:16px;margin-top:-18px;font-size:13.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-dk);font-weight:700}
+  .brand .tag::before,.brand .tag::after{content:"";width:46px;height:2px;background:linear-gradient(90deg,var(--gold),var(--orange))}
 
-  /* ── 3. Hero photo ── */
-  .hero{position:relative;margin-top:30px;height:290px}
-  .hero img{width:100%;height:100%;object-fit:cover;object-position:50% 34%;display:block;filter:saturate(.9) contrast(1.04)}
-  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(74,15,60,0) 40%,rgba(74,15,60,.88) 100%)}
-  .hero .cap{position:absolute;left:64px;right:64px;bottom:22px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end}
-  .hero .cap b{display:block;font-size:31px;margin-top:6px;font-weight:800;letter-spacing:-.02em;line-height:1}
-  .hero .cap span{font-size:13.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:var(--orchid)}
-  .hero .cap .badge{white-space:nowrap;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;border:1.5px solid rgba(255,255,255,.6);padding:9px 14px;border-radius:40px;color:#fff}
+  /* ── Headline ── */
+  .headline{margin:20px 60px 0;padding-top:20px;border-top:1.5px solid var(--line);position:relative}
+  .headline h1{font-size:70px;line-height:1;font-weight:800;letter-spacing:-.035em;margin-top:12px;white-space:nowrap}
+  .headline h1 em{font-style:normal;background:linear-gradient(90deg,var(--plum) 0%,var(--plum-2) 55%,var(--orange) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .headline .bar{width:120px;height:7px;margin-top:16px;background:linear-gradient(90deg,var(--gold),var(--orange));border-radius:4px}
+  .headline p{font-size:19px;line-height:1.38;color:var(--grey);margin-top:12px;white-space:nowrap}
 
-  /* ── 4. Power Suite ── */
-  .suite{background:var(--ink);color:#fff;padding:28px 64px 22px}
-  .suite .head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1.5px solid rgba(255,255,255,.18);padding-bottom:12px;white-space:nowrap}
-  .suite h2{font-size:36px;font-weight:800;letter-spacing:-.03em}
-  .suite h2 span{color:var(--orchid)}
-  .suite .head .eyebrow{color:var(--orchid)}
-  .grid{display:grid;grid-template-columns:1fr 1fr;column-gap:40px}
-  .item{display:grid;grid-template-columns:38px 1fr;padding:10px 0 9px;border-bottom:1px solid rgba(255,255,255,.12)}
-  .item .n{font-size:13px;font-weight:700;color:var(--orchid);padding-top:5px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
-  .item b{display:block;white-space:nowrap;font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
-  .item i{display:block;font-style:normal;font-size:14.5px;line-height:1.3;color:rgba(255,255,255,.72);margin-top:3px}
-  .item .new{display:inline-block;vertical-align:middle;font-size:9.5px;font-weight:800;letter-spacing:.14em;background:var(--plum);color:#fff;padding:4px 7px 3px;border-radius:3px;margin-left:8px;position:relative;top:-3px}
+  /* ── Hero: vector product scene (crisp at any print size) ── */
+  .hero{position:relative;margin-top:22px;height:288px;overflow:hidden;
+    background:radial-gradient(120% 140% at 85% 10%,#8E2A74 0%,var(--plum-deep) 55%,#24081D 100%)}
+  .hero .grid{position:absolute;inset:0;opacity:.18;
+    background-image:linear-gradient(rgba(231,194,122,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(231,194,122,.5) 1px,transparent 1px);background-size:34px 34px}
+  .hero .glow{position:absolute;width:520px;height:520px;right:-170px;bottom:-330px;border-radius:50%;
+    background:radial-gradient(circle,rgba(217,102,31,.55),rgba(200,150,62,.15) 50%,transparent 70%)}
+  .hero .cornerband{position:absolute;left:0;top:0;width:230px;height:8px;background:linear-gradient(90deg,var(--gold),var(--orange))}
+  .hero .copy{position:absolute;left:60px;top:36px;width:250px;color:#fff;z-index:3}
+  .hero .copy .eyebrow{color:var(--gold-lt);font-size:12.5px}
+  .hero .copy h3{font-size:34px;line-height:1.02;font-weight:800;letter-spacing:-.025em;margin-top:10px}
+  .hero .copy p{font-size:15.5px;line-height:1.4;color:rgba(255,255,255,.82);margin-top:12px}
+  .hero .copy .sso{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);background:var(--gold-lt);padding:8px 13px;border-radius:30px}
 
-  /* ── 5. Digital solutions ── */
-  .solutions{padding:28px 64px 0;display:grid;grid-template-columns:250px 1fr;gap:34px;align-items:start}
-  .solutions .photo{position:relative;height:300px;border-radius:6px;overflow:hidden}
-  .solutions .photo img{width:100%;height:100%;object-fit:cover;object-position:62% 50%;display:block}
-  .solutions .photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(128,30,104,0) 55%,rgba(128,30,104,.55))}
-  .solutions h2{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.02;margin:8px 0 10px}
-  .svc{display:flex;gap:12px;align-items:baseline;padding:6px 0;border-top:1.5px solid var(--line)}
-  .svc:last-child{border-bottom:1.5px solid var(--line)}
-  .svc .dot{width:11px;height:11px;border-radius:50%;background:var(--plum);flex:none;transform:translateY(-2px)}
-  .svc b{font-size:17.5px;font-weight:700;letter-spacing:-.01em}
-  .svc i{font-style:normal;font-size:14px;color:var(--grey);display:block;margin-top:2px}
+  .laptop{position:absolute;left:330px;top:22px;width:420px;z-index:2}
+  .laptop .lid{background:#0F0A0E;border-radius:12px 12px 4px 4px;padding:9px;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+  .laptop .base{height:12px;margin:0 -26px;background:linear-gradient(#CFC6CD,#8E858C);border-radius:0 0 14px 14px}
+  .screen{height:228px;background:#FBF8F4;border-radius:3px;display:grid;grid-template-columns:58px 1fr;overflow:hidden}
+  .side{background:var(--plum);padding:10px 8px;display:flex;flex-direction:column;gap:9px}
+  .side i{display:block;height:7px;border-radius:4px;background:rgba(255,255,255,.35)}
+  .side i:first-child{height:18px;background:var(--gold-lt);margin-bottom:6px}
+  .side i.on{background:#fff}
+  .main{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .topbar{display:flex;justify-content:space-between;align-items:center}
+  .topbar b{font-size:11px;font-weight:800;letter-spacing:.02em;color:var(--ink)}
+  .topbar span{font-size:8px;font-weight:700;color:#fff;background:var(--orange);padding:3px 7px;border-radius:10px}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .kpi{background:#fff;border:1px solid #EDE3D6;border-radius:5px;padding:6px 7px;border-top:3px solid var(--plum)}
+  .kpi:nth-child(2){border-top-color:var(--gold)} .kpi:nth-child(3){border-top-color:var(--orange)}
+  .kpi small{display:block;font-size:6.5px;color:#7a7076;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .kpi strong{display:block;font-size:13px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  .kpi em{font-style:normal;font-size:7px;font-weight:700;color:#2E8B57}
+  .charts{display:grid;grid-template-columns:1.6fr 1fr;gap:7px;flex:1}
+  .card{background:#fff;border:1px solid #EDE3D6;border-radius:5px;padding:6px 7px}
+  .card small{font-size:6.5px;color:#7a7076;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .card svg{display:block;width:100%;height:96px;margin-top:3px}
 
-  .stack{margin:22px 64px 0;display:flex;flex-wrap:nowrap;justify-content:space-between}
-  .stack span{white-space:nowrap;font-size:13px;font-weight:700;letter-spacing:.05em;color:var(--plum);border:1.5px solid var(--plum);border-radius:40px;padding:6px 13px}
+  .phone{position:absolute;left:690px;top:76px;width:112px;height:206px;background:#0F0A0E;border-radius:18px;padding:6px;z-index:3;box-shadow:0 16px 34px rgba(0,0,0,.5)}
+  .phone .ps{height:100%;background:#fff;border-radius:13px;overflow:hidden;display:flex;flex-direction:column}
+  .phone .ph{background:linear-gradient(135deg,var(--plum),var(--plum-2));color:#fff;padding:12px 9px 9px;font-size:8px;font-weight:800;letter-spacing:.06em}
+  .phone .ph b{display:block;font-size:13px;letter-spacing:-.01em;margin-top:3px}
+  .phone .ok{margin:12px auto 6px;width:34px;height:34px;border-radius:50%;background:#2E8B57;display:grid;place-items:center}
+  .phone .ok svg{width:18px;height:18px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .phone .amt{text-align:center;font-size:14px;font-weight:800;letter-spacing:-.02em}
+  .phone .via{text-align:center;font-size:7px;color:#7a7076;font-weight:700;margin-top:2px}
+  .phone .line{height:5px;margin:6px 10px 0;border-radius:3px;background:#EFE6DA}
+  .phone .btn{margin:auto 9px 10px;background:var(--orange);color:#fff;font-size:7.5px;font-weight:800;text-align:center;padding:6px;border-radius:10px;letter-spacing:.06em}
 
-  /* ── 6. Contact footer ── */
-  .contact{position:absolute;left:0;right:0;bottom:0;height:270px;background:var(--plum);color:#fff;padding:28px 64px 0}
-  .contact::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:var(--plum-deep)}
-  .crow{display:grid;grid-template-columns:1fr 142px;gap:30px;align-items:start}
+  /* ── Maskani spotlight ── */
+  .maskani{position:relative;margin:22px 60px 0;padding:16px 22px 16px 30px;background:linear-gradient(120deg,#FFF8EA,var(--cream));
+    border:1.5px solid #E9D2A6;border-radius:10px;display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:center;overflow:hidden}
+  .maskani::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:linear-gradient(180deg,var(--plum),var(--gold) 60%,var(--orange))}
+  .maskani .flag{position:absolute;right:0;top:0;font-size:11px;font-weight:800;letter-spacing:.18em;color:#fff;background:var(--orange);padding:7px 14px 6px 18px;border-bottom-left-radius:10px}
+  .maskani img{width:215px;display:block}
+  .maskani .by{font-size:11.5px;font-weight:800;letter-spacing:.26em;color:var(--gold-dk);margin-top:6px;padding-left:4px}
+  .maskani h4{font-size:22px;white-space:nowrap;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .maskani ul{list-style:none;margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 14px}
+  .maskani li{white-space:nowrap;font-size:14.5px;color:#3b3238;padding-left:16px;position:relative;line-height:1.3}
+  .maskani li::before{content:"";position:absolute;left:0;top:6px;width:8px;height:8px;border-radius:2px;background:var(--gold);transform:rotate(45deg)}
+
+  /* ── Power Suite ── */
+  .suite{position:relative;margin-top:22px;background:linear-gradient(180deg,#1E0F1B,#160B14);color:#fff;padding:26px 60px 18px}
+  .suite::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,var(--plum) 0 45%,var(--gold) 45% 75%,var(--orange) 75%)}
+  .suite .head{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;white-space:nowrap;border-bottom:1.5px solid rgba(231,194,122,.35)}
+  .suite h2{font-size:33px;font-weight:800;letter-spacing:-.03em}
+  .suite h2 span{color:var(--gold-lt)}
+  .suite .head .eyebrow{color:var(--gold-lt)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;column-gap:40px}
+  .item{display:grid;grid-template-columns:38px 1fr;padding:7px 0 5px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .item .n{font-size:13px;font-weight:800;color:var(--gold);padding-top:5px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+  .item b{display:block;white-space:nowrap;font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+  .item i{display:block;font-style:normal;font-size:13.5px;line-height:1.3;color:rgba(255,255,255,.72);margin-top:2px}
+  .item .new{display:inline-block;vertical-align:middle;font-size:9px;font-weight:800;letter-spacing:.14em;background:var(--orange);color:#fff;padding:4px 6px 3px;border-radius:3px;margin-left:8px;position:relative;top:-2px}
+
+  /* ── Digital solutions ── */
+  .solutions{padding:22px 60px 0}
+  .solutions .sh{display:flex;justify-content:space-between;align-items:baseline}
+  .solutions h2{font-size:30px;font-weight:800;letter-spacing:-.03em;margin-top:6px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .sc{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:8px;padding:14px 12px 10px 48px;overflow:hidden;min-height:74px}
+  .sc::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--plum)}
+  .sc:nth-child(3n+2)::before{background:var(--gold)} .sc:nth-child(3n)::before{background:var(--orange)}
+  .sc svg{width:26px;height:26px;stroke:var(--plum);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block;position:absolute;left:13px;top:16px}
+  .sc:nth-child(3n+2) svg{stroke:var(--gold-dk)} .sc:nth-child(3n) svg{stroke:var(--orange-dk)}
+  .sc b{display:block;white-space:nowrap;font-size:15.5px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+  .sc i{display:block;font-style:normal;font-size:12.5px;color:var(--grey);margin-top:4px;line-height:1.3}
+
+  .stack{margin:14px 60px 0;display:flex;justify-content:space-between}
+  .stack span{white-space:nowrap;font-size:12.5px;font-weight:800;letter-spacing:.05em;color:var(--plum);border:1.5px solid var(--gold);background:#FFF8EA;border-radius:40px;padding:6px 12px}
+
+  /* ── Contact ── */
+  .contact{position:absolute;left:0;right:0;bottom:0;height:232px;background:linear-gradient(135deg,var(--plum) 0%,#5E1550 70%,var(--plum-deep) 100%);color:#fff;padding:28px 60px 0;overflow:hidden}
+  .contact::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;
+    background:linear-gradient(100deg,var(--gold) 0 40%,transparent 40% 41%,var(--orange) 41% 62%,transparent 62% 63%,var(--gold-lt) 63% 100%)}
+  .contact::after{content:"";position:absolute;right:-120px;bottom:-160px;width:360px;height:360px;border-radius:50%;border:40px solid rgba(231,194,122,.08)}
+  .crow{position:relative;z-index:1;display:grid;grid-template-columns:1fr 142px;gap:30px;align-items:start}
   .cta{white-space:nowrap;font-size:27px;font-weight:800;letter-spacing:-.025em;line-height:1.05}
-  .cta span{color:var(--orchid)}
+  .cta span{color:var(--gold-lt)}
   .lines{margin-top:16px;display:grid;grid-template-columns:auto 1fr;column-gap:13px;row-gap:7px;align-items:center}
-  .lines svg{width:20px;height:20px;stroke:var(--orchid);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  .lines div{white-space:nowrap;font-size:20px;font-weight:600;letter-spacing:-.005em}
-  .lines div.sm{font-size:15.5px;font-weight:400;color:rgba(255,255,255,.85)}
-  .qr{background:#fff;border-radius:7px;padding:11px;width:142px}
-  .qr img{width:120px;height:120px;display:block}
-  .qr p{color:var(--plum);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-top:8px}
+  .lines .ic{width:30px;height:30px;border-radius:50%;background:rgba(231,194,122,.16);border:1.5px solid rgba(231,194,122,.55);display:grid;place-items:center}
+  .lines svg{width:16px;height:16px;stroke:var(--gold-lt);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .lines div.t{white-space:nowrap;font-size:20px;font-weight:600}
+  .lines div.sm{font-size:15px;font-weight:400;color:rgba(255,255,255,.85)}
+  .qr{background:#fff;border-radius:8px;padding:11px;width:142px;border:3px solid var(--gold)}
+  .qr img{width:114px;height:114px;display:block}
+  .qr p{color:var(--plum);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-top:7px}
   .mark{display:flex;align-items:center;gap:8px;justify-content:center;margin-top:12px}
-  .mark img{width:38px;height:auto;filter:brightness(0) invert(1)}
-  .mark span{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,.85)}
+  .mark img{width:36px;height:auto;filter:brightness(0) invert(1)}
+  .mark span{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;font-weight:700;color:var(--gold-lt)}
 </style>
 </head>
 <body>
 <div class="banner">
-  <div class="topstrip"></div>
+  <div class="strip"></div>
 
-  <!-- 1 · Brand -->
+  <!-- Brand -->
   <header class="brand">
     <img src="assets/logo.png" alt="Codevertex Africa Limited">
-    <div class="tag">Architecting Africa’s Digital Renaissance</div>
+    <div class="tag">Architecting Africa’s Digital Excellence</div>
   </header>
 
-  <!-- 2 · Headline -->
-  <section class="headline pad">
+  <!-- Headline -->
+  <section class="headline">
     <div class="eyebrow">Software &amp; Digital Solutions</div>
     <h1>Software that runs<br><em>African business.</em></h1>
-    <p>Integrated cloud platforms, custom software and AI — engineered in Kisumu, built for Africa.</p>
+    <div class="bar"></div>
+    <p>Cloud platforms, custom software &amp; AI — engineered in Kisumu, built for Africa.</p>
   </section>
 
-  <!-- 3 · Hero -->
-  <figure class="hero">
-    <img src="assets/1.jpg" alt="">
-    <figcaption class="cap">
-      <div><span>One account · one login</span><b>The Codevertex Power Suite</b></div>
-      <div class="badge">Single Sign-On</div>
-    </figcaption>
-  </figure>
+  <!-- Hero (vector scene) -->
+  <section class="hero">
+    <div class="grid"></div><div class="glow"></div><div class="cornerband"></div>
+    <div class="copy">
+      <div class="eyebrow">The Power Suite</div>
+      <h3>Every product.<br>One login.</h3>
+      <p>Finance, sales, property, logistics and AI — connected in real time.</p>
+      <div class="sso">● Single Sign-On</div>
+    </div>
+    <div class="laptop">
+      <div class="lid"><div class="screen">
+        <div class="side"><i></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="main">
+          <div class="topbar"><b>Business overview · October</b><span>LIVE</span></div>
+          <div class="kpis">
+            <div class="kpi"><small>Revenue</small><strong>KES 4.82M</strong><em>▲ 18.4%</em></div>
+            <div class="kpi"><small>Orders</small><strong>1,248</strong><em>▲ 9.1%</em></div>
+            <div class="kpi"><small>M-Pesa share</small><strong>92%</strong><em>▲ 3.2%</em></div>
+          </div>
+          <div class="charts">
+            <div class="card"><small>Sales by month</small>
+              <svg viewBox="0 0 200 96" preserveAspectRatio="none">
+                <g fill="#EFE6DA"><rect x="0" y="94" width="200" height="1"/><rect x="0" y="64" width="200" height="1"/><rect x="0" y="34" width="200" height="1"/></g>
+                <g>
+                  <rect x="6" y="58" width="16" height="36" rx="2" fill="#7A1D63"/><rect x="31" y="48" width="16" height="46" rx="2" fill="#7A1D63"/>
+                  <rect x="56" y="52" width="16" height="42" rx="2" fill="#7A1D63"/><rect x="81" y="38" width="16" height="56" rx="2" fill="#7A1D63"/>
+                  <rect x="106" y="30" width="16" height="64" rx="2" fill="#7A1D63"/><rect x="131" y="34" width="16" height="60" rx="2" fill="#7A1D63"/>
+                  <rect x="156" y="20" width="16" height="74" rx="2" fill="#C8963E"/><rect x="181" y="10" width="16" height="84" rx="2" fill="#D9661F"/>
+                </g>
+                <polyline points="14,50 39,42 64,46 89,30 114,22 139,26 164,12 189,4" fill="none" stroke="#C8963E" stroke-width="2.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="card"><small>Channels</small>
+              <svg viewBox="0 0 100 96">
+                <circle cx="50" cy="48" r="32" fill="none" stroke="#EFE6DA" stroke-width="14"/>
+                <circle cx="50" cy="48" r="32" fill="none" stroke="#7A1D63" stroke-width="14" stroke-dasharray="110 201" transform="rotate(-90 50 48)"/>
+                <circle cx="50" cy="48" r="32" fill="none" stroke="#C8963E" stroke-width="14" stroke-dasharray="52 201" stroke-dashoffset="-110" transform="rotate(-90 50 48)"/>
+                <circle cx="50" cy="48" r="32" fill="none" stroke="#D9661F" stroke-width="14" stroke-dasharray="39 201" stroke-dashoffset="-162" transform="rotate(-90 50 48)"/>
+                <text x="50" y="52" text-anchor="middle" font-size="12" font-weight="800" fill="#1A0F18" font-family="Inter,Helvetica,sans-serif">55%</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div class="base"></div>
+    </div>
+    <div class="phone"><div class="ps">
+      <div class="ph">BOOKS · PAY<b>Invoice #1042</b></div>
+      <div class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <div class="amt">KES 12,500</div>
+      <div class="via">Paid via M-Pesa</div>
+      <div class="line"></div><div class="line" style="width:60%"></div>
+      <div class="btn">VIEW RECEIPT</div>
+    </div></div>
+  </section>
 
-  <!-- 4 · Power Suite -->
+  <!-- Maskani spotlight -->
+  <section class="maskani">
+    <div class="flag">NEW</div>
+    <div><img src="assets/maskani-logo.svg" alt="Maskani by Codevertex"></div>
+    <div>
+      <h4>Real estate &amp; property management</h4>
+      <ul>
+        <li>Rent &amp; service charge</li>
+        <li>Unit sales &amp; instalments</li>
+        <li>Meters, works &amp; vendors</li>
+        <li>Gate, visitors &amp; notices</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Power Suite -->
   <section class="suite">
     <div class="head">
-      <h2>12 products. <span>One platform.</span></h2>
+      <h2>14 products. <span>One platform.</span></h2>
       <div class="eyebrow">Power Suite</div>
     </div>
-    <div class="grid">
+    <div class="grid2">
       <div class="item"><div class="n">01</div><div><b>ERP Suite</b><i>HR, payroll, procurement &amp; CRM</i></div></div>
       <div class="item"><div class="n">02</div><div><b>Books &amp; Treasury</b><i>Ledger, invoicing, KRA eTIMS</i></div></div>
       <div class="item"><div class="n">03</div><div><b>POS System</b><i>Offline-ready retail &amp; hospitality</i></div></div>
       <div class="item"><div class="n">04</div><div><b>Ordering Platform</b><i>Online orders &amp; live delivery tracking</i></div></div>
-      <div class="item"><div class="n">05</div><div><b>Inventory<span class="new">NEW</span></b><i>Stock, warehouses &amp; pricing tiers</i></div></div>
-      <div class="item"><div class="n">06</div><div><b>Logistics<span class="new">NEW</span></b><i>Dispatch, delivery &amp; rider tracking</i></div></div>
-      <div class="item"><div class="n">07</div><div><b>TruLoad</b><i>Axle-load weighing &amp; enforcement</i></div></div>
-      <div class="item"><div class="n">08</div><div><b>ISP Billing</b><i>Zero-touch provisioning &amp; billing</i></div></div>
-      <div class="item"><div class="n">09</div><div><b>Codevertex Afya<span class="new">NEW</span></b><i>Clinical &amp; pharmacy operations</i></div></div>
-      <div class="item"><div class="n">10</div><div><b>MarketFlow + Vera AI<span class="new">NEW</span></b><i>CRM, leads &amp; AI chat assistant</i></div></div>
-      <div class="item"><div class="n">11</div><div><b>Library Management<span class="new">NEW</span></b><i>Catalogue, circulation &amp; members</i></div></div>
-      <div class="item"><div class="n">12</div><div><b>Notifications Engine</b><i>SMS, email, push &amp; WhatsApp</i></div></div>
+      <div class="item"><div class="n">05</div><div><b>Projects<span class="new">NEW</span></b><i>Milestones, budgets &amp; timesheets</i></div></div>
+      <div class="item"><div class="n">06</div><div><b>Inventory<span class="new">NEW</span></b><i>Stock, warehouses &amp; pricing tiers</i></div></div>
+      <div class="item"><div class="n">07</div><div><b>Logistics<span class="new">NEW</span></b><i>Dispatch, delivery &amp; rider tracking</i></div></div>
+      <div class="item"><div class="n">08</div><div><b>TruLoad</b><i>Axle-load weighing &amp; enforcement</i></div></div>
+      <div class="item"><div class="n">09</div><div><b>ISP Billing</b><i>Zero-touch provisioning &amp; billing</i></div></div>
+      <div class="item"><div class="n">10</div><div><b>Codevertex Afya<span class="new">NEW</span></b><i>Clinical &amp; pharmacy operations</i></div></div>
+      <div class="item"><div class="n">11</div><div><b>MarketFlow + Vera AI<span class="new">NEW</span></b><i>CRM, leads &amp; AI chat assistant</i></div></div>
+      <div class="item"><div class="n">12</div><div><b>Ticketing<span class="new">NEW</span></b><i>Events, venues &amp; attendees</i></div></div>
+      <div class="item"><div class="n">13</div><div><b>Library Management<span class="new">NEW</span></b><i>Catalogue, circulation &amp; members</i></div></div>
+      <div class="item"><div class="n">14</div><div><b>Notifications Engine</b><i>SMS, email, push &amp; WhatsApp</i></div></div>
     </div>
   </section>
 
-  <!-- 5 · Digital solutions -->
+  <!-- Digital solutions -->
   <section class="solutions">
-    <div class="photo"><img src="assets/2_up.jpg" alt=""></div>
-    <div>
-      <div class="eyebrow">Digital Solutions</div>
-      <h2>Built around your business.</h2>
-      <div class="svc"><span class="dot"></span><div><b>Custom Software &amp; Mobile Apps</b><i>Web portals, Android &amp; iOS, APIs</i></div></div>
-      <div class="svc"><span class="dot"></span><div><b>AI, Automation &amp; BI</b><i>Chatbots, workflows, dashboards</i></div></div>
-      <div class="svc"><span class="dot"></span><div><b>Secure Cloud &amp; Hosting</b><i>Backups, disaster recovery, domains</i></div></div>
-      <div class="svc"><span class="dot"></span><div><b>Cybersecurity &amp; Audit</b><i>Pen-testing, ISO 27001, OWASP</i></div></div>
-      <div class="svc"><span class="dot"></span><div><b>IoT &amp; System Integrations</b><i>Hardware-to-cloud, M-Pesa, Paystack</i></div></div>
+    <div class="sh"><div><div class="eyebrow">Digital Solutions</div><h2>Built around your business.</h2></div></div>
+    <div class="cards">
+      <div class="sc"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="14" height="11" rx="1.5"/><rect x="17" y="8" width="5" height="12" rx="1"/><path d="M6 19h7"/></svg><b>Web &amp; Mobile Apps</b><i>Portals, Android &amp; iOS, APIs</i></div>
+      <div class="sc"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 10h4v4h-4z"/></svg><b>AI &amp; Automation</b><i>Chatbots, workflows, BI dashboards</i></div>
+      <div class="sc"><svg viewBox="0 0 24 24"><path d="M3 9h18M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M7 13h4"/></svg><b>E-commerce</b><i>Marketplaces, multi-currency stores</i></div>
+      <div class="sc"><svg viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 8.5a4 4 0 0 1-1 9.5z"/></svg><b>Cloud &amp; Hosting</b><i>Backups, disaster recovery, domains</i></div>
+      <div class="sc"><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg><b>Cybersecurity</b><i>Pen-testing, audits, ISO&nbsp;27001</i></div>
+      <div class="sc"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5L19 19M19 5l-2.5 2.5M7.5 16.5L5 19"/></svg><b>IoT &amp; Integrations</b><i>Hardware-to-cloud, M-Pesa, Paystack</i></div>
     </div>
   </section>
 
@@ -156,19 +289,19 @@
     <span>M-Pesa</span><span>Paystack</span><span>KRA eTIMS</span><span>OAuth 2.0 SSO</span><span>AES-256</span><span>Multi-tenant</span>
   </div>
 
-  <!-- 6 · Contact -->
+  <!-- Contact -->
   <footer class="contact">
     <div class="crow">
       <div>
         <div class="cta">Let’s build what’s next. <span>Talk to us.</span></div>
         <div class="lines">
-          <svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
-          <div>+254 742 201 368 &nbsp;·&nbsp; +254 743 793 901</div>
-          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
-          <div>info@codevertexafrica.com</div>
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <div>codevertexafrica.com</div>
-          <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div>
+          <div class="t">+254 742 201 368 &nbsp;·&nbsp; +254 743 793 901</div>
+          <div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></div>
+          <div class="t">info@codevertexafrica.com</div>
+          <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div class="t">codevertexafrica.com</div>
+          <div class="ic"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
           <div class="sm">Pioneer House, Oginga-Odinga Rd, Kisumu CBD</div>
         </div>
       </div>
