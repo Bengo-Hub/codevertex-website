@@ -139,6 +139,13 @@
   .stack{margin:14px 60px 0;display:flex;justify-content:space-between}
   .stack span{white-space:nowrap;font-size:12.5px;font-weight:800;letter-spacing:.04em;color:var(--plum);border:1.5px solid var(--gold);background:#FFF8EA;border-radius:40px;padding:6px 10px}
 
+  /* Integration logos: drop official files into assets/logos/<name>.svg (or .png);
+     the badge shows the logo when the file exists, otherwise the brand name. */
+  .stack .lb img{height:20px;width:auto;display:block}
+  .stack .lb.has-logo{background:#fff;padding:5px 12px}
+  .stack .lb.has-logo em{display:none}
+  .stack em{font-style:normal}
+
   /* ── Contact ── */
   .contact{position:absolute;left:0;right:0;bottom:0;height:232px;background:linear-gradient(135deg,var(--plum) 0%,#5E1550 70%,var(--plum-deep) 100%);color:#fff;padding:28px 60px 0;overflow:hidden}
   .contact::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;
@@ -288,8 +295,7 @@
     </div>
   </section>
 
-  <div class="stack">
-    <span>M-Pesa</span><span>Paystack</span><span>PayHero</span><span>KRA eTIMS</span><span>OAuth 2.0 SSO</span><span>AES-256</span><span>Multi-tenant</span>
+  <div class="stack"><span class="lb" data-logo="mpesa"><em>M-Pesa</em></span><span class="lb" data-logo="paystack"><em>Paystack</em></span><span class="lb" data-logo="payhero"><em>PayHero</em></span><span class="lb" data-logo="kra-etims"><em>KRA eTIMS</em></span><span>OAuth 2.0 SSO</span><span>AES-256</span><span>Multi-tenant</span>
   </div>
 
   <!-- Contact -->
@@ -315,5 +321,20 @@
     </div>
   </footer>
 </div>
+<script>
+  // Load assets/logos/<name>.svg, then .png; keep the text label if neither exists.
+  window.logosReady = Promise.all([...document.querySelectorAll('.lb')].map(el => new Promise(done => {
+    const exts = ['svg', 'png'];
+    const tryNext = () => {
+      if (!exts.length) return done();
+      const img = new Image();
+      img.alt = el.textContent;
+      img.onload = () => { el.prepend(img); el.classList.add('has-logo'); done(); };
+      img.onerror = tryNext;
+      img.src = 'assets/logos/' + el.dataset.logo + '.' + exts.shift();
+    };
+    tryNext();
+  })));
+</script>
 </body>
 </html>
