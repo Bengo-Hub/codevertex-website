@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 12 260 96" width="260" height="96">
+  <!-- Stylized Crimson e-Icon Wrapper -->
+  <g transform="translate(10, 10)">
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#DA251D" stroke-width="10" />
+    <path d="M 25 50 Q 50 20 75 50 Q 50 80 25 50 Z" fill="#DA251D" />
+    <text x="50" y="63" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="#FFFFFF" text-anchor="middle">e</text>
+  </g>
+  <!-- eTIMS Branding Text -->
+  <text x="130" y="78" font-family="Helvetica, Arial, sans-serif" font-size="54" font-weight="900" fill="#000000" letter-spacing="2">TIMS</text>
+</svg>
