@@ -6,8 +6,9 @@ rule snaps to the same invisible scaffolding. Order is not decoration here; it i
 A structure this disciplined says, without words, that the systems behind it are engineered.
 
 Colour is limited and deliberate. A single deep plum — drawn directly from the vertex mark —
-carries all emphasis, set against warm paper white and near-black ink. A thin second accent of
-soft orchid appears only where the eye must pause. Nothing is tinted for its own sake; each
+carries all emphasis, set against warm paper white and near-black ink. Gold and a dark, burnt orange are the
+second voice: angled colour strips, rules and small markers that appear only where the eye must
+pause, giving the plum warmth and momentum. Nothing is tinted for its own sake; each
 chromatic decision is meticulously calibrated so that the palette reads as one voice from five
 metres away and as a finely tuned instrument from arm's length.
 
