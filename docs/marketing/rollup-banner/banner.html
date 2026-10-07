@@ -137,13 +137,18 @@
   .sc i{display:block;font-style:normal;font-size:12.5px;color:var(--grey);margin-top:4px;line-height:1.3}
 
   .stack{margin:14px 60px 0;display:flex;justify-content:space-between}
-  .stack span{white-space:nowrap;font-size:12.5px;font-weight:800;letter-spacing:.04em;color:var(--plum);border:1.5px solid var(--gold);background:#FFF8EA;border-radius:40px;padding:6px 10px}
+  .stack span{white-space:nowrap;font-size:12px;font-weight:800;letter-spacing:.03em;color:var(--plum);border:1.5px solid var(--gold);background:#FFF8EA;border-radius:40px;padding:0 10px;height:32px;display:inline-flex;align-items:center}
 
   /* Integration logos: drop official files into assets/logos/<name>.svg (or .png);
      the badge shows the logo when the file exists, otherwise the brand name. */
+  .stack .lb{display:inline-flex;align-items:center;gap:7px}
   .stack .lb img{height:20px;width:auto;display:block}
-  .stack .lb.has-logo{background:#fff;padding:5px 12px}
+  .stack [data-logo="mpesa"] img{height:21px}
+  .stack [data-logo="paystack"] img{height:13px}
+  .stack [data-logo="payhero"] img{height:19px}
+  .stack .lb.has-logo{background:#fff;padding:0 11px}
   .stack .lb.has-logo em{display:none}
+  .stack .lb.has-logo.keep-label em{display:inline;color:#2E2A3A}
   .stack em{font-style:normal}
 
   /* ── Contact ── */
@@ -295,7 +300,7 @@
     </div>
   </section>
 
-  <div class="stack"><span class="lb" data-logo="mpesa"><em>M-Pesa</em></span><span class="lb" data-logo="paystack"><em>Paystack</em></span><span class="lb" data-logo="payhero"><em>PayHero</em></span><span class="lb" data-logo="kra-etims"><em>KRA eTIMS</em></span><span>OAuth 2.0 SSO</span><span>AES-256</span><span>Multi-tenant</span>
+  <div class="stack"><span class="lb" data-logo="mpesa"><em>M-Pesa</em></span><span class="lb" data-logo="paystack"><em>Paystack</em></span><span class="lb keep-label" data-logo="payhero"><em>PayHero</em></span><span class="lb" data-logo="kra-etims"><em>KRA eTIMS</em></span><span>OAuth 2.0 SSO</span><span>AES-256</span><span>Multi-tenant</span>
   </div>
 
   <!-- Contact -->
