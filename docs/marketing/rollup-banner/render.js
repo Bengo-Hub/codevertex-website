@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
   const dir = process.argv[2], scale = +(process.argv[3]||1);
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 850, height: 2000 }, deviceScaleFactor: scale });
-  await p.goto('file://' + dir + '/banner.html'); await p.waitForTimeout(500);
+  await p.goto('file://' + dir + '/banner.html'); await p.evaluate(() => window.logosReady); await p.waitForTimeout(500);
   const over = await p.evaluate(() => { const c=document.querySelector('.contact').getBoundingClientRect(); const s=document.querySelector('.stack').getBoundingClientRect(); return {stackBottom:s.bottom, contactTop:c.top, fonts:getComputedStyle(document.body).fontFamily}; });
   console.log(JSON.stringify(over));
   await p.screenshot({ path: dir + `/preview@${scale}x.png` });
