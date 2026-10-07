@@ -6,6 +6,5 @@ leaves the badge as text.
   paystack.svg  Paystack mark + wordmark, from shared-ui-lib (paystack.com site header).
   payhero.png   PayHero "PH" mark, from shared-ui-lib (PayHero's published PNG, 160x90).
                 Replace with a larger PNG (600 px+) from PayHero for sharper print.
-  kra-etims.svg KRA eTIMS mark supplied by Codevertex (xmlns corrected, viewBox trimmed).
-                Its lettering uses live text (Helvetica/Arial), so it renders in the
-                installed fallback font.
+  kra-etims.png Official KRA eTIMS logo supplied by Codevertex (447x447 source): cropped to
+                the artwork, white made transparent, upscaled 3x for print.
