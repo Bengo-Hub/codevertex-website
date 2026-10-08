@@ -19,12 +19,12 @@ function safeReturnTo(raw: string | null): string {
 function LoginInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { status, user, login } = useAuthStore();
+  const { status, user, login, ready } = useAuthStore();
   const started = useRef(false);
   const returnTo = safeReturnTo(searchParams.get('returnTo'));
 
   useEffect(() => {
-    if (status === 'loading') return; // session is being restored; wait
+    if (!ready || status === 'loading') return; // session is being restored; wait
     if (status === 'authenticated' && user) {
       router.replace(returnTo);
       return;
@@ -33,7 +33,7 @@ function LoginInner() {
     if (started.current) return;
     started.current = true;
     void login(returnTo, returnTo.startsWith('/student') ? 'student' : 'admin');
-  }, [status, user, returnTo, login, router]);
+  }, [ready, status, user, returnTo, login, router]);
 
   if (status === 'error') {
     return (
