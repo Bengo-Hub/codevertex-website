@@ -5,24 +5,124 @@ import { useAuth } from '@/hooks/use-auth';
 import { NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronDown, LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { ChevronDown, GraduationCap, LayoutDashboard, LogIn, LogOut, Menu, ShieldCheck, Users, X } from 'lucide-react';
+import { canAccessAdminPanel } from '@/lib/auth/admin-nav';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+/** Shared outside-click + Escape handling for the navbar dropdowns. */
+function useDismiss(open: boolean, setOpen: (v: boolean) => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open, setOpen]);
+  return ref;
+}
+
+/**
+ * One entry point for every audience: students (SSO), parents (no account: Student ID +
+ * one-time code) and staff (SSO, lands on the admin panel).
+ */
+function useSignInOptions() {
+  const { login } = useAuth();
+  return [
+    {
+      key: 'student',
+      label: 'Student login',
+      hint: 'Lessons, quizzes and certificates',
+      icon: GraduationCap,
+      onSelect: () => login('/student', 'student'),
+    },
+    {
+      key: 'parent',
+      label: 'Parent portal',
+      hint: 'Progress and fees, no account needed',
+      icon: Users,
+      href: '/digitika/parent',
+    },
+    {
+      key: 'staff',
+      label: 'Staff login',
+      hint: 'Admin dashboard',
+      icon: ShieldCheck,
+      onSelect: () => login('/admin', 'admin'),
+    },
+  ] as const;
+}
+
+function SignInMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useDismiss(open, setOpen);
+  const options = useSignInOptions();
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="h-9 pl-4 pr-3 rounded-full bg-primary text-primary-foreground text-sm font-bold inline-flex items-center gap-1.5 shadow-primary hover:shadow-primary-lg transition-all duration-200"
+      >
+        <LogIn className="h-4 w-4" /> Sign in
+        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            role="menu"
+            initial={{ opacity: 0, y: 4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            transition={{ duration: 0.12 }}
+            className="absolute right-0 top-11 w-72 rounded-xl bg-background border border-border shadow-lg p-1.5 z-50"
+          >
+            {options.map((o) => {
+              const body = (
+                <>
+                  <span className="mt-0.5 h-8 w-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <o.icon className="h-4 w-4 text-primary" />
+                  </span>
+                  <span className="text-left">
+                    <span className="block text-sm font-semibold text-foreground">{o.label}</span>
+                    <span className="block text-xs text-muted-foreground">{o.hint}</span>
+                  </span>
+                </>
+              );
+              const cls = 'w-full flex items-start gap-3 rounded-lg px-2.5 py-2 hover:bg-secondary transition-colors';
+              return 'href' in o ? (
+                <Link key={o.key} href={o.href} role="menuitem" onClick={() => setOpen(false)} className={cls}>{body}</Link>
+              ) : (
+                <button key={o.key} role="menuitem" onClick={() => { setOpen(false); o.onSelect(); }} className={cls}>{body}</button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function UserMenu() {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const ref = useDismiss(open, setOpen);
+  // Staff go to the admin panel; students to their learning portal (was always /admin,
+  // which sent students to the "unauthorized" page).
+  const isStaff = canAccessAdminPanel(user);
 
   const initials = (user?.name || user?.email || 'U')
     .split(' ')
@@ -37,6 +137,8 @@ function UserMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className="flex items-center gap-2 h-9 pl-2 pr-3 rounded-full bg-primary/10 hover:bg-primary/15 transition-colors"
       >
         <span className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground">
@@ -60,13 +162,23 @@ function UserMenu() {
               {user?.email && <p className="text-xs text-muted-foreground truncate">{user.email}</p>}
             </div>
             <Link
-              href="/admin"
+              href={isStaff ? '/admin' : '/student'}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
             >
               <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-              Dashboard
+              {isStaff ? 'Admin dashboard' : 'My learning'}
             </Link>
+            {isStaff && (
+              <Link
+                href="/student"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+              >
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                Student portal
+              </Link>
+            )}
             <button
               onClick={() => { setOpen(false); logout(); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/8 transition-colors"
@@ -85,7 +197,9 @@ export function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated, isLoading, login, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const signInOptions = useSignInOptions();
+  const isStaff = canAccessAdminPanel(user);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 16);
@@ -149,13 +263,8 @@ export function Navbar() {
   isAuthenticated ? (
     <UserMenu />
   ) : (
-    <div className="hidden sm:flex items-center gap-2">
-      <button
-        onClick={() => login('/student', 'student')}
-        className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-sm font-bold items-center gap-1.5 shadow-primary hover:shadow-primary-lg hover:-translate-y-0.5 transition-all duration-200"
-      >
-        Student Login
-      </button>
+    <div className="hidden sm:block">
+      <SignInMenu />
     </div>
   )
 )}
@@ -203,10 +312,10 @@ export function Navbar() {
                   ? (
                     <>
                       <Link
-                        href="/admin"
+                        href={isStaff ? '/admin' : '/student'}
                         className="mt-2 flex h-11 items-center justify-center rounded-full bg-secondary text-foreground text-sm font-bold"
                       >
-                        Dashboard
+                        {isStaff ? 'Admin dashboard' : 'My learning'}
                       </Link>
                       <button
                         onClick={() => logout()}
@@ -217,14 +326,26 @@ export function Navbar() {
                     </>
                   )
                   : (
-                   <div className="mt-2 flex flex-col gap-2">
-  <button
-    onClick={() => login('/student', 'student')}
-    className="flex h-11 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-primary"
-  >
-    Student Login
-  </button>
-</div>
+                    <div className="mt-3 pt-3 border-t border-border flex flex-col gap-1">
+                      <p className="px-4 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Sign in</p>
+                      {signInOptions.map((o) => {
+                        const body = (
+                          <>
+                            <o.icon className="h-4 w-4 text-primary shrink-0" />
+                            <span className="text-left">
+                              <span className="block text-sm font-semibold text-foreground">{o.label}</span>
+                              <span className="block text-xs text-muted-foreground">{o.hint}</span>
+                            </span>
+                          </>
+                        );
+                        const cls = 'flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-secondary transition-colors';
+                        return 'href' in o ? (
+                          <Link key={o.key} href={o.href} className={cls}>{body}</Link>
+                        ) : (
+                          <button key={o.key} onClick={() => o.onSelect()} className={cls}>{body}</button>
+                        );
+                      })}
+                    </div>
                   )
               )}
             </div>

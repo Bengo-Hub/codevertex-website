@@ -20,6 +20,8 @@
 - [x] /digitika catalog redesign: category tabs with counts, search, level/format/duration/price/age filters, sort, active-filter chips, shareable URLs, catalog moved under the hero, hero category chips link to tabs
 - [x] Digitika hero kept as is; its category chips open catalog tabs, course stats are live from the DB, and the parent-portal link is visible
 - [x] Every "Browse courses" link (home, student portal, payment success, certificate, pricing) lands on the catalog (#courses); course pages link back to their category tab
+- [x] Navbar "Sign in" menu with all three entry points (Student login, Parent portal, Staff login), also in the mobile menu and footer; account menu sends staff to /admin and students to /student
+- [x] Fixed session restore: the auth store's rehydrate callback ran inside create() and failed silently, so every reload looked signed out (navbar showed Sign in, /admin bounced through SSO). Route guards now wait for `ready`; /student redirects signed-out visitors to sign-in like /admin
 
 ## Follow-ups
 - `/api/students/[studentId]/*` content routes still trust the Student ID alone (pre-existing, see `src/lib/digitika-access.ts`); move them behind SSO or the parent-style one-time code
