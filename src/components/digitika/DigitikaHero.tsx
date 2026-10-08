@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { COURSE_CATEGORIES } from '@/config/courses';
 import { ArrowRight, BookOpen, Award, Users, Globe, ChevronLeft, ChevronRight, GraduationCap, CreditCard, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,13 +36,9 @@ const GALLERY = [
   },
 ];
 
-const DISCIPLINES = [
-  { name: 'Software Engineering', color: '#10B981', courses: 8, icon: '⌨️' },
-  { name: 'ICDL Certification', color: '#9100B0', courses: 4, icon: '🖥️' },
-  { name: 'Cisco Networking', color: '#0EA5E9', courses: 4, icon: '🌐' },
-  { name: 'AI & Machine Learning', color: '#F59E0B', courses: 4, icon: '🤖' },
-  { name: 'Data Analytics', color: '#4ade80', courses: 4, icon: '📊' },
-];
+// Category chips link straight to the matching catalog tab (counts live in the catalog,
+// which reads them from the DB, so nothing here can go stale).
+const DISCIPLINES = COURSE_CATEGORIES;
 
 export function DigitikaHero() {
   const [slide, setSlide] = useState(0);
@@ -81,13 +78,14 @@ export function DigitikaHero() {
             {/* Discipline tags */}
             <div className="flex flex-wrap gap-2 mb-8">
               {DISCIPLINES.map(d => (
-                <span
-                  key={d.name}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border"
+                <Link
+                  key={d.id}
+                  href={`/digitika?category=${d.id}#courses`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border hover:opacity-80 transition-opacity"
                   style={{ color: d.color, borderColor: `${d.color}30`, background: `${d.color}10` }}
                 >
-                  <span>{d.icon}</span> {d.name}
-                </span>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: d.color }} /> {d.name}
+                </Link>
               ))}
             </div>
 
@@ -96,7 +94,7 @@ export function DigitikaHero() {
                   clicks and updates the URL without scrolling. A native anchor
                   scrolls reliably to the course catalog below. */}
               <Button asChild size="lg">
-                <a href="#software">
+                <a href="#courses">
                   Browse courses <ArrowRight className="h-4 w-4" />
                 </a>
               </Button>

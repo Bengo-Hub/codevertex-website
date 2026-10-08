@@ -16,5 +16,8 @@
 
 - [x] Automated tests: `pnpm test` (19 tests: catalog integrity, admin schema, token scoping, rate-limit IP handling, payment maths; DB integration tests for seed upgrades, parent code flow and progress, opt-in via `TEST_DATABASE_URL`), run in CI
 
+- [x] Removed robotics-kit claims (none on offer yet); robotics course runs on simulators
+- [x] /digitika catalog redesign: category tabs with counts, search, level/format/duration/price/age filters, sort, active-filter chips, shareable URLs, catalog moved under the hero, hero category chips link to tabs
+
 ## Follow-ups
 - `/api/students/[studentId]/*` content routes still trust the Student ID alone (pre-existing, see `src/lib/digitika-access.ts`); move them behind SSO or the parent-style one-time code

@@ -270,3 +270,17 @@ Route: `/digitika/parent`. Parents track progress and pay fee arrears with the S
 Security and data protection (Kenya Data Protection Act 2019 principles): codes are random, single-use, expire in 5 minutes, stored only as a keyed HMAC, max 5 guesses per code; rate limits of 3 codes per student per hour and 10 requests per IP per hour, DB-backed (`parent_access_codes`, IP stored as a keyed hash) so they hold across pods; every request is an audit row, pruned after 30 days. Requires `SESSION_SECRET`, `INTERNAL_SERVICE_KEY` and `NOTIFICATIONS_API_URL`.
 
 Related hardening: `GET /api/enrollments/[id]/summary` now requires `?reference=DGT-{id}-DGT-{studentId}` (the receipt reference); previously any sequential id exposed another student's details.
+
+
+---
+
+## 9. Public Catalog (/digitika)
+
+The catalog sits directly under the hero (`#courses`) and follows the patterns of the large course platforms (Coursera, Codecademy, DataCamp): keyword search plus facets, category tabs, sort, visible active filters and result counts.
+
+- **Tabs:** "All courses" plus one tab per category that has active courses, each with a live count. Under "All" with the recommended sort, courses are grouped by category with an "Only <category>" shortcut.
+- **Search:** name, short name, description, stack, audience and outcomes; all terms must match.
+- **Filters:** level, format (in-person, online, hybrid, parsed from `mode`), duration (up to 4, 5 to 8, 9+ weeks), price (under 10k, 10k to 25k, over 25k), and age group (from `metadata.ageRange`). Facets are derived from course fields, so admins never maintain tags. Options no course in the current tab can match are hidden, and counts reflect the other active filters.
+- **Sort:** recommended (category order, featured, sortOrder), price either way, shortest first, name.
+- **Shareable URLs:** `?category=&q=&level=&format=&duration=&price=&age=&sort=`. These are updated with `history.replaceState`, so filtering is instant and never re-renders the page on the server. Legacy `#<categoryId>` links open the matching tab.
+- Logic lives in `src/lib/course-catalog-filters.ts` (unit tested); UI lives in `src/components/digitika/CourseCatalogClient.tsx`.

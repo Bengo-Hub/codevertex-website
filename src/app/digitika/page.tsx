@@ -31,9 +31,10 @@ export default function DigitikaPage() {
     <>
       <DigitikaHero />
       <AlumniBar />
+      {/* Catalog right under the hero: browsing courses is the main job of this page */}
+      <CourseCatalog />
       <LifeAtDigitika />
       <TestimonialsSection />
-      <CourseCatalog />
     </>
   );
 }

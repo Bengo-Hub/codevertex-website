@@ -74,7 +74,7 @@ export async function DigitikaTeaser() {
             {COURSE_CATEGORIES.map((cat) => (
               <Link
                 key={cat.id}
-                href={`/digitika#${cat.id}`}
+                href={`/digitika?category=${cat.id}#courses`}
                 className="group flex items-center justify-between px-6 py-5 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-primary/3 transition-all duration-200"
               >
                 <div className="flex items-center gap-4">
