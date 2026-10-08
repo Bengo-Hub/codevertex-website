@@ -92,6 +92,8 @@ The database is the single source of truth for course content; admins edit every
 | Cohorts | Create-only, keyed by (courseId, startDate). Admins own dates, slots and status afterwards. |
 | Blog posts | Create-only (`skipDuplicates` on slug). |
 
+Automated checks: `pnpm test` runs the catalog and parent-portal unit tests (also in CI). The seed upgrade, parent code flow and progress queries are covered by `tests/db.integration.test.ts`, which runs only with `TEST_DATABASE_URL` pointing at an empty throwaway database.
+
 To push a deliberate catalog change to production, edit the entry in `prisma/seed/courses.ts` **and** bump its `seedVersion`.
 
 The seed must stay self-contained: the runtime image ships only `prisma/` plus `src/lib/digitika-rbac-catalog.ts` (copied explicitly in the `Dockerfile`). Do not import other `src/` files from the seed.
