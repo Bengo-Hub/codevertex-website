@@ -3,7 +3,18 @@ import {
   Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound, Newspaper,
   School, Images,
 } from 'lucide-react';
-import { DIGITIKA_MODULES, digitikaPerm } from '@/lib/digitika-rbac-catalog';
+import { DIGITIKA_MODULES, digitikaPerm, hasBypassRole } from '@/lib/digitika-rbac-catalog';
+import type { UserProfile } from '@/lib/store/auth-store';
+
+/**
+ * True when the signed-in user may open the admin panel at all (platform admin roles,
+ * or any Digitika permission). Shared by the admin layout guard and the public navbar,
+ * which uses it to send staff to /admin and students to /student.
+ */
+export function canAccessAdminPanel(user: UserProfile | null | undefined): boolean {
+  if (!user) return false;
+  return hasBypassRole(user.roles, user.is_platform_owner, user.tenant_slug) || (user.permissions?.length ?? 0) > 0;
+}
 
 export interface AdminNavItem {
   label: string;

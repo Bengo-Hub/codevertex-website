@@ -132,6 +132,19 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              {/* Sign-in entry points (same three as the navbar "Sign in" menu). /student and
+                  /admin send signed-out visitors to the sign-in page themselves. */}
+              {[
+                { label: 'Student login', href: '/student' },
+                { label: 'Parent portal', href: '/digitika/parent' },
+                { label: 'Staff login', href: '/admin' },
+              ].map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
               <li className="pt-1">
                 <a
                   href={SSO_URL}
