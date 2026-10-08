@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import { CareersPostingDetail } from '@bengo-hub/shared-ui-lib/careers';
-import { ERP } from '@/lib/constants';
+import { CareersPostingDetailClient } from '@/components/careers/CareersClient';
 
 export const metadata: Metadata = { title: 'Job Opening', description: 'Open position at Codevertex Africa Limited.' };
 
-// Live data from erp-api — never statically prerender.
+// Posting data is fetched in the browser from erp-api by CareersPostingDetailClient.
 export const dynamic = 'force-dynamic';
 
 export default async function CareersDetailPage({ params }: { params: Promise<{ postingSlug: string }> }) {
@@ -12,13 +11,7 @@ export default async function CareersDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="pt-20">
-      <CareersPostingDetail
-        orgSlug={ERP.tenant}
-        postingSlug={postingSlug}
-        apiBaseUrl={ERP.apiBaseUrl}
-        backHref="/careers"
-        poweredByHref="/services"
-      />
+      <CareersPostingDetailClient postingSlug={postingSlug} />
     </div>
   );
 }

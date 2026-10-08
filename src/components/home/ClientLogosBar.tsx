@@ -21,6 +21,7 @@ export async function ClientLogosBar() {
           {items.map((t, i) => (
             <div
               key={`${t.slug}-${i}`}
+              aria-hidden={i >= tenants.length ? true : undefined}
               className="flex flex-col items-center justify-center w-48 h-28 rounded-xl bg-background border border-border px-4 py-3 shrink-0 hover:border-primary/30 transition-colors duration-200"
               title={t.name}
             >

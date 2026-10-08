@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner';
+import { VeraWidget } from '@/components/layout/VeraWidget';
 import { JsonLd, organizationJsonLd } from '@/lib/json-ld';
 
 const poppins = Poppins({
@@ -27,7 +28,6 @@ export const metadata: Metadata = {
   },
   description:
     "Architecting Africa's Digital Renaissance. Enterprise software, AI, cloud infrastructure, and Digitika Academy talent development from Kisumu, Kenya.",
-  keywords: ['Codevertex', 'IT Solutions', 'Kenya', 'Africa', 'Software Development', 'AI', 'Cloud', 'Digitika'],
   authors: [{ name: 'Codevertex Africa Limited', url: 'https://codevertexafrica.com' }],
   metadataBase: new URL('https://codevertexafrica.com'),
   openGraph: {
@@ -38,11 +38,13 @@ export const metadata: Metadata = {
     title: "Codevertex Africa Limited — Architecting Africa's Digital Renaissance",
     description:
       'Premier technology firm in Kisumu, Kenya. Enterprise software, AI analytics, cloud infrastructure, and Digitika Academy.',
+    images: [{ url: '/images/og-image.png', width: 1200, height: 630, alt: 'Codevertex Africa Limited — Architecting Africa\'s Digital Renaissance' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Codevertex Africa Limited',
     description: "Architecting Africa's Digital Renaissance.",
+    images: ['/images/og-image.png'],
   },
   icons: {
     icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/images/logo.png' }],
@@ -72,21 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Toaster richColors position="top-right" />
           <CookieConsentBanner />
         </ThemeProvider>
-        {/* Vera AI widget — loaded as a plain async script so document.currentScript works */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script
-          async
-          src="https://marketflow.codevertexafrica.com/widget/chat.js"
-          data-tenant="codevertex"
-          data-mode="platform"
-          data-business-type="codevertex"
-          data-api-url="https://marketflowai.codevertexafrica.com"
-          data-primary-color="#9100B0"
-          data-accent-color="#b800e0"
-          data-widget-title="Vera"
-          data-whatsapp="254743793901"
-          data-phone="+254743793901"
-        />
+        <VeraWidget />
       </body>
     </html>
   );

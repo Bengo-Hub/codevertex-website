@@ -556,3 +556,39 @@ model ProcessedWebhookEvent {
 
   @@map("processed_webhook_events")
 }
+// ---------------------------------------------------------------------------
+// Projects & events gallery — meetings/events the team attends. Admin uploads
+// photos + venue + description; published events show on /projects.
+// Photos are stored in Postgres (Bytes) and served by /api/projects/photos/[id],
+// so no third-party storage is needed and nothing is lost on container redeploys.
+// The admin form downsizes each photo in the browser (max 1600px) before upload.
+// ---------------------------------------------------------------------------
+model ProjectEvent {
+  id          BigInt         @id @default(autoincrement())
+  slug        String         @unique
+  title       String
+  venue       String
+  description String         @db.Text
+  eventDate   DateTime       @map("event_date")
+  published   Boolean        @default(false)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  photos      ProjectPhoto[]
+
+  @@index([published, eventDate(sort: Desc)])
+  @@map("project_events")
+}
+
+model ProjectPhoto {
+  id        BigInt       @id @default(autoincrement())
+  eventId   BigInt       @map("event_id")
+  event     ProjectEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  caption   String?
+  mimeType  String       @map("mime_type")
+  data      Bytes
+  sortOrder Int          @default(0) @map("sort_order")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@index([eventId, sortOrder])
+  @@map("project_photos")
+}
