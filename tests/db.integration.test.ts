@@ -122,3 +122,17 @@ test('per-course progress is aggregated in one query', { skip }, async () => {
   );
   assert.equal(map.get('kids-games')?.totalLessons, 0);
 });
+
+test('a bumped seedVersion re-applies the course once (kits wording removed)', { skip }, async () => {
+  const { prisma } = lib;
+  // Simulate production state from the first kids release (v1, with the kits claim).
+  const row = await prisma.course.findUniqueOrThrow({ where: { id: 'kids-robotics-ai' } });
+  await prisma.course.update({
+    where: { id: 'kids-robotics-ai' },
+    data: { includes: ['Robotics and electronics kits provided in class'], metadata: { ...(row.metadata as object), _seedVersion: 1 } },
+  });
+  run('npx', ['tsx', 'prisma/seed.ts']);
+  const updated = await prisma.course.findUniqueOrThrow({ where: { id: 'kids-robotics-ai' } });
+  assert.doesNotMatch(JSON.stringify(updated.includes), /kits/i);
+  assert.equal((updated.metadata as { _seedVersion?: number })._seedVersion, 2);
+});

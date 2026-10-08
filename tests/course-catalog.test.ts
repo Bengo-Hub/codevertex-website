@@ -75,3 +75,10 @@ test('plan keys and category fallback', () => {
   assert.equal(findInstallmentPlan('not-an-array', 'upfront'), undefined);
   assert.equal(getCategory('unknown-cat').name, 'Unknown-cat');
 });
+
+test('no course promises robotics or hardware kits (none on offer yet)', () => {
+  for (const c of COURSES) {
+    const { seedVersion: _v, ...content } = c;
+    assert.doesNotMatch(JSON.stringify(content), /\bkits?\b/i, `${c.id} mentions kits`);
+  }
+});
