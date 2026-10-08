@@ -151,15 +151,8 @@ export function Navbar() {
   ) : (
     <div className="hidden sm:flex items-center gap-2">
       <button
-        onClick={() => login('/admin', 'admin')}
-        className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-sm font-bold items-center gap-1.5 shadow-primary hover:shadow-primary-lg hover:-translate-y-0.5 transition-all duration-200"
-      >
-        Admin Login
-      </button>
-
-      <button
         onClick={() => login('/student', 'student')}
-        className="h-9 px-5 rounded-full border border-primary text-primary text-sm font-bold items-center gap-1.5 hover:bg-primary/10 transition-all duration-200"
+        className="h-9 px-5 rounded-full bg-primary text-primary-foreground text-sm font-bold items-center gap-1.5 shadow-primary hover:shadow-primary-lg hover:-translate-y-0.5 transition-all duration-200"
       >
         Student Login
       </button>
@@ -226,15 +219,8 @@ export function Navbar() {
                   : (
                    <div className="mt-2 flex flex-col gap-2">
   <button
-    onClick={() => login('/admin', 'admin')}
-    className="flex h-11 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-primary"
-  >
-    Admin Login
-  </button>
-
-  <button
     onClick={() => login('/student', 'student')}
-    className="flex h-11 items-center justify-center rounded-full border border-primary text-primary text-sm font-bold"
+    className="flex h-11 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-primary"
   >
     Student Login
   </button>

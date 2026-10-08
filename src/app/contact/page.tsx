@@ -104,7 +104,7 @@ export default function ContactPage() {
             {[
               { icon: MapPin, title: 'Office', content: SITE.address },
               { icon: Mail, title: 'Email', content: SITE.email, href: `mailto:${SITE.email}` },
-              { icon: Phone, title: 'Phone', content: `${SITE.phone1}\n${SITE.phone2}` },
+              { icon: Phone, title: 'Phone', content: SITE.phone1 },
               { icon: MessageCircle, title: 'WhatsApp', content: 'Chat with us for fast responses', href: SITE.whatsapp, accent: true },
             ].map(item => (
               <div key={item.title} className="flex gap-4 p-5 rounded-xl bg-card border border-border">

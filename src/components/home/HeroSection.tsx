@@ -6,12 +6,15 @@ import Image from 'next/image';
 import { ArrowRight, ChevronRight, CircleCheck as CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SSO_URL } from '@/lib/constants';
+import { POWER_SUITE } from '@/config/services';
+
+const FOUNDED_YEAR = 2020;
 
 const STATS = [
   { value: '200+', label: 'Staff trained' },
   { value: '120+', label: 'Certified' },
-  { value: '14+', label: 'Products live' },
-  { value: '5yr', label: 'In Kisumu, KE' },
+  { value: String(POWER_SUITE.length), label: 'Products live' },
+  { value: `${new Date().getFullYear() - FOUNDED_YEAR}yr`, label: 'In Kisumu, KE' },
 ];
 
 const SLIDES = [

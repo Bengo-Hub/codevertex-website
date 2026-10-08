@@ -20,6 +20,7 @@ export function AlumniBar() {
           {items.map((company, i) => (
             <div
               key={`${company.name}-${i}`}
+              aria-hidden={i >= ALUMNI_COMPANIES.length ? true : undefined}
               className="flex items-center justify-center w-44 h-16 rounded-xl bg-background border border-border px-4 py-3 shrink-0 hover:border-primary/30 transition-colors duration-200"
               title={company.name}
             >

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 const STATS = [
   { icon: Users, value: '200+', label: 'Corporate staff trained' },
   { icon: BookOpen, value: '120+', label: 'Students certified' },
-  { icon: Award, value: '24', label: 'Courses across 5 disciplines' },
+  { icon: Award, value: '25', label: 'Courses across 5 disciplines' },
   { icon: Globe, value: 'Online', label: 'And in-person · Kisumu' },
 ];
 

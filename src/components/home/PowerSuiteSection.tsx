@@ -1,6 +1,7 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { SSO_URL } from '@/lib/constants';
+import { POWER_SUITE } from '@/config/services';
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -72,7 +73,7 @@ export function PowerSuiteSection() {
               The Codevertex<br />Power Suite
             </h2>
             <p className="text-muted-foreground mt-3 text-base font-medium max-w-md leading-relaxed">
-              Six integrated products. One SSO identity. Zero friction between your tools.
+              {POWER_SUITE.length} integrated products. One SSO identity. Zero friction between your tools.
             </p>
           </div>
           <Button size="lg" variant="outline" asChild className="self-start lg:self-auto">
