@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { X, CheckCircle2, CreditCard, BadgePercent, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addDays, addWeeks, format } from 'date-fns';
-import { type CourseCategory, TREASURY_PAY_URL, computeDueDates } from '@/config/courses';
+import { type CourseCategory, TREASURY_PAY_URL, computeDueDates, planKey } from '@/config/courses';
 import { type DbCourse, type InstallmentPlan } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
@@ -162,7 +162,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
         dueDate: dueDates[i].toISOString().split('T')[0],
       }));
 
-      const planKey = selectedPlan.label.toLowerCase().replace(/\s+/g, '-');
+      const selectedPlanKey = planKey(selectedPlan.label);
 
       const res = await fetch('/api/enrollments', {
         method: 'POST',
@@ -179,7 +179,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
           discountCode: discount?.code,
           discountPct: discount?.discountPct,
           discountAmount: discountSaving > 0 ? discountSaving : undefined,
-          paymentPlan: planKey,
+          paymentPlan: selectedPlanKey,
           firstPaymentAmount: firstPayment,
           installments: discountedTotal === 0 ? undefined : installments,
         }),

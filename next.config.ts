@@ -11,6 +11,10 @@ const COURSE_SLUG_REDIRECTS: Record<string, string> = {
   'scratch-python': 'kids-scratch',
   'web-design-teens': 'teens-web',
   'game-dev': 'kids-games',
+  // Kids & Teens relaunch: course slugs used in marketing material
+  'tech-explorers': 'kids-scratch',
+  'young-innovators-games-python': 'kids-games',
+  'young-innovators-robotics-ai': 'kids-robotics-ai',
   'ccna-exam-prep': 'ccna-cert',
   'ai-for-business': 'ai-business',
   'data-powerbi': 'power-bi',

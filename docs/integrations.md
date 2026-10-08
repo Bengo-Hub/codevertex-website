@@ -241,3 +241,32 @@ is unset, routes fall back to a direct S2S call via `src/lib/notifications.ts` t
 
 Trigger for the payment-receipt email: `treasury.payment.succeeded` (NATS) →
 `treasury-subscriber.ts` → `publishInstallmentPaid`.
+
+
+---
+
+## 7. Course Catalog Data Model (DB single source of truth)
+
+- Every section of `/digitika/[courseId]` comes from the `courses` row. Page-only content lives in `Course.metadata` (JSON, shape `CourseMetadata` in `src/types/course.ts`): `curriculum`, `testimonials`, `showAlumni`, `brochure`, `location`, `cohortSize`, `ageRange`, `schedule`, `requirements`, `highlights`. Keys starting with `_` are system-owned (`_seedVersion`).
+- `src/config/courses.ts` holds only category display metadata (`COURSE_CATEGORIES`, `getCategory()`) and shared helpers (`planKey`, `findInstallmentPlan`, `computeDueDates`). No per-course data.
+- Admin: `/admin/courses` edits all fields in four tabs (Details, Page content, Curriculum, Pricing) and can create courses. "Import from LMS modules" builds the curriculum from the course's LMS modules and lessons so the website outline matches what is delivered.
+- API: `POST /api/admin/courses`, `PATCH /api/admin/courses/[id]` share one Zod schema (`src/lib/course-schema.ts`). Metadata patches are merged, so system keys survive.
+- Kids & Teens category (`kids`): Tech Explorers (6-10, KES 8,000), Young Innovators: Game Development & Python (10-16, KES 15,000), Young Innovators: Robotics, IoT & AI (10-16, KES 15,000). Module mix benchmarked against Kenyan providers and the KICD coding / digital literacy strands.
+
+---
+
+## 8. Parent Portal (no login)
+
+Route: `/digitika/parent`. Parents track progress and pay fee arrears with the Student ID plus a one-time code.
+
+| Step | Endpoint | Notes |
+|------|----------|-------|
+| Request code | `POST /api/parent/request-code` `{ studentId }` | 6-digit code sent to the email and phone on file via notifications-api (`auth/otp_verification` email, `auth/otp` SMS templates). Returns masked destinations only. |
+| Verify | `POST /api/parent/verify` `{ studentId, code }` | Sets `cv_parent` cookie (httpOnly, SameSite=Strict, 30 min, purpose-scoped HMAC). |
+| Overview | `GET /api/parent/overview` | Per-course progress (one grouped SQL query, `src/lib/student-progress.ts`), quiz results, certificates, announcements, balances and arrears. No email, phone or DOB returned. |
+| Pay | `POST /api/parent/pay` `{ enrollmentId, installmentNo? }` | Server builds the treasury pay link; amount comes from the DB; only the session student's enrollments. |
+| Sign out | `POST /api/parent/logout` | Clears the cookie. |
+
+Security and data protection (Kenya Data Protection Act 2019 principles): codes are random, single-use, expire in 5 minutes, stored only as a keyed HMAC, max 5 guesses per code; rate limits of 3 codes per student per hour and 10 requests per IP per hour, DB-backed (`parent_access_codes`, IP stored as a keyed hash) so they hold across pods; every request is an audit row, pruned after 30 days. Requires `SESSION_SECRET`, `INTERNAL_SERVICE_KEY` and `NOTIFICATIONS_API_URL`.
+
+Related hardening: `GET /api/enrollments/[id]/summary` now requires `?reference=DGT-{id}-DGT-{studentId}` (the receipt reference); previously any sequential id exposed another student's details.

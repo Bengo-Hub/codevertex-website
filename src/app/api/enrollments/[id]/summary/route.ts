@@ -1,19 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { summarizeEnrollmentPayments } from '@/lib/enrollment-helpers';
 
+// GET /api/enrollments/[id]/summary?reference=DGT-{id}-DGT-{studentId}
+// Receipt / "my enrollment" summary. Public (no login) by design, so the caller must
+// present the full payment reference from the receipt email or redirect, not just the
+// sequential enrollment id; otherwise anyone could walk ids and read other students'
+// names, emails and payments.
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const enrollmentId = BigInt(id);
+    if (!/^\d+$/.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { id: enrollmentId },
+    const reference = req.nextUrl.searchParams.get('reference') ?? '';
+    const match = reference.match(/^DGT-(\d+)-DGT-([A-Za-z0-9-]+)$/);
+    if (!match || match[1] !== id) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+
+    const enrollment = await prisma.enrollment.findFirst({
+      where: { id: BigInt(id), studentUserId: match[2] },
       include: {
         installments: { orderBy: { installmentNo: 'asc' } },
-        studentUser: true,
+        studentUser: { select: { id: true } },
       },
     });
 
@@ -21,10 +33,7 @@ export async function GET(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    const totalAmount = enrollment.totalAmount ?? enrollment.amount;
-    const amountPaid = enrollment.installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
-      || (enrollment.paymentStatus === 'succeeded' ? enrollment.amount : 0);
-    const remainingBalance = Math.max(0, totalAmount - amountPaid);
+    const { totalAmount, amountPaid, remainingBalance } = summarizeEnrollmentPayments(enrollment, enrollment.installments);
 
     return NextResponse.json({
       enrollmentId: enrollment.id.toString(),
@@ -48,7 +57,7 @@ export async function GET(
         status: i.status,
         label: `Installment ${i.installmentNo}`,
       })),
-    });
+    }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }

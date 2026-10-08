@@ -280,7 +280,10 @@ Liveness:  initialDelay 30s, period 15s, failureThreshold 3
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| ORM | Raw `pg` client | Minimal deps; marketing site has 3 simple tables |
+| ORM | Prisma 7 (`@prisma/adapter-pg`) | Schema in `prisma/schema.prisma`, synced with `prisma db push` at startup |
+| Course content | DB only (`courses` + `metadata` JSON) | Admin edits show immediately; seed is non-destructive (see database-maintenance.md) |
+| Parent access | Student ID + one-time code, 30 min scoped cookie | No accounts for parents, without exposing data on the ID alone (see integrations.md section 8) |
+| Dashboard stats | SQL aggregates (`/api/admin/stats`) | Constant payload and cost as enrollments grow |
 | Payment | Treasury redirect (no iframe) | Simplest integration; treasury handles PCI compliance |
 | AI model | Claude Haiku 4.5 | Fast, cheap, sufficient for FAQ chatbot |
 | Auth | None (marketing site) | No login wall; SSO link → accounts subdomain |

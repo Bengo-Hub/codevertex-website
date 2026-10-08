@@ -6,7 +6,7 @@ import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
-import { findCourse, computeDueDates } from '@/config/courses';
+import { getCategory, computeDueDates, findInstallmentPlan } from '@/config/courses';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
 
@@ -110,9 +110,7 @@ export async function POST(req: NextRequest) {
     if (!course) {
       return NextResponse.json({ error: 'Course not found' }, { status: 404 });
     }
-    // Category display name lives in static config (COURSE_CATEGORIES), not the DB row —
-    // same lookup the public checkout flow relies on.
-    const categoryName = findCourse(data.courseId)?.category.name ?? course.categoryId;
+    const categoryName = getCategory(course.categoryId).name;
 
     // Resolve the student: either look up the existing one by public ID, or upsert by email.
     let studentUser;
@@ -187,10 +185,8 @@ export async function POST(req: NextRequest) {
     // installment enrollment has paymentPlan set but zero real installment rows,
     // which breaks progress display, the "Pay Now" block, and the reminder cron.
     if (!isFree && !data.markAsPaid && data.paymentPlan !== 'upfront') {
-      const planSlug = data.paymentPlan;
-      const matchedPlan = findCourse(data.courseId)?.course.installmentPlans?.find(
-        (p) => p.label.toLowerCase().replace(/\s+/g, '-') === planSlug
-      );
+      // Plans come from the DB row (admin-editable), the same source the public checkout uses.
+      const matchedPlan = findInstallmentPlan(course.installmentPlans, data.paymentPlan);
       if (matchedPlan) {
         const dueDates = computeDueDates(matchedPlan);
         // Scale the plan's stock amounts proportionally if the admin overrode totalAmount
