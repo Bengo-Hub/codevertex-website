@@ -47,7 +47,7 @@ function BrowseCoursesCard() {
         Explore new courses and start building your next skill today.
       </p>
       <Link
-        href="/digitika"
+        href="/digitika#courses"
         className="mt-3 block rounded-lg bg-purple-300/20 px-3 py-2 text-center text-xs font-bold text-white hover:bg-purple-300/30"
       >
         Browse Courses
@@ -113,7 +113,7 @@ function SidebarContent({
         <div className="my-3 border-t border-white/10" />
 
         <Link
-          href="/digitika"
+          href="/digitika#courses"
           onClick={onNavigate}
           className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/65 transition-colors hover:bg-white/10 hover:text-white"
         >

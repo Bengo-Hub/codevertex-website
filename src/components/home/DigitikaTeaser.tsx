@@ -61,7 +61,7 @@ export async function DigitikaTeaser() {
 
             <div className="flex gap-3 flex-wrap">
               <Button asChild>
-                <Link href="/digitika">Browse all courses <ArrowRight className="h-4 w-4" /></Link>
+                <Link href="/digitika#courses">Browse all courses <ArrowRight className="h-4 w-4" /></Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link href="/contact">Corporate training</Link>

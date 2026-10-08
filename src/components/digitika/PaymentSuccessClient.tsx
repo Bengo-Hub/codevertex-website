@@ -179,7 +179,7 @@ export function PaymentSuccessClient() {
                 Email Us
               </a>
               <Link
-                href="/digitika"
+                href="/digitika#courses"
                 className="px-5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm font-semibold hover:bg-muted transition-colors"
               >
                 Browse Courses
@@ -543,7 +543,7 @@ export function PaymentSuccessClient() {
             Access Student Portal
           </button>
           <Link
-            href="/digitika"
+            href="/digitika#courses"
             className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-border bg-card text-foreground font-bold text-sm hover:bg-muted transition-colors"
           >
             Explore More Courses <ChevronRight className="h-4 w-4" />

@@ -6,12 +6,18 @@ import { COURSE_CATEGORIES } from '@/config/courses';
 import { ArrowRight, BookOpen, Award, Users, Globe, ChevronLeft, ChevronRight, GraduationCap, CreditCard, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const STATS = [
-  { icon: Users, value: '200+', label: 'Corporate staff trained' },
-  { icon: BookOpen, value: '120+', label: 'Students certified' },
-  { icon: Award, value: '25', label: 'Courses across 5 disciplines' },
-  { icon: Globe, value: 'Online', label: 'And in-person · Kisumu' },
-];
+// Course/discipline counts come from the DB (passed by the page) so they never go stale.
+function heroStats(courseCount: number, categoryCount: number) {
+  return [
+    { icon: Users, value: '200+', label: 'Corporate staff trained' },
+    { icon: BookOpen, value: '120+', label: 'Students certified' },
+    // Fallback only if the DB was unreachable for this render.
+    courseCount > 0
+      ? { icon: Award, value: String(courseCount), label: `Courses across ${categoryCount} disciplines` }
+      : { icon: Award, value: '25+', label: 'Industry-aligned courses' },
+    { icon: Globe, value: 'Online', label: 'And in-person · Kisumu' },
+  ];
+}
 
 const GALLERY = [
   {
@@ -36,11 +42,15 @@ const GALLERY = [
   },
 ];
 
-// Category chips link straight to the matching catalog tab (counts live in the catalog,
-// which reads them from the DB, so nothing here can go stale).
-const DISCIPLINES = COURSE_CATEGORIES;
+// Category chips (same look as before) now link straight to the matching catalog tab.
+// Names and colours come from the category config, so new categories appear here too.
+const CATEGORY_ICONS: Record<string, string> = {
+  kids: '🧩', software: '⌨️', icdl: '🖥️', ccna: '🌐', ai: '🤖', data: '📊',
+};
+const DISCIPLINES = COURSE_CATEGORIES.map((c) => ({ ...c, icon: CATEGORY_ICONS[c.id] ?? '📘' }));
 
-export function DigitikaHero() {
+export function DigitikaHero({ courseCount, categoryCount }: { courseCount: number; categoryCount: number }) {
+  const STATS = heroStats(courseCount, categoryCount);
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
@@ -84,7 +94,7 @@ export function DigitikaHero() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border hover:opacity-80 transition-opacity"
                   style={{ color: d.color, borderColor: `${d.color}30`, background: `${d.color}10` }}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: d.color }} /> {d.name}
+                  <span>{d.icon}</span> {d.name}
                 </Link>
               ))}
             </div>
@@ -233,8 +243,7 @@ export function DigitikaHero() {
           </div>
           <Link
             href="/digitika/parent"
-            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
-            style={{ color: 'rgba(255,255,255,0.85)' }}
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary underline underline-offset-2 hover:opacity-80"
           >
             Parent or guardian? Track progress and pay fees
             <ArrowRight className="h-3 w-3" />
