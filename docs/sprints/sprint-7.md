@@ -14,5 +14,7 @@
 - [x] Student IDs now generated with a CSPRNG (`crypto.randomInt`)
 - [x] Removed unused `/api/student/dashboard` (duplicate of `/api/students/me`); trimmed `/api/students/me` columns
 
+- [x] Automated tests: `pnpm test` (19 tests: catalog integrity, admin schema, token scoping, rate-limit IP handling, payment maths; DB integration tests for seed upgrades, parent code flow and progress, opt-in via `TEST_DATABASE_URL`), run in CI
+
 ## Follow-ups
 - `/api/students/[studentId]/*` content routes still trust the Student ID alone (pre-existing, see `src/lib/digitika-access.ts`); move them behind SSO or the parent-style one-time code
