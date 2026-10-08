@@ -31,6 +31,9 @@ interface Stats {
   contacts: { total: number };
   installments: { overdue: number; upcomingWeek: number };
   revenue: { collected: number; currency: string };
+  /** Server-aggregated: enrollments by created month, cash collected by payment month. */
+  monthlyTrend: { month: string; enrollments: number; revenue: number }[];
+  /** Newest few enrollments only (for Recent activity). */
   recentEnrollments: RecentEnrollment[];
 }
 
@@ -40,26 +43,16 @@ function monthLabel(date: Date) {
   return date.toLocaleDateString('en-GB', { month: 'short' });
 }
 
-/** Group real enrollment records (already returned by the API) into a per-month revenue + volume trend. */
-function useMonthlyTrend(recentEnrollments: RecentEnrollment[]) {
-  return useMemo(() => {
-    const now = new Date();
-    const buckets: { key: string; month: string; revenue: number; enrollments: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, month: monthLabel(d), revenue: 0, enrollments: 0 });
-    }
-    const byKey = new Map(buckets.map((b) => [b.key, b]));
-    for (const e of recentEnrollments) {
-      const d = new Date(e.createdAt);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const bucket = byKey.get(key);
-      if (!bucket) continue;
-      bucket.enrollments += 1;
-      if (e.paymentStatus === 'succeeded') bucket.revenue += e.amount;
-    }
-    return buckets;
-  }, [recentEnrollments]);
+/** Adds display labels to the server-computed monthly series ("YYYY-MM"). */
+function useMonthlyTrend(series: Stats['monthlyTrend']) {
+  return useMemo(
+    () =>
+      series.map((p) => {
+        const [y, m] = p.month.split('-').map(Number);
+        return { key: p.month, month: monthLabel(new Date(y, m - 1, 1)), revenue: p.revenue, enrollments: p.enrollments };
+      }),
+    [series],
+  );
 }
 
 export function AdminDashboard() {
@@ -81,7 +74,7 @@ export function AdminDashboard() {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 
-  const trend = useMonthlyTrend(stats?.recentEnrollments ?? []);
+  const trend = useMonthlyTrend(stats?.monthlyTrend ?? []);
   const otherEnrollments = stats
     ? Math.max(stats.enrollments.total - stats.enrollments.succeeded - stats.enrollments.pending, 0)
     : 0;
@@ -93,7 +86,7 @@ export function AdminDashboard() {
       ]
     : [];
   const recentActivity = stats
-    ? [...stats.recentEnrollments].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 6)
+    ? stats.recentEnrollments
     : [];
 
   return (

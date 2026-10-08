@@ -1,21 +1,158 @@
 /**
- * Digitika Academy — Course seed data
- * Cover images: /public/images/courses/*.jpg (real photos, Unsplash License — free, no watermark)
- * Installment plans: imported from src/config/courses.ts (COURSE_CATEGORIES)
+ * Digitika Academy: course seed data (initial catalog).
+ *
+ * The DATABASE is the source of truth for course content; admins edit it from
+ * /admin/courses. This file only seeds rows: prisma/seed.ts creates missing courses,
+ * applies an entry over an existing row ONLY when the entry's seedVersion is higher than
+ * the row's metadata._seedVersion, and otherwise just backfills missing metadata keys.
+ * To push a one-time content revision for a course, edit its entry here AND bump its
+ * seedVersion; otherwise admin edits are preserved.
+ *
+ * This file must stay self-contained (no imports from src/): the production image
+ * only ships the prisma/ folder for the seed step (see Dockerfile).
+ *
+ * Cover images: /public/images/courses/*.jpg (real photos, Unsplash License, or our own)
  */
 
-import { COURSE_CATEGORIES } from '../../src/config/courses';
-
 // ---------------------------------------------------------------------------
-// Build installment plans map from static config
+// Shared shapes (mirror src/types/course.ts; duplicated on purpose, see above)
 // ---------------------------------------------------------------------------
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const INSTALLMENT_PLANS_MAP: Record<string, any[]> = {};
-for (const cat of COURSE_CATEGORIES) {
-  for (const course of cat.courses) {
-    INSTALLMENT_PLANS_MAP[course.id] = (course.installmentPlans ?? []) as unknown[];
-  }
+interface InstallmentPlan {
+  label: string;
+  payments: { amount: number; label: string }[];
+  totalAmount: number;
+  badge?: string;
 }
+
+interface WeeklyModule {
+  week: number | string;
+  title: string;
+  topics: string[];
+}
+
+interface Testimonial {
+  name: string;
+  role: string;
+  company: string;
+  quote: string;
+}
+
+// --- Installment plan factory ---
+// Generates upfront + 2-installment + 3-installment options for a given course price.
+// weekLabels: [midpointLabel, finalLabel] — defaults to 'Midway' and 'Final week'.
+function makeInstallmentPlans(
+  price: number,
+  weekLabels: [string, string] = ['Midway', 'Final week']
+): InstallmentPlan[] {
+  // 2 installments: 60% / 40% rounded to nearest 500
+  const p2_1 = Math.round((price * 0.6) / 500) * 500;
+  const p2_2 = price - p2_1;
+
+  // 3 installments: 40% / 33% / 27% rounded to nearest 500
+  const p3_1 = Math.round((price * 0.4) / 500) * 500;
+  const p3_2 = Math.round((price * 0.33) / 500) * 500;
+  const p3_3 = price - p3_1 - p3_2;
+
+  const plans: InstallmentPlan[] = [
+    {
+      label: 'Upfront',
+      payments: [{ amount: price, label: 'Full payment' }],
+      totalAmount: price,
+    },
+    {
+      label: '2 Installments',
+      payments: [
+        { amount: p2_1, label: 'At enrollment' },
+        { amount: p2_2, label: weekLabels[0] },
+      ],
+      totalAmount: price,
+      badge: 'Popular',
+    },
+  ];
+
+  // Only offer 3-installment plan when third installment is meaningful (≥ 1,000 KES)
+  if (p3_3 >= 1000) {
+    plans.push({
+      label: '3 Installments',
+      payments: [
+        { amount: p3_1, label: 'At enrollment' },
+        { amount: p3_2, label: weekLabels[0] },
+        { amount: p3_3, label: weekLabels[1] },
+      ],
+      totalAmount: price,
+    });
+  }
+
+  return plans;
+}
+
+// --- Code-Starter curriculum ---
+const CODE_STARTER_CURRICULUM: WeeklyModule[] = [
+  { week: 1, title: 'Developer Setup & Git Mastery', topics: ['Dev environment setup', 'Git init, commit, push, pull', 'GitHub account & first repo', 'Command line basics'] },
+  { week: 2, title: 'Web Foundations — HTML & CSS', topics: ['HTML5 semantics', 'CSS box model & layouts', 'Flexbox & responsive design', 'Build: personal profile page'] },
+  { week: 3, title: 'CSS Frameworks', topics: ['Bootstrap 5 grid system', 'Tailwind CSS utility-first approach', 'Responsive breakpoints', 'Build: redesign with framework'] },
+  { week: 4, title: 'Portfolio Project Week', topics: ['Multi-page portfolio site', 'GitHub Pages deployment', 'Code review session', 'ICDL Module 1 prep'] },
+  { week: 5, title: 'Python Foundations', topics: ['Variables, data types, loops', 'Functions & modules', 'File I/O', 'Build: text-based quiz game'] },
+  { week: 6, title: 'Python Applications', topics: ['Data structures (lists, dicts)', 'APIs with requests', 'Automation scripts', 'Build: weather CLI tool'] },
+  { week: 7, title: 'JavaScript & DOM', topics: ['JS syntax & ES6+', 'DOM manipulation', 'Event listeners', 'Build: interactive to-do app'] },
+  { week: 8, title: 'AI Tools & Prompt Engineering', topics: ['ChatGPT & Claude for developers', 'Prompt engineering patterns', 'AI-assisted coding workflow', 'Code review with AI'] },
+  { week: 9, title: 'Capstone Project', topics: ['Full project brief', 'Plan, build, debug', 'Peer code review', 'Deploy to GitHub Pages / Heroku'] },
+  { week: 10, title: 'ICDL Exams & Graduation', topics: ['ICDL Core Module exam', 'ICDL Advanced revision', 'Portfolio presentations', 'Alumni network onboarding & career roadmap'] },
+];
+
+// Code-Starter uses hand-crafted installments with specific week labels
+const CODE_STARTER_INSTALLMENTS: InstallmentPlan[] = [
+  {
+    label: 'Upfront',
+    payments: [{ amount: 30000, label: 'Full payment' }],
+    totalAmount: 30000,
+  },
+  {
+    label: '2 Installments',
+    payments: [
+      { amount: 18000, label: 'Week 1 (enroll)' },
+      { amount: 12000, label: 'Week 6' },
+    ],
+    totalAmount: 30000,
+    badge: 'Popular',
+  },
+  {
+    label: '3 Installments',
+    payments: [
+      { amount: 12000, label: 'Week 1 (enroll)' },
+      { amount: 10000, label: 'Week 4' },
+      { amount: 8000, label: 'Week 7' },
+    ],
+    totalAmount: 30000,
+  },
+];
+
+const CODE_STARTER_TESTIMONIALS: Testimonial[] = [
+  {
+    name: 'Ryan Mwakala',
+    role: 'ICT Manager',
+    company: 'Danka Africa',
+    quote: "The Code-Starter programme gave me the practical skills I needed to transition into tech. Within 6 months of graduating I landed my first ICT management role.",
+  },
+  {
+    name: 'Brandon Odhiambo',
+    role: 'Software Developer',
+    company: 'Boxcraft',
+    quote: "I came in knowing nothing about coding. The curriculum is intense but the instructors make it digestible. I'm now writing production code every day.",
+  },
+  {
+    name: 'Christine Kerubo',
+    role: 'CS Tutor & Graduate',
+    company: 'Maseno University',
+    quote: "As a CS student I thought I knew enough. This programme showed me what real-world software engineering looks like. The Git and Linux modules alone were worth it.",
+  },
+  {
+    name: 'Tricia Adhiambo',
+    role: 'Emerging Tech Talent',
+    company: 'Maseno University',
+    quote: "The hybrid format was perfect for me — I could attend Zoom sessions when I couldn't make it in person. The community of learners keeps you accountable.",
+  },
+];
 
 // ---------------------------------------------------------------------------
 // Course data type
@@ -43,6 +180,17 @@ export interface CourseSeed {
   featured?: boolean;
   sortOrder: number;
   installmentsEnabled?: boolean;
+  isActive?: boolean;
+  /** Explicit plans; otherwise generated from price + INSTALLMENT_WEEKS. */
+  installmentPlans?: InstallmentPlan[];
+  /** Course page content stored in Course.metadata (CourseMetadata in src/types/course.ts). */
+  metadata?: Record<string, unknown>;
+  /**
+   * Content revision. When higher than the row's metadata._seedVersion the entry is applied
+   * once over the existing (possibly admin-edited) row. Default 0 = never overwrite; only
+   * missing metadata keys are backfilled. Bump it only for deliberate catalog changes.
+   */
+  seedVersion?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,7 +208,7 @@ export const DEPRECATED_COURSE_IDS = [
 // Course catalog — IDs MUST match src/config/courses.ts
 // Cover images use /images/courses/<id>.jpg (real photos, Unsplash License)
 // ---------------------------------------------------------------------------
-export const COURSES: CourseSeed[] = [
+const RAW_COURSES: CourseSeed[] = [
 
   // ── SOFTWARE ENGINEERING ───────────────────────────────────────────────────
   {
@@ -105,6 +253,14 @@ export const COURSES: CourseSeed[] = [
       'Certificate of completion',
     ],
     stack: 'HTML, CSS, Tailwind, Python, JavaScript, Git, GitHub, VS Code, AI tools',
+    installmentPlans: CODE_STARTER_INSTALLMENTS,
+    metadata: {
+      curriculum: CODE_STARTER_CURRICULUM,
+      testimonials: CODE_STARTER_TESTIMONIALS,
+      showAlumni: true,
+      location: 'Pioneer House, 2nd Floor, Room 204A, Kisumu',
+      cohortSize: 20,
+    },
   },
   {
     id: 'fullstack',
@@ -228,35 +384,7 @@ export const COURSES: CourseSeed[] = [
     careerPaths: ['Security Analyst', 'Ethical Hacker', 'IT Security Officer', 'Penetration Tester'],
     includes: ['6 weeks instruction', 'Kali Linux lab environment', 'Capture-the-Flag challenges', 'Certificate'],
     stack: 'Kali Linux, Wireshark, Metasploit, OWASP tools, Nmap',
-  },
-  {
-    id: 'kids-scratch',
-    categoryId: 'software',
-    name: 'Coding for Kids — Scratch & Python',
-    shortName: 'Kids Coding',
-    slug: 'scratch-python',
-    duration: '8 weeks',
-    mode: 'In-person / Online',
-    price: 8000,
-    currency: 'KES',
-    level: 'beginner',
-    sortOrder: 6,
-    coverImage: '/images/courses/kids-scratch.jpg',
-    audience: 'Kids (Age 8–13)',
-    description: 'Fun, project-based coding for kids aged 8–13. Build games, animations, and interactive stories.',
-    longDescription:
-      "Kids learn to think like programmers through visual Scratch projects and introductory Python. Every lesson is game-based and project-driven — kids build something new each week.",
-    outcomes: [
-      'Scratch programming',
-      'Python basics',
-      'Logical thinking',
-      'Mini game creation',
-      'Creative problem-solving',
-    ],
-    prerequisites: ['Basic computer operation', 'Parental consent form required'],
-    careerPaths: ['Foundation for future tech career', 'STEM enrichment'],
-    includes: ['8 weeks instruction', 'Parent progress reports', 'Digital certificate', 'Coding portfolio'],
-    stack: 'Scratch, Python (Turtle, basics)',
+    metadata: { brochure: '/brochures/IT-SUPPORT-BROCHURE.pdf' },
   },
   {
     id: 'teens-web',
@@ -281,34 +409,194 @@ export const COURSES: CourseSeed[] = [
     includes: ['8 weeks instruction', 'Live portfolio website', 'Graduation showcase', 'Certificate'],
     stack: 'HTML5, CSS3, JavaScript, VS Code, GitHub Pages',
   },
+
+  // ── DIGITIKA KIDS & TEENS (ages 6-16) ─────────────────────────────────────
+  // Module mix benchmarked against Kenyan kids-tech providers (iLabAfrica, Pixel
+  // Academy, MindHub, DigiAsk) and the KICD coding / digital literacy strands:
+  // computational thinking, block-to-text coding, game design, robotics/IoT, safe AI.
   {
-    id: 'kids-games',
-    categoryId: 'software',
-    name: 'Game Development for Kids',
-    shortName: 'Game Dev Kids',
-    slug: 'game-dev',
-    duration: '6 weeks',
-    mode: 'In-person',
-    price: 10000,
+    id: 'kids-scratch', // id kept so existing links and enrollments keep working
+    seedVersion: 1, // Kids & Teens relaunch (Oct 2026): replaces the old kids course content
+    categoryId: 'kids',
+    name: 'Tech Explorers: Digital Creativity & Coding (Ages 6-10)',
+    shortName: 'Tech Explorers',
+    slug: 'tech-explorers',
+    duration: '8 weeks',
+    mode: 'In-person (Kisumu)',
+    price: 8000,
     currency: 'KES',
     level: 'beginner',
-    sortOrder: 8,
-    coverImage: '/images/courses/kids-games.jpg',
-    audience: 'Kids (Age 10–16)',
-    description: 'Create fun 2D games using Pygame and Unity basics in a hands-on studio environment.',
+    featured: true,
+    sortOrder: 1,
+    coverImage: '/images/courses/kids-scratch.jpg',
+    audience: 'Kids (Age 6-10)',
+    description:
+      'Digital play, creativity and first steps into tech. Kids aged 6-10 learn to use computers safely, create digital art and stories, and code their first games in ScratchJr and Scratch.',
     longDescription:
-      "Kids aged 10–16 learn game design fundamentals, physics, and programming through building their own 2D games. Sessions are fast-paced and creative — students playtest each other's games each week.",
+      'Tech Explorers turns screen time into creative time. Through unplugged games, ScratchJr and Scratch, children build computational thinking (sequences, loops, events, debugging), the same skills found in the KICD coding and digital literacy strands, while making animations, digital art and games of their own. A robotics taster and a kid-friendly introduction to AI show them how the technology around them works, and every child presents a finished project to parents on Showcase Day.',
     outcomes: [
-      'Game mechanics',
-      'Pygame basics',
-      'Unity 2D intro',
-      'Creative problem-solving',
-      'Game design principles',
+      'Confident, safe computer and internet use',
+      'Computational thinking: sequences, loops, events',
+      'Digital art, animation and storytelling',
+      'ScratchJr and Scratch games',
+      'Intro robotics with programmable bots',
+      'Understanding the AI around us',
+      'Teamwork and presentation skills',
     ],
-    prerequisites: ['Some computer familiarity', 'Parental consent form required'],
-    careerPaths: ['Foundation for game development career', 'STEM pathway'],
-    includes: ['6 weeks instruction', 'Unity Pro student license', 'Published game portfolio', 'Certificate'],
-    stack: 'Python (Pygame), Unity (C# basics)',
+    prerequisites: ['No prior experience needed', 'Able to read simple words', 'Parental consent form required'],
+    careerPaths: ['Next step: Young Innovators (ages 10-16)', 'CBC digital literacy and STEM enrichment'],
+    includes: [
+      '8 weekly 3-hour sessions',
+      'Computers and robotics kits provided',
+      'Weekly progress updates on the parent portal',
+      'Digital portfolio of projects',
+      'Showcase Day and certificate of completion',
+    ],
+    stack: 'ScratchJr, Scratch 3, Code.org, programmable robots (taster), Teachable Machine (demo)',
+    installmentPlans: makeInstallmentPlans(8000, ['Week 4', 'Week 7']),
+    metadata: {
+      ageRange: '6-10',
+      schedule: 'Saturdays 9:00am-12:00pm, or a daily 2-week bootcamp during the April, August and December school holidays',
+      location: 'Pioneer House, 2nd Floor, Room 204A, Kisumu',
+      cohortSize: 15,
+      requirements: ['Snack and water bottle', 'Headphones (optional)'],
+      highlights: ['Small classes of up to 15', 'Learning through play', 'Parent Showcase Day'],
+      curriculum: [
+        { week: 1, title: 'Hello, Computer!', topics: ['Parts of a computer', 'Mouse and keyboard skills', 'Staying safe and kind online', 'Unplugged: robot directions game'] },
+        { week: 2, title: 'Thinking Like a Coder (Unplugged)', topics: ['Sequences and algorithms', 'Spotting patterns', 'Debugging games', 'Code.org puzzles'] },
+        { week: 3, title: 'ScratchJr Stories', topics: ['Characters and backgrounds', 'Motion and looks blocks', 'Build: my first animated story'] },
+        { week: 4, title: 'Digital Art & Creativity', topics: ['Drawing and editing pictures', 'Scratch paint editor', 'Adding sounds and music', 'Build: animated greeting card'] },
+        { week: 5, title: 'Scratch Games I', topics: ['Events and loops', 'Sprites and costumes', 'Build: catch-the-fruit game'] },
+        { week: 6, title: 'Scratch Games II', topics: ['If-then decisions', 'Score and timer variables', 'Build: maze game', 'Playtest a friend\'s game'] },
+        { week: 7, title: 'Robots & AI Around Us', topics: ['Programmable robot taster', 'What is AI?', 'Teach a computer with pictures and sounds', 'AI safety: who to trust online'] },
+        { week: 8, title: 'Showcase Day', topics: ['Finish and polish my project', 'Present to parents', 'Certificate and portfolio'] },
+      ],
+    },
+  },
+  {
+    id: 'kids-games', // id kept so existing links and enrollments keep working
+    seedVersion: 1, // Kids & Teens relaunch (Oct 2026): replaces the old kids course content
+    categoryId: 'kids',
+    name: 'Young Innovators: Game Development & Python (Ages 10-16)',
+    shortName: 'Young Innovators: Games & Python',
+    slug: 'young-innovators-games-python',
+    duration: '8 weeks',
+    mode: 'In-person (Kisumu)',
+    price: 15000,
+    currency: 'KES',
+    level: 'beginner',
+    featured: true,
+    sortOrder: 2,
+    coverImage: '/images/courses/kids-games.jpg',
+    audience: 'Kids & Teens (Age 10-16)',
+    description:
+      'From block code to real Python. Learners aged 10-16 design and build their own 2D games, master logic and Python fundamentals, and design a web page to showcase their work.',
+    longDescription:
+      'Young Innovators bridges the jump from Scratch to text-based programming. Learners master logic and Python fundamentals, then use Pygame Zero to build playable 2D games with levels, scoring and sound, playtesting each other\'s games every week. A web and design module teaches HTML and CSS so each learner builds a showcase page for their games, and a guided session on AI coding assistants teaches how to use AI to learn, not to copy. Aligned to the KICD coding strand and a head start for Computer Studies and the CBC Pre-Technical pathway.',
+    outcomes: [
+      'Logic and computational thinking',
+      'Python fundamentals: variables, loops, functions, lists',
+      '2D game development with Pygame Zero',
+      'Game design: mechanics, levels and playtesting',
+      'Web and design basics: HTML and CSS',
+      'Using AI coding assistants responsibly',
+      'Portfolio of 3+ playable games',
+    ],
+    prerequisites: ['Comfortable using a computer', 'Scratch experience helpful but not required', 'Parental consent form required'],
+    careerPaths: [
+      'Foundation for software and game development careers',
+      'Head start for Computer Studies and CBC Pre-Technical studies',
+      'Next step: Web Design for Teens or Code-Starter',
+    ],
+    includes: [
+      '8 weekly 3-hour sessions',
+      'Lab computers provided',
+      'Weekly progress updates on the parent portal',
+      '3+ playable games in a portfolio',
+      'Demo Day and certificate of completion',
+    ],
+    stack: 'Python 3, Pygame Zero, Thonny / VS Code, HTML5, CSS3, Scratch (bridge), AI coding assistants (guided)',
+    installmentPlans: makeInstallmentPlans(15000, ['Week 3', 'Week 6']),
+    metadata: {
+      ageRange: '10-16',
+      schedule: 'Saturdays 1:00pm-4:00pm, or a daily 2-week bootcamp during the April, August and December school holidays',
+      location: 'Pioneer House, 2nd Floor, Room 204A, Kisumu',
+      cohortSize: 15,
+      requirements: ['Own laptop optional (lab computers provided)', 'Notebook and pen'],
+      highlights: ['Real Python, not just blocks', 'Weekly playtesting', 'Parent Demo Day'],
+      curriculum: [
+        { week: 1, title: 'Logic & Problem Solving', topics: ['Algorithms and flowcharts', 'From Scratch blocks to Python', 'The debugging mindset'] },
+        { week: 2, title: 'Python Basics', topics: ['print, input and variables', 'Maths with Python', 'Turtle drawings'] },
+        { week: 3, title: 'Decisions & Loops', topics: ['if / elif / else', 'for and while loops', 'Build: guess-the-number game'] },
+        { week: 4, title: 'Functions & Lists', topics: ['Writing functions', 'Lists and random', 'Build: text adventure game'] },
+        { week: 5, title: 'Game Dev with Pygame Zero I', topics: ['The game loop', 'Sprites and movement', 'Collisions and scoring'] },
+        { week: 6, title: 'Game Dev with Pygame Zero II', topics: ['Levels and game states', 'Sound and lives', 'Playtesting and feedback'] },
+        { week: 7, title: 'Web & Design', topics: ['HTML page structure', 'CSS colour, fonts and layout', 'Design principles', 'Build: my game showcase page'] },
+        { week: 8, title: 'AI & Demo Day', topics: ['Using AI assistants to learn, not copy', 'Polish the final game', 'Demo Day for parents', 'Certificate'] },
+      ],
+    },
+  },
+  {
+    id: 'kids-robotics-ai',
+    seedVersion: 1,
+    categoryId: 'kids',
+    name: 'Young Innovators: Robotics, IoT & AI (Ages 10-16)',
+    shortName: 'Young Innovators: Robotics & AI',
+    slug: 'young-innovators-robotics-ai',
+    duration: '8 weeks',
+    mode: 'In-person (Kisumu)',
+    price: 15000,
+    currency: 'KES',
+    level: 'beginner',
+    sortOrder: 3,
+    coverImage: '/images/courses/kids-robotics-ai.jpg',
+    audience: 'Kids & Teens (Age 10-16)',
+    description:
+      'Build and program real robots and smart devices. Learners wire sensors, code micro:bit and Arduino projects, and train simple AI models to solve problems in their community.',
+    longDescription:
+      'A hands-on engineering lab for curious builders. Learners start with circuits in a simulator, then program BBC micro:bit and Arduino boards, read sensors, drive motors and build a robot car that avoids obstacles. They connect devices into a simple Internet-of-Things prototype (smart farm or smart home), train image and sound models with Teachable Machine, and finish with a team Innovation Challenge that tackles a real local problem. All kits are provided in class.',
+    outcomes: [
+      'Electronics basics: circuits, LEDs, sensors and motors',
+      'micro:bit programming from MakeCode blocks to MicroPython',
+      'Arduino basics and wiring',
+      'Build and code a robot car',
+      'IoT: collect, send and display sensor data',
+      'AI literacy: train image and sound models',
+      'Engineering design and teamwork',
+    ],
+    prerequisites: ['Comfortable using a computer', 'No electronics experience needed', 'Parental consent form required'],
+    careerPaths: [
+      'Foundation for engineering, robotics and AI careers',
+      'CBC STEM pathway and science-fair projects',
+      'Next step: AI Fundamentals or Code-Starter',
+    ],
+    includes: [
+      '8 weekly 3-hour sessions',
+      'Robotics and electronics kits provided in class',
+      'Weekly progress updates on the parent portal',
+      'Team Innovation Challenge',
+      'Demo Day and certificate of completion',
+    ],
+    stack: 'BBC micro:bit, Microsoft MakeCode, MicroPython, Arduino Uno, Tinkercad Circuits, robot car kits, Teachable Machine',
+    installmentPlans: makeInstallmentPlans(15000, ['Week 3', 'Week 6']),
+    metadata: {
+      ageRange: '10-16',
+      schedule: 'Saturdays 1:00pm-4:00pm, or a daily 2-week bootcamp during the April, August and December school holidays',
+      location: 'Pioneer House, 2nd Floor, Room 204A, Kisumu',
+      cohortSize: 12,
+      requirements: ['Notebook and pen', 'Closed shoes for lab sessions'],
+      highlights: ['Kits provided, no purchase needed', 'Build a real robot car', 'Solve a local problem with tech'],
+      curriculum: [
+        { week: 1, title: 'How Machines Think', topics: ['Inputs, processing and outputs', 'Circuits in Tinkercad', 'Lab safety'] },
+        { week: 2, title: 'micro:bit Basics', topics: ['LEDs and buttons', 'MakeCode blocks', 'Build: reaction-time game'] },
+        { week: 3, title: 'Sensors & Data', topics: ['Light, temperature and motion sensors', 'Logging data', 'Build: mini weather station'] },
+        { week: 4, title: 'Arduino & Electronics', topics: ['Breadboards, LEDs and resistors', 'Buzzers and buttons', 'Build: traffic-light controller'] },
+        { week: 5, title: 'Robots in Motion', topics: ['Motors and wheels', 'Build and code a robot car', 'Obstacle avoidance'] },
+        { week: 6, title: 'Smart Devices (IoT)', topics: ['Radio messaging between devices', 'Smart farm or smart home prototype', 'Moving to MicroPython'] },
+        { week: 7, title: 'AI Lab', topics: ['What AI is and is not', 'Train image and sound models', 'AI-controlled robot', 'AI ethics and safety'] },
+        { week: 8, title: 'Innovation Challenge & Demo Day', topics: ['Team build for a local problem', 'Pitch to parents', 'Certificate'] },
+      ],
+    },
   },
 
   // ── ICDL (Levels 1–5 progression) ───────────────────────────────────────────
@@ -348,6 +636,7 @@ export const COURSES: CourseSeed[] = [
       'Exam practice software',
       'ICDL Level 1 certificate',
     ],
+    metadata: { brochure: '/brochures/Codevertex_Digitika_Program_Cert_Samples.pdf' },
   },
   {
     id: 'icdl-l2',
@@ -833,3 +1122,35 @@ export const COURSES: CourseSeed[] = [
     stack: 'Python, R, Tableau/Superset, SQL, Jupyter',
   },
 ];
+
+// Week labels for the generated 2- and 3-installment plans (used when a course has no
+// explicit installmentPlans).
+const INSTALLMENT_WEEKS: Record<string, [string, string]> = {
+  fullstack: ['Week 6', 'Week 10'],
+  'mobile-dev': ['Week 5', 'Week 8'],
+  devops: ['Week 5', 'Week 8'],
+  cybersec: ['Week 3', 'Week 5'],
+  'teens-web': ['Week 4', 'Week 7'],
+  'icdl-l1': ['Week 2', 'Week 3'],
+  'icdl-l2': ['Week 2', 'Week 3'],
+  'icdl-l3': ['Week 3', 'Week 4'],
+  'icdl-l4': ['Week 4', 'Week 6'],
+  'icdl-l5': ['Week 4', 'Week 6'],
+  'ccna-1': ['Week 4', 'Week 6'],
+  'ccna-2': ['Week 4', 'Week 6'],
+  'ccna-3': ['Week 4', 'Week 6'],
+  'ccna-cert': ['Week 2', 'Week 3'],
+  'ai-fundamentals': ['Week 2', 'Week 3'],
+  'ml-python': ['Week 5', 'Week 8'],
+  'genai-llm': ['Week 4', 'Week 6'],
+  'ai-business': ['Week 1', 'Week 2'],
+  'data-python': ['Week 4', 'Week 6'],
+  'power-bi': ['Week 2', 'Week 3'],
+  'sql-db': ['Week 2', 'Week 3'],
+  'advanced-analytics': ['Week 3', 'Week 5'],
+};
+
+export const COURSES: (CourseSeed & { installmentPlans: InstallmentPlan[] })[] = RAW_COURSES.map((c) => ({
+  ...c,
+  installmentPlans: c.installmentPlans ?? makeInstallmentPlans(c.price, INSTALLMENT_WEEKS[c.id]),
+}));

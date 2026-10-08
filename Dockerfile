@@ -57,6 +57,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # from the standalone node_modules. Without prisma.config.ts the Prisma 7 CLI
 # falls back to the --url flag passed in entrypoint.sh.
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+# prisma/seed/digitika-rbac.ts imports the RBAC catalog (shared with the app, no
+# imports of its own). Ship that single file so the seed resolves it at runtime;
+# everything else the seed needs lives under prisma/.
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/digitika-rbac-catalog.ts ./src/lib/digitika-rbac-catalog.ts
 
 # src/config is needed by prisma/seed/courses.ts at seed time (relative import).
 COPY --from=builder --chown=nextjs:nodejs /app/src/config ./src/config

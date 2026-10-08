@@ -24,7 +24,7 @@ The codevertex-website uses **PostgreSQL** via **Prisma ORM** (not Ent/Atlas). S
 `scripts/entrypoint.sh` runs on every container start:
 
 1. `prisma db push --url $DIRECT_DATABASE_URL --accept-data-loss` — syncs schema (uses direct Postgres URL, not PgBouncer)
-2. `tsx /app/prisma/seed.ts` — idempotent seed (upserts courses, cohorts, blog posts)
+2. `tsx /app/prisma/seed.ts` - idempotent, non-destructive seed (see "Seed rules" below)
 3. `node server.js` — starts the Next.js server
 
 > **Important:** `DIRECT_DATABASE_URL` (direct postgres) must be used for schema operations. `DATABASE_URL` uses PgBouncer (`?pgbouncer=true`) and is for runtime queries only.
@@ -80,7 +80,21 @@ kubectl exec -n codevertex deployment/codevertex-website -- \
   sh -c "DATABASE_URL=\$DIRECT_DATABASE_URL tsx /app/prisma/seed.ts"
 ```
 
-The seed is **idempotent** — it upserts courses and cohorts, so running it multiple times is safe.
+The seed is **idempotent and non-destructive**, so running it multiple times is safe.
+
+### Seed rules (since the Oct 2026 Kids & Teens relaunch)
+
+The database is the single source of truth for course content; admins edit everything from `/admin/courses`. The seed never resets admin edits:
+
+| Data | Rule |
+|------|------|
+| Courses | Missing course: created. Existing course: left as is, except (a) missing `metadata` keys are backfilled, and (b) when the seed entry's `seedVersion` is higher than the row's `metadata._seedVersion`, the entry is applied once over the row. |
+| Cohorts | Create-only, keyed by (courseId, startDate). Admins own dates, slots and status afterwards. |
+| Blog posts | Create-only (`skipDuplicates` on slug). |
+
+To push a deliberate catalog change to production, edit the entry in `prisma/seed/courses.ts` **and** bump its `seedVersion`.
+
+The seed must stay self-contained: the runtime image ships only `prisma/` plus `src/lib/digitika-rbac-catalog.ts` (copied explicitly in the `Dockerfile`). Do not import other `src/` files from the seed.
 
 ---
 
@@ -113,7 +127,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/codevertex?sslmode=d
 
 | Seeder | File | Content |
 |--------|------|---------|
-| Courses | `prisma/seed/courses.ts` | Course catalog with installment plans (imports from `src/config/courses.ts`) |
+| Courses | `prisma/seed/courses.ts` | Initial course catalog: fields, installment plans and page `metadata` (curriculum, testimonials, schedule, age range...). Self-contained. |
 | Cohorts | `prisma/seed/cohorts.ts` | Scheduled cohort intake dates |
 | Blog posts | `prisma/seed/blog.ts` | Starter blog articles |
 
