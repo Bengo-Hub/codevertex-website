@@ -4,6 +4,8 @@ import { AlumniBar } from '@/components/digitika/AlumniBar';
 import { LifeAtDigitika } from '@/components/digitika/LifeAtDigitika';
 import { TestimonialsSection } from '@/components/digitika/TestimonialsSection';
 import { CourseCatalog } from '@/components/digitika/CourseCatalog';
+import { COURSE_CATEGORIES } from '@/config/courses';
+import { prisma } from '@/lib/db';
 
 // Render at request time so the catalog reads courses from the DB on the running
 // pod, rather than baking an empty list at build time.
@@ -26,10 +28,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DigitikaPage() {
+async function catalogCounts(): Promise<{ courseCount: number; categoryCount: number }> {
+  try {
+    const rows = await prisma.course.groupBy({ by: ['categoryId'], where: { isActive: true }, _count: { _all: true } });
+    return { courseCount: rows.reduce((s, r) => s + r._count._all, 0), categoryCount: rows.length };
+  } catch {
+    return { courseCount: 0, categoryCount: COURSE_CATEGORIES.length };
+  }
+}
+
+export default async function DigitikaPage() {
+  const counts = await catalogCounts();
   return (
     <>
-      <DigitikaHero />
+      <DigitikaHero {...counts} />
       <AlumniBar />
       {/* Catalog right under the hero: browsing courses is the main job of this page */}
       <CourseCatalog />

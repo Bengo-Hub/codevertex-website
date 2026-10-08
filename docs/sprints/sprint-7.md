@@ -18,6 +18,8 @@
 
 - [x] Removed robotics-kit claims (none on offer yet); robotics course runs on simulators
 - [x] /digitika catalog redesign: category tabs with counts, search, level/format/duration/price/age filters, sort, active-filter chips, shareable URLs, catalog moved under the hero, hero category chips link to tabs
+- [x] Digitika hero kept as is; its category chips open catalog tabs, course stats are live from the DB, and the parent-portal link is visible
+- [x] Every "Browse courses" link (home, student portal, payment success, certificate, pricing) lands on the catalog (#courses); course pages link back to their category tab
 
 ## Follow-ups
 - `/api/students/[studentId]/*` content routes still trust the Student ID alone (pre-existing, see `src/lib/digitika-access.ts`); move them behind SSO or the parent-style one-time code

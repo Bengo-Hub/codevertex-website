@@ -62,7 +62,7 @@ export default async function PricingPage() {
           <p className="text-center text-sm text-muted-foreground mt-10">
             Prices shown are entry-level tiers per product — most businesses combine a few. All prices in KES, VAT may apply.
             Digitika Academy courses are priced separately —{' '}
-            <Link href="/digitika" className="text-primary font-semibold hover:underline">view course fees →</Link>
+            <Link href="/digitika#courses" className="text-primary font-semibold hover:underline">view course fees →</Link>
           </p>
         </div>
       </section>

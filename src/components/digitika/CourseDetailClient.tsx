@@ -120,6 +120,10 @@ export function CourseDetailClient({ course, category }: Props) {
             <ArrowLeft className="h-3.5 w-3.5" /> Digitika Academy
           </Link>
           <span className="text-border">/</span>
+          <Link href={`/digitika?category=${course.categoryId}#courses`} className="hidden sm:inline text-muted-foreground hover:text-primary transition-colors shrink-0">
+            {category.name}
+          </Link>
+          <span className="hidden sm:inline text-border">/</span>
           <span className="font-medium text-foreground truncate">{course.shortName ?? course.name}</span>
         </div>
       </div>
@@ -731,10 +735,10 @@ export function CourseDetailClient({ course, category }: Props) {
               </div>
 
               <Link
-                href="/digitika"
+                href={`/digitika?category=${course.categoryId}#courses`}
                 className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                <ArrowLeft className="h-4 w-4" /> All courses
+                <ArrowLeft className="h-4 w-4" /> More {category.name} courses
               </Link>
             </div>
           </div>
