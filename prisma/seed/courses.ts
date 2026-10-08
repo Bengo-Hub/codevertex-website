@@ -416,7 +416,7 @@ const RAW_COURSES: CourseSeed[] = [
   // computational thinking, block-to-text coding, game design, robotics/IoT, safe AI.
   {
     id: 'kids-scratch', // id kept so existing links and enrollments keep working
-    seedVersion: 1, // Kids & Teens relaunch (Oct 2026): replaces the old kids course content
+    seedVersion: 2, // v2: no robotics kits on offer yet (virtual robots only)
     categoryId: 'kids',
     name: 'Tech Explorers: Digital Creativity & Coding (Ages 6-10)',
     shortName: 'Tech Explorers',
@@ -433,13 +433,13 @@ const RAW_COURSES: CourseSeed[] = [
     description:
       'Digital play, creativity and first steps into tech. Kids aged 6-10 learn to use computers safely, create digital art and stories, and code their first games in ScratchJr and Scratch.',
     longDescription:
-      'Tech Explorers turns screen time into creative time. Through unplugged games, ScratchJr and Scratch, children build computational thinking (sequences, loops, events, debugging), the same skills found in the KICD coding and digital literacy strands, while making animations, digital art and games of their own. A robotics taster and a kid-friendly introduction to AI show them how the technology around them works, and every child presents a finished project to parents on Showcase Day.',
+      'Tech Explorers turns screen time into creative time. Through unplugged games, ScratchJr and Scratch, children build computational thinking (sequences, loops, events, debugging), the same skills found in the KICD coding and digital literacy strands, while making animations, digital art and games of their own. A virtual-robot coding challenge and a kid-friendly introduction to AI show them how the technology around them works, and every child presents a finished project to parents on Showcase Day.',
     outcomes: [
       'Confident, safe computer and internet use',
       'Computational thinking: sequences, loops, events',
       'Digital art, animation and storytelling',
       'ScratchJr and Scratch games',
-      'Intro robotics with programmable bots',
+      'Coding virtual robots',
       'Understanding the AI around us',
       'Teamwork and presentation skills',
     ],
@@ -447,12 +447,12 @@ const RAW_COURSES: CourseSeed[] = [
     careerPaths: ['Next step: Young Innovators (ages 10-16)', 'CBC digital literacy and STEM enrichment'],
     includes: [
       '8 weekly 3-hour sessions',
-      'Computers and robotics kits provided',
+      'Lab computers provided',
       'Weekly progress updates on the parent portal',
       'Digital portfolio of projects',
       'Showcase Day and certificate of completion',
     ],
-    stack: 'ScratchJr, Scratch 3, Code.org, programmable robots (taster), Teachable Machine (demo)',
+    stack: 'ScratchJr, Scratch 3, Code.org, virtual robot simulators, Teachable Machine (demo)',
     installmentPlans: makeInstallmentPlans(8000, ['Week 4', 'Week 7']),
     metadata: {
       ageRange: '6-10',
@@ -468,7 +468,7 @@ const RAW_COURSES: CourseSeed[] = [
         { week: 4, title: 'Digital Art & Creativity', topics: ['Drawing and editing pictures', 'Scratch paint editor', 'Adding sounds and music', 'Build: animated greeting card'] },
         { week: 5, title: 'Scratch Games I', topics: ['Events and loops', 'Sprites and costumes', 'Build: catch-the-fruit game'] },
         { week: 6, title: 'Scratch Games II', topics: ['If-then decisions', 'Score and timer variables', 'Build: maze game', 'Playtest a friend\'s game'] },
-        { week: 7, title: 'Robots & AI Around Us', topics: ['Programmable robot taster', 'What is AI?', 'Teach a computer with pictures and sounds', 'AI safety: who to trust online'] },
+        { week: 7, title: 'Robots & AI Around Us', topics: ['Code a virtual robot', 'What is AI?', 'Teach a computer with pictures and sounds', 'AI safety: who to trust online'] },
         { week: 8, title: 'Showcase Day', topics: ['Finish and polish my project', 'Present to parents', 'Certificate and portfolio'] },
       ],
     },
@@ -538,7 +538,7 @@ const RAW_COURSES: CourseSeed[] = [
   },
   {
     id: 'kids-robotics-ai',
-    seedVersion: 1,
+    seedVersion: 2, // v2: no robotics kits on offer yet, hardware work runs in simulators
     categoryId: 'kids',
     name: 'Young Innovators: Robotics, IoT & AI (Ages 10-16)',
     shortName: 'Young Innovators: Robotics & AI',
@@ -552,19 +552,19 @@ const RAW_COURSES: CourseSeed[] = [
     coverImage: '/images/courses/kids-robotics-ai.jpg',
     audience: 'Kids & Teens (Age 10-16)',
     description:
-      'Build and program real robots and smart devices. Learners wire sensors, code micro:bit and Arduino projects, and train simple AI models to solve problems in their community.',
+      'Design and program robots and smart devices. Learners build circuits, code micro:bit and Arduino projects in simulators, and train simple AI models to solve problems in their community.',
     longDescription:
-      'A hands-on engineering lab for curious builders. Learners start with circuits in a simulator, then program BBC micro:bit and Arduino boards, read sensors, drive motors and build a robot car that avoids obstacles. They connect devices into a simple Internet-of-Things prototype (smart farm or smart home), train image and sound models with Teachable Machine, and finish with a team Innovation Challenge that tackles a real local problem. All kits are provided in class.',
+      'A hands-on engineering lab for curious builders, run on free browser-based simulators so no hardware is needed. Learners build circuits in Tinkercad, program BBC micro:bit and Arduino boards in their simulators, read virtual sensors, drive motors and code a robot car that avoids obstacles. They connect devices into a simple Internet-of-Things prototype (smart farm or smart home), train image and sound models with Teachable Machine, and finish with a team Innovation Challenge that tackles a real local problem.',
     outcomes: [
       'Electronics basics: circuits, LEDs, sensors and motors',
-      'micro:bit programming from MakeCode blocks to MicroPython',
+      'micro:bit programming from MakeCode blocks to MicroPython (simulator)',
       'Arduino basics and wiring',
-      'Build and code a robot car',
+      'Design and code a virtual robot car',
       'IoT: collect, send and display sensor data',
       'AI literacy: train image and sound models',
       'Engineering design and teamwork',
     ],
-    prerequisites: ['Comfortable using a computer', 'No electronics experience needed', 'Parental consent form required'],
+    prerequisites: ['Comfortable using a computer', 'No electronics experience or hardware needed', 'Parental consent form required'],
     careerPaths: [
       'Foundation for engineering, robotics and AI careers',
       'CBC STEM pathway and science-fair projects',
@@ -572,28 +572,28 @@ const RAW_COURSES: CourseSeed[] = [
     ],
     includes: [
       '8 weekly 3-hour sessions',
-      'Robotics and electronics kits provided in class',
+      'Lab computers with circuit and robot simulators',
       'Weekly progress updates on the parent portal',
       'Team Innovation Challenge',
       'Demo Day and certificate of completion',
     ],
-    stack: 'BBC micro:bit, Microsoft MakeCode, MicroPython, Arduino Uno, Tinkercad Circuits, robot car kits, Teachable Machine',
+    stack: 'Tinkercad Circuits, BBC micro:bit (MakeCode simulator), MicroPython, Arduino (Wokwi simulator), Teachable Machine',
     installmentPlans: makeInstallmentPlans(15000, ['Week 3', 'Week 6']),
     metadata: {
       ageRange: '10-16',
       schedule: 'Saturdays 1:00pm-4:00pm, or a daily 2-week bootcamp during the April, August and December school holidays',
       location: 'Pioneer House, 2nd Floor, Room 204A, Kisumu',
       cohortSize: 12,
-      requirements: ['Notebook and pen', 'Closed shoes for lab sessions'],
-      highlights: ['Kits provided, no purchase needed', 'Build a real robot car', 'Solve a local problem with tech'],
+      requirements: ['Notebook and pen'],
+      highlights: ['No hardware needed: simulators', 'Code a robot car', 'Solve a local problem with tech'],
       curriculum: [
         { week: 1, title: 'How Machines Think', topics: ['Inputs, processing and outputs', 'Circuits in Tinkercad', 'Lab safety'] },
         { week: 2, title: 'micro:bit Basics', topics: ['LEDs and buttons', 'MakeCode blocks', 'Build: reaction-time game'] },
         { week: 3, title: 'Sensors & Data', topics: ['Light, temperature and motion sensors', 'Logging data', 'Build: mini weather station'] },
-        { week: 4, title: 'Arduino & Electronics', topics: ['Breadboards, LEDs and resistors', 'Buzzers and buttons', 'Build: traffic-light controller'] },
-        { week: 5, title: 'Robots in Motion', topics: ['Motors and wheels', 'Build and code a robot car', 'Obstacle avoidance'] },
+        { week: 4, title: 'Arduino & Electronics', topics: ['Breadboards, LEDs and resistors (simulated)', 'Buzzers and buttons', 'Build: traffic-light controller'] },
+        { week: 5, title: 'Robots in Motion', topics: ['Motors and wheels', 'Code a robot car in the simulator', 'Obstacle avoidance'] },
         { week: 6, title: 'Smart Devices (IoT)', topics: ['Radio messaging between devices', 'Smart farm or smart home prototype', 'Moving to MicroPython'] },
-        { week: 7, title: 'AI Lab', topics: ['What AI is and is not', 'Train image and sound models', 'AI-controlled robot', 'AI ethics and safety'] },
+        { week: 7, title: 'AI Lab', topics: ['What AI is and is not', 'Train image and sound models', 'AI-controlled virtual robot', 'AI ethics and safety'] },
         { week: 8, title: 'Innovation Challenge & Demo Day', topics: ['Team build for a local problem', 'Pitch to parents', 'Certificate'] },
       ],
     },
