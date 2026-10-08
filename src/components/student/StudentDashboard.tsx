@@ -917,7 +917,7 @@ function CourseSection({
             icon={<BookOpen className="h-10 w-10" />}
             message="You currently have no course enrollment."
             actionLabel="Browse Courses"
-            onAction={() => router.push('/digitika')}
+            onAction={() => router.push('/digitika#courses')}
           />
         )}
       </div>
