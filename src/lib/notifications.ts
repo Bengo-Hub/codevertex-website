@@ -200,6 +200,32 @@ export async function sendContactFormReply(data: ContactFormData, requestId?: st
   );
 }
 
+/**
+ * Parent-portal one-time code. Reuses notifications-api's shared auth OTP templates
+ * (email: auth/otp_verification, SMS: auth/otp) so no new template is needed. Always a
+ * direct S2S call (no NATS consumer handles this). The code is never logged in production.
+ */
+export async function sendParentAccessCode(data: {
+  email?: string;
+  phone?: string;
+  name: string;
+  code: string;
+  ttlMinutes: number;
+}): Promise<void> {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`[notifications] (dev) parent access code for ${data.name}: ${data.code}`);
+  }
+  const subject = 'Your Digitika parent portal code';
+  await Promise.all([
+    data.email
+      ? postNotification('auth/otp_verification', data.email, { name: data.name, otp: data.code }, subject)
+      : Promise.resolve(),
+    data.phone
+      ? postNotification('auth/otp', data.phone, { brand_name: 'Digitika parent portal', otp: data.code, ttl_minutes: data.ttlMinutes }, subject, undefined, 'sms')
+      : Promise.resolve(),
+  ]);
+}
+
 export function buildPortalLink(enrollmentId: string | bigint, studentId: string): string {
   return `${APP_URL}/digitika/success?reference=DGT-${enrollmentId}-DGT-${studentId}`;
 }

@@ -10,7 +10,8 @@ import {
   Sparkles, Wallet, BadgeCheck, Bookmark, Share2, Copy, Check, LogIn,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import { SITE, TREASURY } from '@/lib/constants';
+import { SITE } from '@/lib/constants';
+import { buildTreasuryPayUrl } from '@/lib/treasury-pay';
 import { useAuth } from '@/hooks/use-auth';
 
 interface InstallmentRow {
@@ -77,7 +78,7 @@ export function PaymentSuccessClient() {
     const enrollmentId = match[1];
 
     const loadSummary = () =>
-      fetch(`/api/enrollments/${enrollmentId}/summary`)
+      fetch(`/api/enrollments/${enrollmentId}/summary?reference=${encodeURIComponent(referenceId)}`)
         .then((r) => r.json())
         .then((data) => {
           if (data.error) throw new Error(data.error);
@@ -128,19 +129,13 @@ export function PaymentSuccessClient() {
       });
       // Best-effort: just open treasury pay URL directly
     } catch { /* ignore */ } finally {
-      const params = new URLSearchParams({
-        amount: String(inst.amount),
-        tenant: TREASURY.tenant,
-        reference_id: referenceId ?? summary.enrollmentId,
-        reference_type: 'digitika_enrollment',
+      window.open(buildTreasuryPayUrl({
+        amount: inst.amount,
         currency: summary.currency,
+        referenceId: referenceId ?? summary.enrollmentId,
         description: `${summary.courseName} — ${ordinal(inst.installmentNo)} Installment`,
-        redirect_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/digitika/success`,
-        button_text: 'View My Enrollment',
-        gateways: 'paystack,mpesa',
-        email: '',
-      });
-      window.open(`${TREASURY.payUrl}?${params}`, '_blank');
+        redirectUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/digitika/success`,
+      }), '_blank');
       setPayingInst(null);
     }
   }

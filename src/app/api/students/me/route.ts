@@ -33,11 +33,13 @@ export async function GET(req: NextRequest) {
             cohort: true,
           },
         },
-        progress: true,
+        // Only the columns the dashboard renders (attempt answers JSON is never sent).
+        progress: { select: { lessonId: true, completedAt: true, lastPositionSec: true } },
         quizAttempts: {
           orderBy: {
             createdAt: 'desc',
           },
+          select: { id: true, quizId: true, scorePct: true, passed: true, createdAt: true },
         },
         certificates: {
           where: {
