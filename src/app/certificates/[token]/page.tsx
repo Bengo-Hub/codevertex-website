@@ -52,7 +52,7 @@ export default async function VerifyCertificatePage({
                 This certificate link is invalid, expired, or has been revoked.
               </p>
             </div>
-            <Link href="/digitika" className="text-primary text-sm underline underline-offset-2">
+            <Link href="/digitika#courses" className="text-primary text-sm underline underline-offset-2">
               Browse Digitika courses →
             </Link>
           </>
