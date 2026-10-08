@@ -1,4 +1,4 @@
-import { COURSE_CATEGORIES } from '@/config/courses';
+import { COURSE_CATEGORIES, getCategory } from '@/config/courses';
 import { type DbCourse } from '@/types/course';
 import { prisma } from '@/lib/db';
 import { CourseCard } from './CourseCard';
@@ -9,6 +9,8 @@ async function fetchCourses(): Promise<DbCourse[]> {
     // The self-fetch failed during the CI build and rendered an empty catalog.
     const courses = await prisma.course.findMany({
       where: { isActive: true },
+      // Cards never render page-only content, so skip the metadata JSON payload.
+      omit: { metadata: true },
       orderBy: [{ categoryId: 'asc' }, { sortOrder: 'asc' }],
     });
     return courses as unknown as DbCourse[];
@@ -28,10 +30,18 @@ export async function CourseCatalog() {
     coursesByCategory.set(course.categoryId, list);
   }
 
+  // Configured categories first (in their display order), then any categoryId an admin
+  // created that has no display config yet, so no active course is ever hidden.
+  const known = new Set(COURSE_CATEGORIES.map((c) => c.id));
+  const categories = [
+    ...COURSE_CATEGORIES,
+    ...[...coursesByCategory.keys()].filter((id) => !known.has(id)).map(getCategory),
+  ];
+
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto space-y-16">
-        {COURSE_CATEGORIES.map(cat => {
+        {categories.map(cat => {
           const courses = coursesByCategory.get(cat.id) ?? [];
           if (courses.length === 0) return null;
           return (

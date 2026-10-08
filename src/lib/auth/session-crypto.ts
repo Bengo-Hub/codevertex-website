@@ -92,3 +92,39 @@ export async function verifySessionPayload(cookieValue: string | undefined | nul
     return null;
   }
 }
+
+/**
+ * Purpose-scoped signed tokens (same key, HMAC input prefixed with the purpose), so a
+ * token minted for one feature (e.g. the parent portal) can never be replayed as a
+ * cv_session cookie or for another purpose.
+ */
+export async function signScopedToken<T extends { exp: number }>(purpose: string, payload: T): Promise<string> {
+  const payloadB64 = toB64Url(enc.encode(JSON.stringify(payload)));
+  const key = await getKey();
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${purpose}:${payloadB64}`));
+  return `${payloadB64}.${toB64Url(new Uint8Array(sig))}`;
+}
+
+export async function verifyScopedToken<T extends { exp: number }>(purpose: string, token: string | undefined | null): Promise<T | null> {
+  if (!token) return null;
+  const dot = token.lastIndexOf('.');
+  if (dot <= 0) return null;
+  const payloadB64 = token.slice(0, dot);
+  try {
+    const key = await getKey();
+    const valid = await crypto.subtle.verify('HMAC', key, fromB64Url(token.slice(dot + 1)), enc.encode(`${purpose}:${payloadB64}`));
+    if (!valid) return null;
+    const payload = JSON.parse(new TextDecoder().decode(fromB64Url(payloadB64))) as T;
+    if (typeof payload?.exp !== 'number' || payload.exp <= Math.floor(Date.now() / 1000)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/** Keyed hash (hex) for values that must be compared but never stored in clear (OTP codes, IPs). */
+export async function keyedHash(purpose: string, value: string): Promise<string> {
+  const key = await getKey();
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(`${purpose}:${value}`)));
+  return Array.from(sig, (b) => b.toString(16).padStart(2, '0')).join('');
+}

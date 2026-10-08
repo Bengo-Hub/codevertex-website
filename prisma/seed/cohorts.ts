@@ -121,12 +121,6 @@ const RAW_COHORTS: CohortSeed[] = [
     registrationExtDays: 0, maxSlots: 15, status: 'open',
   },
   {
-    courseId: 'kids-scratch', name: 'Coding for Kids',
-    startDate: d('2026-08-03'), endDate: addWeeks(d('2026-08-03'), 8),
-    ...regWindow(d('2026-08-03')),
-    registrationExtDays: 0, maxSlots: 15, status: 'open',
-  },
-  {
     courseId: 'cybersec', name: 'Cybersecurity Fundamentals',
     startDate: d('2026-06-23'), endDate: addWeeks(d('2026-06-23'), 6),
     ...regWindow(d('2026-06-23')),
@@ -159,6 +153,44 @@ const RAW_COHORTS: CohortSeed[] = [
     startDate: d('2026-07-14'), endDate: addWeeks(d('2026-07-14'), 10),
     ...regWindow(d('2026-07-14')),
     registrationExtDays: 0, maxSlots: 20, status: 'open',
+  },
+
+  // ── Digitika Kids & Teens (Saturday cohorts; 8 weeks) ─────────────────────
+  {
+    courseId: 'kids-scratch', name: 'Tech Explorers',
+    startDate: d('2026-11-07'), endDate: addWeeks(d('2026-11-07'), 8),
+    ...regWindow(d('2026-11-07')),
+    registrationExtDays: 0, maxSlots: 15, status: 'open',
+  },
+  {
+    courseId: 'kids-scratch', name: 'Tech Explorers',
+    startDate: d('2027-01-09'), endDate: addWeeks(d('2027-01-09'), 8),
+    ...regWindow(d('2027-01-09')),
+    registrationExtDays: 0, maxSlots: 15, status: 'open',
+  },
+  {
+    courseId: 'kids-games', name: 'Young Innovators: Games & Python',
+    startDate: d('2026-11-07'), endDate: addWeeks(d('2026-11-07'), 8),
+    ...regWindow(d('2026-11-07')),
+    registrationExtDays: 0, maxSlots: 15, status: 'open',
+  },
+  {
+    courseId: 'kids-games', name: 'Young Innovators: Games & Python',
+    startDate: d('2027-01-09'), endDate: addWeeks(d('2027-01-09'), 8),
+    ...regWindow(d('2027-01-09')),
+    registrationExtDays: 0, maxSlots: 15, status: 'open',
+  },
+  {
+    courseId: 'kids-robotics-ai', name: 'Young Innovators: Robotics & AI',
+    startDate: d('2026-11-07'), endDate: addWeeks(d('2026-11-07'), 8),
+    ...regWindow(d('2026-11-07')),
+    registrationExtDays: 0, maxSlots: 12, status: 'open',
+  },
+  {
+    courseId: 'kids-robotics-ai', name: 'Young Innovators: Robotics & AI',
+    startDate: d('2027-01-09'), endDate: addWeeks(d('2027-01-09'), 8),
+    ...regWindow(d('2027-01-09')),
+    registrationExtDays: 0, maxSlots: 12, status: 'open',
   },
 ];
 

@@ -14,8 +14,10 @@ export const SITE = {
   },
 };
 
+export const TREASURY_PAY_URL = 'https://books.codevertexafrica.com/pay';
+
 export const TREASURY = {
-  payUrl: 'https://books.codevertexafrica.com/pay',
+  payUrl: TREASURY_PAY_URL,
   tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
 };
 

@@ -9,7 +9,7 @@ import {
   Star, Briefcase, GraduationCap, Award, TrendingUp, Zap, Code2, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { type CourseCategory, ALUMNI_COMPANIES, type WeeklyModule, type Testimonial } from '@/config/courses';
+import { type CourseCategory, ALUMNI_COMPANIES } from '@/config/courses';
 import { type DbCourse } from '@/types/course';
 import { formatCurrency } from '@/lib/utils';
 import { EnrollmentModal } from './EnrollmentModal';
@@ -28,20 +28,9 @@ interface CohortInfo {
   isFull: boolean;
 }
 
-interface StaticData {
-  curriculum?: WeeklyModule[];
-  testimonials?: Testimonial[];
-  alumniCompanies?: { name: string; logo: string }[];
-  brochure?: string;
-  location?: string;
-  cohortSize?: number;
-  startDate?: string;
-}
-
 interface Props {
   course: DbCourse;
   category: CourseCategory;
-  staticData?: StaticData;
 }
 
 const LEVEL_CONFIG: Record<string, { label: string; steps: number; color: string }> = {
@@ -59,7 +48,9 @@ function fadeUp(delay = 0) {
   };
 }
 
-export function CourseDetailClient({ course, category, staticData = {} }: Props) {
+export function CourseDetailClient({ course, category }: Props) {
+  // Every page section below is DB-driven (Course row + Course.metadata), editable in /admin/courses.
+  const meta = course.metadata ?? {};
   const plans = course.installmentsEnabled ? course.installmentPlans : [];
   const defaultPlanIdx = plans.findIndex(p => p.badge) >= 0 ? plans.findIndex(p => p.badge) : 0;
 
@@ -97,10 +88,10 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
     }
   };
 
-  const hasCurriculum = staticData.curriculum && staticData.curriculum.length > 0;
+  const hasCurriculum = Boolean(meta.curriculum && meta.curriculum.length > 0);
   const hasInstallments = plans.length > 0;
-  const hasTestimonials = staticData.testimonials && staticData.testimonials.length > 0;
-  const hasAlumni = staticData.alumniCompanies && staticData.alumniCompanies.length > 0;
+  const hasTestimonials = Boolean(meta.testimonials && meta.testimonials.length > 0);
+  const hasAlumni = meta.showAlumni === true;
   const level = LEVEL_CONFIG[course.level] ?? LEVEL_CONFIG.beginner;
 
   const hasActiveCohorts = cohorts.length > 0;
@@ -178,10 +169,11 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                 {[
                   { icon: Clock,        label: course.duration },
                   { icon: BookOpen,     label: course.mode },
-                  ...(staticData.cohortSize ? [{ icon: Users,    label: `${staticData.cohortSize} slots per cohort` }] : []),
-                  ...(staticData.location   ? [{ icon: MapPin,   label: staticData.location }] : []),
-                  ...(staticData.startDate  ? [{ icon: Calendar, label: `Next: ${staticData.startDate}` }] : []),
+                  ...(meta.cohortSize ? [{ icon: Users,    label: `${meta.cohortSize} slots per cohort` }] : []),
+                  ...(meta.location   ? [{ icon: MapPin,   label: meta.location }] : []),
+                  ...(meta.schedule   ? [{ icon: Calendar, label: meta.schedule }] : []),
                   ...(course.audience       ? [{ icon: GraduationCap, label: course.audience }] : []),
+                  ...(meta.highlights ?? []).map((h) => ({ icon: Star, label: h })),
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-background border border-border text-sm text-muted-foreground">
                     <Icon className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -317,7 +309,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                 >
                   <span className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-primary" />
-                    {staticData.curriculum!.length}-Week Curriculum
+                    {meta.curriculum!.length}-Week Curriculum
                   </span>
                   {showCurriculum ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                 </button>
@@ -327,7 +319,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
 
                 {showCurriculum && (
                   <div className="space-y-3">
-                    {staticData.curriculum!.map((mod, idx) => (
+                    {meta.curriculum!.map((mod, idx) => (
                       <motion.div
                         key={mod.week}
                         initial={{ opacity: 0, x: -8 }}
@@ -423,6 +415,33 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
               </motion.section>
             )}
 
+            {/* Parents (kids & teens courses) */}
+            {course.categoryId === 'kids' && (
+              <motion.section {...fadeUp(0)}>
+                <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 text-sm text-muted-foreground">
+                  <p className="font-bold text-foreground mb-1">For parents</p>
+                  Follow your child&apos;s progress, see results and pay fees anytime on the{' '}
+                  <Link href="/digitika/parent" className="font-semibold text-primary underline underline-offset-2">parent portal</Link>
+                  , using the Student ID and a one-time code. No account needed.
+                </div>
+              </motion.section>
+            )}
+
+            {/* What to bring */}
+            {meta.requirements && meta.requirements.length > 0 && (
+              <motion.section {...fadeUp(0)}>
+                <h2 className="text-xl font-black text-foreground mb-4">What to bring</h2>
+                <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-2">
+                  {meta.requirements.map(r => (
+                    <div key={r} className="flex items-center gap-2.5 text-sm text-muted-foreground">
+                      <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-primary" />
+                      {r}
+                    </div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
             {/* Career paths */}
             {course.careerPaths.length > 0 && (
               <motion.section {...fadeUp(0)}>
@@ -448,7 +467,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                 <h2 className="text-xl font-black text-foreground mb-2">Our graduates work at</h2>
                 <p className="text-sm text-muted-foreground mb-6">Companies that have hired Digitika Academy graduates</p>
                 <div className="flex flex-wrap items-center gap-8">
-                  {(staticData.alumniCompanies ?? ALUMNI_COMPANIES).map(co => (
+                  {ALUMNI_COMPANIES.map(co => (
                     <div key={co.name} className="grayscale hover:grayscale-0 opacity-50 hover:opacity-100 transition-all duration-300" title={co.name}>
                       <Image src={co.logo} alt={co.name} width={100} height={32} className="h-7 w-auto object-contain" />
                     </div>
@@ -462,7 +481,7 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
               <motion.section {...fadeUp(0)}>
                 <h2 className="text-xl font-black text-foreground mb-6">What graduates say</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {staticData.testimonials!.map((t, i) => (
+                  {meta.testimonials!.map((t, i) => (
                     <motion.div
                       key={t.name}
                       initial={{ opacity: 0, y: 12 }}
@@ -671,9 +690,9 @@ export function CourseDetailClient({ course, category, staticData = {} }: Props)
                     {canEnroll && <ArrowRight className="h-4 w-4" />}
                   </Button>
 
-                  {staticData.brochure && (
+                  {meta.brochure && (
                     <Link
-                      href={staticData.brochure}
+                      href={meta.brochure}
                       target="_blank"
                       className="flex items-center justify-center gap-2 mt-3 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
                     >

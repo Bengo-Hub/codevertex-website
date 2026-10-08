@@ -50,6 +50,34 @@ model Lead {
   @@map("leads")
 }
 
+// ---------------------------------------------------------------------------
+// Parent / guardian access: one-time codes that let a parent open the
+// no-login parent portal with a Student ID. The code itself is never stored,
+// only an HMAC of it. Rows double as the rate-limit ledger (per student and per
+// hashed client IP) and as the access audit trail. Expired rows are pruned
+// opportunistically by the request route (see src/lib/parent-access.ts).
+// ---------------------------------------------------------------------------
+model ParentAccessCode {
+  id            String    @id @default(cuid())
+  // Null when the requested Student ID did not exist: the row still counts toward the
+  // per-IP rate limit, so probing for valid IDs is throttled and audited.
+  studentUserId String?   @map("student_user_id")
+  codeHash      String    @map("code_hash")
+  ipHash        String    @map("ip_hash")
+  channels      String[]  @default([])
+  attempts      Int       @default(0)
+  expiresAt     DateTime  @map("expires_at")
+  verifiedAt    DateTime? @map("verified_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  studentUser StudentUser? @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@index([studentUserId, createdAt])
+  @@index([ipHash, createdAt])
+  @@index([createdAt])
+  @@map("parent_access_codes")
+}
+
 model StudentUser {
   id        String   @id  // DGT-XXXXXXXX unique student ID
   email     String   @unique
@@ -65,6 +93,7 @@ model StudentUser {
   certificates Certificate[]
   threads      CourseThread[]
   replies      CourseReply[]
+  parentAccessCodes ParentAccessCode[]
 
   @@index([email])
   @@map("student_users")
@@ -200,6 +229,7 @@ model Enrollment {
   @@index([paymentStatus])
   @@index([studentUserId])
   @@index([discountRuleId])
+  @@index([createdAt])
   @@map("enrollments")
 }
 
@@ -221,6 +251,8 @@ model InstallmentSchedule {
   @@index([enrollmentId])
   @@index([dueDate])
   @@index([status])
+  @@index([status, dueDate])
+  @@index([paidAt])
   @@map("installment_schedules")
 }
 
@@ -269,6 +301,10 @@ model Course {
   isActive            Boolean  @default(true) @map("is_active")
   installmentsEnabled Boolean  @default(true) @map("installments_enabled")
   installmentPlans    Json?    @default("[]") @map("installment_plans")
+  // Course page content that is not a first-class column (curriculum, testimonials,
+  // brochure, location, age range, schedule, ...). Shape: CourseMetadata in
+  // src/types/course.ts. Keeps new page sections migration-free and admin-editable.
+  metadata            Json     @default("{}")
   sortOrder           Int      @default(0) @map("sort_order")
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")

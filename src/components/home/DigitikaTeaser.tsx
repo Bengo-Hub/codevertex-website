@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { COURSE_CATEGORIES } from '@/config/courses';
+import { prisma } from '@/lib/db';
 
 const PREVIEW_IMAGES = [
   // One tall feature image on the left, two stacked on the right: fills the grid with no gaps.
@@ -11,7 +12,22 @@ const PREVIEW_IMAGES = [
   { src: '/images/MUSICA%20HACKATHON/SPK_6501.jpg', alt: 'Student coding at MUCISA Hackathon', className: '', position: 'object-center' },
 ];
 
-export function DigitikaTeaser() {
+async function activeCourseCounts(): Promise<Map<string, number>> {
+  try {
+    const rows = await prisma.course.groupBy({
+      by: ['categoryId'],
+      where: { isActive: true },
+      _count: { _all: true },
+    });
+    return new Map(rows.map((r) => [r.categoryId, r._count._all]));
+  } catch {
+    // DB unreachable (e.g. at build time): render the categories without counts.
+    return new Map();
+  }
+}
+
+export async function DigitikaTeaser() {
+  const counts = await activeCourseCounts();
   return (
     <section className="py-10 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
@@ -72,7 +88,9 @@ export function DigitikaTeaser() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 ml-4">
-                  <span className="text-xs font-bold" style={{ color: cat.color }}>{cat.courses.length} courses</span>
+                  {(counts.get(cat.id) ?? 0) > 0 && (
+                    <span className="text-xs font-bold" style={{ color: cat.color }}>{counts.get(cat.id)} courses</span>
+                  )}
                   <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                 </div>
               </Link>

@@ -155,6 +155,14 @@ export function MyEnrollmentClient() {
                 <span className="text-primary mt-0.5">•</span>
                 Call or WhatsApp: <span className="font-semibold text-foreground">+254 743 793 901</span>
               </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>
+                  Parent or guardian?{' '}
+                  <a href="/digitika/parent" className="text-primary underline underline-offset-2">Open the parent portal</a>{' '}
+                  to follow progress and pay fees with a one-time code.
+                </span>
+              </li>
             </ul>
           </motion.div>
         </div>

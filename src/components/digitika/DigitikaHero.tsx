@@ -233,6 +233,14 @@ export function DigitikaHero() {
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
+          <Link
+            href="/digitika/parent"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold underline underline-offset-2"
+            style={{ color: 'rgba(255,255,255,0.85)' }}
+          >
+            Parent or guardian? Track progress and pay fees
+            <ArrowRight className="h-3 w-3" />
+          </Link>
 
           </div>{/* end right column */}
 
