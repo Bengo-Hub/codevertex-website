@@ -6,7 +6,8 @@ export function useAuth() {
   return {
     user: store.user,
     isAuthenticated: store.status === 'authenticated',
-    isLoading: store.status === 'loading',
+    // Not ready = stored session not restored yet; treat as loading so UI never flashes "signed out".
+    isLoading: store.status === 'loading' || !store.ready,
     login: store.login,
     logout: store.logout,
     handleCallback: store.handleCallback,

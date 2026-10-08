@@ -48,6 +48,9 @@ interface Session {
 
 interface AuthState {
   status: 'idle' | 'loading' | 'authenticated' | 'error';
+  /** True once the stored session has been restored on this page load. Route guards wait
+   *  for it so a signed-in user is never bounced to sign-in during the first render. */
+  ready: boolean;
   user: UserProfile | null;
   session: Session | null;
   accessToken: string | null;
@@ -149,6 +152,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       status: 'idle',
+      ready: false,
       user: null,
       session: null,
       accessToken: null,
@@ -579,28 +583,22 @@ export const useAuthStore = create<AuthState>()(
           state.accessToken,
       }),
 
+      // localStorage hydration runs synchronously INSIDE create(), before `useAuthStore`
+      // is assigned, so calling useAuthStore.setState here threw (swallowed by zustand)
+      // and status stayed 'idle' after every reload: signed-in users looked signed out.
+      // Deferring to a microtask runs it right after the store exists, before React renders.
       onRehydrateStorage: () =>
         (state) => {
-          if (
-            state?.session?.accessToken &&
-            state?.user
-          ) {
-            useAuthStore.setState({
-              status: 'authenticated',
-            });
-          } else if (
-            state?.session?.accessToken
-          ) {
-            useAuthStore.setState({
-              status: 'loading',
-            });
-
-            state.initialize();
-          } else {
-            useAuthStore.setState({
-              status: 'idle',
-            });
-          }
+          queueMicrotask(() => {
+            if (state?.session?.accessToken && state?.user) {
+              useAuthStore.setState({ status: 'authenticated', ready: true });
+            } else if (state?.session?.accessToken) {
+              useAuthStore.setState({ status: 'loading', ready: true });
+              state.initialize();
+            } else {
+              useAuthStore.setState({ status: 'idle', ready: true });
+            }
+          });
         },
     }
   )
