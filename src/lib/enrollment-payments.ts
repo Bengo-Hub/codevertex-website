@@ -201,6 +201,10 @@ export async function bookManualPaymentInTreasury(p: {
         reference: p.reference,
         payer_name: p.payerName,
         source_service: 'codevertex-website',
+        // An enrollment has no invoices for treasury to allocate to, so book it as a direct
+        // receipt (same type as the online payments): the ledger posts it Dr bank / Cr revenue.
+        // As account_payment it was held as account credit and never reached the ledger.
+        reference_type: 'digitika_enrollment',
       }),
     },
   );
