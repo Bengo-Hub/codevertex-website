@@ -68,8 +68,12 @@ export function EnrollmentsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentStatus: newStatus }),
     });
-    if (res.ok) toast.success(`Payment status set to ${newStatus}`);
-    else toast.error('Failed to update status');
+    if (res.ok) {
+      toast.success(`Payment status set to ${newStatus}`);
+    } else {
+      const body = await res.json().catch(() => ({}));
+      toast.error(typeof body?.error === 'string' ? body.error : 'Failed to update status');
+    }
     load();
   }
 
@@ -142,7 +146,7 @@ export function EnrollmentsPage() {
       render: (row) => {
         // Same rule as the server: paid = paid installment rows, or the first payment of a
         // confirmed upfront enrollment.
-        const { remainingBalance, nextDue } = summarizeEnrollmentPayments(
+        const { remainingBalance, nextDue, amountPaid } = summarizeEnrollmentPayments(
           row,
           row.installments.map((i) => ({ ...i, dueDate: new Date(i.dueDate) })),
         );
@@ -163,16 +167,21 @@ export function EnrollmentsPage() {
                 <Landmark className="h-3 w-3" /> Record payment
               </button>
             )}
-            <select
-              value={row.paymentStatus}
-              onChange={(e) => updateStatus(row.id, e.target.value)}
-              aria-label="Payment status"
-              className="text-xs rounded border border-border bg-background px-2 py-1 text-foreground"
-            >
-              {['pending', 'succeeded', 'failed', 'refunded'].map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            {/* Status follows the money. It can be flipped by hand only while nothing has been
+                received (an abandoned checkout); the server enforces the same rule. */}
+            {amountPaid === 0 && (row.paymentStatus === 'pending' || row.paymentStatus === 'failed') ? (
+              <select
+                value={row.paymentStatus}
+                onChange={(e) => updateStatus(row.id, e.target.value)}
+                aria-label="Payment status"
+                className="text-xs rounded border border-border bg-background px-2 py-1 text-foreground"
+              >
+                <option value="pending">pending</option>
+                <option value="failed">failed</option>
+              </select>
+            ) : (
+              <StatusBadge status={row.paymentStatus} />
+            )}
           </div>
         );
       },

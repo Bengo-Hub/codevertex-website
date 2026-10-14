@@ -84,6 +84,14 @@ Bank deposits, cash, cheques and M-Pesa sent straight to the till are recorded b
    A part-paid upfront enrollment gets a schedule (the payment, then the balance due in 28 days).
 3. The student gets the usual receipt event, and portal accounts if it was the first payment.
 
+Payment status follows the money and is never typed in. Only the allocator (a payment) and a
+free course set `succeeded`; `PATCH /api/admin/enrollments/{id}` refuses `succeeded` and
+`refunded` (refunds are made in treasury) and refuses any status change once money has been
+received, so an enrollment can neither be marked paid with nothing in the books nor have real
+payments hidden. With nothing received, an admin can still flip pending and failed (an
+abandoned checkout). "Payment already collected" when enrolling a student goes through the same
+treasury-first path and needs the method and a reference.
+
 The old student-callable `POST /api/enrollments/{id}/sync` is gone: it marked installments paid
 without treasury knowing.
 

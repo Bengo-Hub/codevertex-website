@@ -9,6 +9,7 @@ import { publishEnrollmentConfirmed } from '@/lib/events';
 import { getCategory } from '@/config/courses';
 import { coursePolicy, resolveSchedule } from '@/lib/installments';
 import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
+import { MANUAL_PAYMENT_METHODS, ManualPaymentError, recordManualPayment } from '@/lib/enrollment-payments';
 import type { InstallmentPlan } from '@/types/course';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
@@ -84,9 +85,14 @@ const createSchema = z.object({
   paymentPlan: z.string().default('upfront'),
   // For paymentPlan "custom": the deposit and number of payments, within the course rules.
   customPlan: z.object({ deposit: z.number().int(), count: z.number().int() }).optional(),
-  // Admin already collected payment out-of-band (cash, bank transfer, etc.) — mark it paid now.
+  // Admin already collected payment out-of-band (cash, bank transfer, etc.): record it now.
+  // It is booked in treasury like any payment, so how it was paid and the reference are required.
   markAsPaid: z.boolean().default(false),
+  paymentMethod: z.enum(MANUAL_PAYMENT_METHODS).optional(),
+  paymentReference: z.string().trim().min(3).max(80).optional(),
   notes: z.string().optional(),
+}).refine((d) => !d.markAsPaid || (d.paymentMethod && d.paymentReference), {
+  message: 'Choose how it was paid and enter the bank slip or transaction reference.',
 });
 
 /**
@@ -156,7 +162,9 @@ export async function POST(req: NextRequest) {
 
     const totalAmount = data.totalAmount ?? course.price;
     const isFree = totalAmount === 0;
-    const paymentStatus = data.markAsPaid || isFree ? 'succeeded' : 'pending';
+    // Paid enrollments are confirmed by the payment itself (recordManualPayment below), never
+    // typed in: only a free enrollment starts out succeeded.
+    const paymentStatus = isFree ? 'succeeded' : 'pending';
     // A manually-paid or free enrollment has nothing outstanding, so "first payment"
     // is recorded as the full amount; a pending enrollment still records the full
     // total owed (admin can add an installment schedule via PATCH later if needed).
@@ -217,10 +225,31 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (paymentStatus === 'succeeded') {
+    if (isFree) {
       provisionEnrollmentAccounts(enrollment.id).catch((err) =>
         console.error('[admin-enrollment] portal account provisioning failed:', err)
       );
+    }
+
+    // "Mark as paid": book the full amount in treasury, then apply it (which confirms the
+    // enrollment and creates the portal accounts). If treasury refuses, undo the enrollment so
+    // nothing is left half-recorded.
+    if (data.markAsPaid && !isFree) {
+      try {
+        await recordManualPayment({
+          enrollmentId: enrollment.id,
+          amount: totalAmount,
+          method: data.paymentMethod!,
+          reference: data.paymentReference!,
+          requestId: crypto.randomUUID(),
+          skipReceipt: true, // the enrollment confirmation below already tells the student
+        });
+      } catch (err) {
+        await prisma.installmentSchedule.deleteMany({ where: { enrollmentId: enrollment.id } });
+        await prisma.enrollment.delete({ where: { id: enrollment.id } });
+        if (err instanceof ManualPaymentError) return NextResponse.json({ error: err.message }, { status: err.status });
+        throw err;
+      }
     }
 
     const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;
@@ -270,7 +299,7 @@ export async function POST(req: NextRequest) {
       success: true,
       enrollmentId,
       studentId: studentUser.id,
-      paymentStatus,
+      paymentStatus: data.markAsPaid && !isFree ? 'succeeded' : paymentStatus,
       invoiceRef,
     });
   } catch (err) {

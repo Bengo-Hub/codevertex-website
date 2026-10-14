@@ -8,6 +8,14 @@ import { authedFetch } from '@/lib/auth/authed-fetch';
 import { CUSTOM_PLAN_KEY, coursePolicy, customLimits, planKey } from '@/lib/installments';
 import type { InstallmentPlan } from '@/types/course';
 
+// How an already-collected payment was made; booked in treasury with its reference.
+const PAID_METHODS = [
+  { value: 'bank_transfer', label: 'Bank deposit or transfer' },
+  { value: 'mpesa', label: 'M-Pesa (paid to the till directly)' },
+  { value: 'cash', label: 'Cash' },
+  { value: 'cheque', label: 'Cheque' },
+] as const;
+
 interface CourseOption {
   id: string;
   name: string;
@@ -60,7 +68,9 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
   const [paymentPlan, setPaymentPlan] = useState('upfront');
   const [customDeposit, setCustomDeposit] = useState<number | ''>('');
   const [customCount, setCustomCount] = useState(2);
-  const [markAsPaid, setMarkAsPaid] = useState(true);
+  const [markAsPaid, setMarkAsPaid] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<(typeof PAID_METHODS)[number]['value']>('bank_transfer');
+  const [paymentReference, setPaymentReference] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -118,9 +128,11 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
     return () => clearTimeout(handle);
   }, [studentQuery, mode]);
 
+  const needsReference = markAsPaid && totalAmount !== 0;
   const canSubmit =
     courseId &&
     totalAmount !== '' &&
+    (!needsReference || paymentReference.trim().length >= 3) &&
     (selectedStudent || (mode === 'new' && fullName.trim() && email.trim() && phone.trim()));
 
   async function submit() {
@@ -141,6 +153,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
           paymentPlan,
           customPlan: paymentPlan === CUSTOM_PLAN_KEY ? { deposit: Number(customDeposit) || 0, count: customCount } : undefined,
           markAsPaid,
+          ...(needsReference ? { paymentMethod, paymentReference: paymentReference.trim() } : {}),
         }),
       });
       const result = await res.json().catch(() => ({}));
@@ -337,12 +350,26 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
             <label className="flex items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-sm">
               <input type="checkbox" checked={markAsPaid} onChange={(e) => setMarkAsPaid(e.target.checked)} className="h-4 w-4 accent-primary" />
               <span>
-                <span className="font-medium text-foreground">Mark as paid now</span>
+                <span className="font-medium text-foreground">Payment already collected</span>
                 <span className="block text-xs text-muted-foreground">
-                  Payment already collected (cash, bank transfer, etc.). Leave unchecked to send an invoice link instead.
+                  Cash, a bank deposit and so on. It is booked in treasury. Leave unchecked and the student pays through their enrollment link.
                 </span>
               </span>
             </label>
+          )}
+          {needsReference && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Paid by</span>
+                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)} className={inputCls}>
+                  {PAID_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bank slip or reference</span>
+                <input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="e.g. FT26287XK9" className={inputCls} required />
+              </label>
+            </div>
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}

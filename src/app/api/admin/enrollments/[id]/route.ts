@@ -3,10 +3,10 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
-import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
+import { summarizeEnrollmentPayments } from '@/lib/installments';
 
 const patchSchema = z.object({
-  paymentStatus: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
+  paymentStatus: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(), // only pending/failed are accepted; see PATCH
   paymentRef: z.string().optional(),
   cohortId: z.string().optional(),
 });
@@ -51,8 +51,41 @@ export async function PATCH(
   if ('response' in guard) return guard.response;
 
   const { id } = await params;
-  const body = await req.json();
-  const data = patchSchema.parse(body);
+  const parsed = patchSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid update' }, { status: 400 });
+  }
+  const data = parsed.data;
+
+  if (data.paymentStatus !== undefined) {
+    // The payment status follows the money, so it is never typed in. "succeeded" comes from a
+    // payment (online, or Record payment, which books treasury); "refunded" from a treasury
+    // refund. Without this an admin could mark an enrollment paid with nothing in the books,
+    // or hide real payments by setting it back to pending. An enrollment with no money
+    // received can still be marked pending or failed (an abandoned checkout).
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { id: BigInt(id) },
+      include: { installments: { select: { installmentNo: true, amount: true, dueDate: true, status: true } } },
+    });
+    if (!enrollment) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const { amountPaid } = summarizeEnrollmentPayments(enrollment, enrollment.installments);
+    if (data.paymentStatus === 'succeeded' || data.paymentStatus === 'refunded') {
+      return NextResponse.json(
+        {
+          error: data.paymentStatus === 'succeeded'
+            ? 'Use Record payment to mark an enrollment paid, so treasury has the money too.'
+            : 'Refunds are made in treasury; the enrollment is updated from there.',
+        },
+        { status: 409 },
+      );
+    }
+    if (amountPaid > 0) {
+      return NextResponse.json(
+        { error: `${enrollment.currency} ${amountPaid.toLocaleString()} has been received on this enrollment, so its status follows the payments.` },
+        { status: 409 },
+      );
+    }
+  }
 
   const updated = await prisma.enrollment.update({
     where: { id: BigInt(id) },
@@ -62,12 +95,6 @@ export async function PATCH(
       ...(data.cohortId ? { cohortId: BigInt(data.cohortId) } : {}),
     },
   });
-
-  if (data.paymentStatus === 'succeeded') {
-    provisionEnrollmentAccounts(updated.id).catch((err) =>
-      console.error('[admin-enrollment] portal account provisioning failed:', err)
-    );
-  }
 
   return NextResponse.json({ ...updated, id: updated.id.toString() });
 }

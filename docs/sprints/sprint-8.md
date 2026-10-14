@@ -14,6 +14,7 @@
 - [x] `docs/database-maintenance.md` no longer carries the Postgres admin password.
 - [x] Tests: `tests/installments.test.ts` (schedules, rules, summaries) and allocator cases in `tests/db.integration.test.ts`; the integration harness now runs on Windows too.
 
+- [x] Payment status can no longer be typed in: the admin PATCH refuses `succeeded`/`refunded` and any change once money is received; "Payment already collected" on enroll books treasury (method and reference required) through the same path.
+
 ## Follow-ups
 - Rotate the Postgres admin password: it was in this repo's history.
-- The admin status dropdown can still set an enrollment to "succeeded" without any money recorded; prefer "Record payment".

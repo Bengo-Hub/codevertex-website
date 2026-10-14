@@ -210,3 +210,81 @@ export async function bookManualPaymentInTreasury(p: {
   const body = (await res.json()) as { intent_id?: string; booked?: boolean };
   return { intentId: body.intent_id ?? '', booked: body.booked !== false };
 }
+
+export class ManualPaymentError extends Error {
+  constructor(message: string, readonly status: 400 | 404 | 409 | 502) {
+    super(message);
+  }
+}
+
+/**
+ * The one way an admin puts money on an enrollment: treasury books it first, then the
+ * allocator applies it. Used by "Record payment" and by "Mark as paid" when enrolling a
+ * student, so no enrollment is ever marked paid without a treasury record behind it.
+ * Throws ManualPaymentError with the status and a message fit to show the admin.
+ */
+export async function recordManualPayment(p: {
+  enrollmentId: bigint;
+  amount: number;
+  method: ManualPaymentMethod;
+  reference: string;
+  paidAt?: Date;
+  requestId: string;
+  /** Skip the receipt email, e.g. when the enrollment confirmation was just sent. */
+  skipReceipt?: boolean;
+}): Promise<AppliedPayment & { treasuryIntentId: string }> {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: p.enrollmentId },
+    include: { installments: { orderBy: { installmentNo: 'asc' } } },
+  });
+  if (!enrollment) throw new ManualPaymentError('Not found', 404);
+  if (!enrollment.studentUserId) throw new ManualPaymentError('This enrollment has no student record.', 400);
+  const { remainingBalance } = summarizeEnrollmentPayments(enrollment, enrollment.installments);
+  if (remainingBalance <= 0) throw new ManualPaymentError('This enrollment is already paid in full.', 409);
+  if (p.amount > remainingBalance) {
+    throw new ManualPaymentError(`That is more than the balance of ${enrollment.currency} ${remainingBalance.toLocaleString()}.`, 400);
+  }
+
+  const paymentRef = `${p.method}:${p.reference}`;
+  let booking;
+  try {
+    booking = await bookManualPaymentInTreasury({
+      // The same receipt reference online payments carry, so treasury files it with them.
+      accountRef: `DGT-${enrollment.id}-DGT-${enrollment.studentUserId}`,
+      enrollmentId: enrollment.id.toString(),
+      amount: p.amount,
+      currency: enrollment.currency,
+      method: p.method,
+      reference: p.reference,
+      payerName: enrollment.fullName,
+      requestId: p.requestId,
+    });
+  } catch (err) {
+    console.error('[manual-payment] treasury booking failed:', err);
+    throw new ManualPaymentError('Treasury did not accept the payment, so nothing was recorded. Try again.', 502);
+  }
+  if (!booking.booked) {
+    throw new ManualPaymentError(`A ${p.method.replace('_', ' ')} payment with reference ${p.reference} is already recorded.`, 409);
+  }
+
+  try {
+    const applied = await applyEnrollmentPayment(p.enrollmentId, p.amount, { paymentRef, paidAt: p.paidAt, rejectOverpayment: true });
+    if (!p.skipReceipt) {
+      publishPaymentReceipt(applied, paymentRef).catch((err) => console.error('[manual-payment] receipt event failed:', err));
+    }
+    // Lazy import: portal-accounts imports notifications, which this module's callers already load.
+    const { provisionEnrollmentAccounts } = await import('@/lib/portal-accounts');
+    provisionEnrollmentAccounts(p.enrollmentId, p.requestId).catch((err) =>
+      console.error('[manual-payment] portal account provisioning failed:', err)
+    );
+    return { ...applied, treasuryIntentId: booking.intentId };
+  } catch (err) {
+    // Booked in treasury but not applied here (a concurrent payment cleared the balance first).
+    const reason = err instanceof PaymentRejected ? err.message : 'an internal error';
+    console.error(`[manual-payment] enrollment ${p.enrollmentId}: booked in treasury (${booking.intentId}) but not applied:`, err);
+    throw new ManualPaymentError(
+      `Treasury recorded the payment, but the schedule was not updated (${reason}). Ask finance to refund or move intent ${booking.intentId}.`,
+      409,
+    );
+  }
+}
