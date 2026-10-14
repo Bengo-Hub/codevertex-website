@@ -27,7 +27,7 @@ async function createTreasuryIntent(opts: {
   customerEmail: string;
   returnUrl: string;
   requestId?: string;
-}): Promise<{ initiateUrl: string } | null> {
+}): Promise<{ initiateUrl: string; intentId: string | null } | null> {
   if (!INTERNAL_SERVICE_KEY) {
     console.warn('[enrollments] INTERNAL_SERVICE_KEY not set — skipping treasury intent pre-creation');
     return null;
@@ -56,7 +56,9 @@ async function createTreasuryIntent(opts: {
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.initiate_url ? { initiateUrl: data.initiate_url as string } : null;
+    return data.initiate_url
+      ? { initiateUrl: data.initiate_url as string, intentId: typeof data.intent_id === 'string' ? data.intent_id : null }
+      : null;
   } catch {
     return null;
   }
@@ -384,6 +386,8 @@ export async function POST(req: NextRequest) {
         })),
         // If intent pre-creation succeeded, pass initiate_url so treasury-ui skips auto-create
         initiateUrl: treasuryIntent?.initiateUrl ?? null,
+        // The shared payment modal opens treasury's pay page for this intent.
+        intentId: treasuryIntent?.intentId ?? null,
       },
       { headers: { 'X-Request-ID': requestId } }
     );

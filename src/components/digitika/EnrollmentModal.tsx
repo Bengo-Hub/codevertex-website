@@ -10,6 +10,7 @@ import { type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
 import { type DbCourse, type InstallmentPlan } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
+import { TreasuryPaymentModal } from '@bengo-hub/shared-ui-lib/payments';
 import {
   CUSTOM_PLAN_KEY,
   buildCustomSchedule,
@@ -85,6 +86,11 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   const [guardianError, setGuardianError] = useState('');
   const [enrollError, setEnrollError] = useState('');
   const [chargedNow, setChargedNow] = useState<number | null>(null);
+  // The treasury payment intent opened in the shared payment modal; null until enrollment succeeds.
+  const [pay, setPay] = useState<{
+    intentId: string; amount: number; reference: string; description: string; initiateUrl: string | null; email: string;
+  } | null>(null);
+  const [payOpen, setPayOpen] = useState(false);
 
   // Discount code state
   const [discountInput, setDiscountInput] = useState('');
@@ -278,7 +284,21 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
         params.set('initiate_url', result.initiateUrl);
       }
 
-      window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
+      if (typeof result.intentId === 'string' && result.intentId) {
+        // Pay inside this page with the shared treasury payment modal, like the other Codevertex apps.
+        setPay({
+          intentId: result.intentId,
+          amount: chargeNow,
+          reference: invoiceRef,
+          description: params.get('description') ?? course.name,
+          initiateUrl: result.initiateUrl ?? null,
+          email: data.email,
+        });
+        setPayOpen(true);
+      } else {
+        // The intent could not be created up front: fall back to treasury's hosted page.
+        window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
+      }
       setStep(3);
     } catch {
       setEnrollError('Something went wrong while submitting your enrollment. Please check your connection and try again.');
@@ -630,9 +650,9 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-black text-foreground mb-3">Payment window opened</h3>
+                <h3 className="text-xl font-black text-foreground mb-3">{pay ? 'Complete your payment' : 'Payment window opened'}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  Complete your payment of <strong>{formatCurrency(chargedNow ?? firstPayment, course.currency)}</strong> in the payment tab.
+                  Complete your payment of <strong>{formatCurrency(chargedNow ?? firstPayment, course.currency)}</strong> {pay ? 'to confirm your place.' : 'in the payment tab.'}
                   {isInstallment && ` You'll get reminders for the ${schedule.length - 1} remaining payment${schedule.length - 1 === 1 ? '' : 's'}.`}
                   {' '}Once it clears we email your receipt and your student portal login.
                 </p>
@@ -640,12 +660,35 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                   Questions? WhatsApp us at{' '}
                   <a href="https://wa.me/254743793901" className="text-primary font-semibold">+254 743 793 901</a>
                 </p>
+                {pay && !payOpen && (
+                  <Button onClick={() => setPayOpen(true)} className="mr-2">Pay now</Button>
+                )}
                 <Button onClick={onClose} variant="outline">Close</Button>
               </div>
             )}
           </div>
         </motion.div>
       </AnimatePresence>
+      {pay && (
+        <TreasuryPaymentModal
+          open={payOpen}
+          onOpenChange={setPayOpen}
+          paymentIntentId={pay.intentId}
+          tenantSlug={process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex'}
+          amount={pay.amount}
+          currency={course.currency}
+          description={pay.description}
+          allowedMethods="paystack,mpesa"
+          initiateUrl={pay.initiateUrl ?? undefined}
+          customerEmail={pay.email}
+          referenceId={pay.reference}
+          referenceType="digitika_enrollment"
+          onPaymentConfirmed={() => {
+            // The enrollment page shows the receipt and portal details once the payment is applied.
+            window.location.href = `${window.location.origin}/digitika/success?reference=${pay.reference}`;
+          }}
+        />
+      )}
     </div>
   );
 }
