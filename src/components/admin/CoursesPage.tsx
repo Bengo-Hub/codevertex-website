@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { authedFetch } from '@/lib/auth/authed-fetch';
 import { COURSE_CATEGORIES, getCategory } from '@/config/courses';
 import type { DbCourse, InstallmentPlan, WeeklyModule, Testimonial } from '@/types/course';
+import { DEFAULT_INSTALLMENT_POLICY, coursePolicy, customLimits, type InstallmentPolicy } from '@/lib/installments';
 
 type InstallmentPayment = InstallmentPlan['payments'][number];
 
@@ -311,6 +312,74 @@ function TestimonialsEditor({ items, onChange }: { items: Testimonial[]; onChang
   );
 }
 
+// ── Custom plan rules ──────────────────────────────────────────────────────
+
+function PolicyNumber({
+  label, hint, value, onChange, min = 0, max, suffix,
+}: {
+  label: string; hint: string; value: number | null; onChange: (v: number | null) => void;
+  min?: number; max?: number; suffix?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-medium text-foreground">{label}</span>
+      <div className="mt-1 flex items-center gap-2">
+        <input
+          type="number"
+          min={min}
+          max={max}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value === '' ? null : Math.max(min, Math.round(Number(e.target.value))))}
+          className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+        />
+        {suffix && <span className="shrink-0 text-xs text-muted-foreground">{suffix}</span>}
+      </div>
+      <span className="mt-1 block text-[11px] text-muted-foreground">{hint}</span>
+    </label>
+  );
+}
+
+function CustomPlanRules({
+  policy, price, currency, onChange,
+}: {
+  policy: InstallmentPolicy | null; price: number; currency: string; onChange: (p: InstallmentPolicy | null) => void;
+}) {
+  const enabled = !!policy;
+  const p = policy ?? DEFAULT_INSTALLMENT_POLICY;
+  const set = (patch: Partial<InstallmentPolicy>) => onChange({ ...p, ...patch });
+  const limits = price > 0 ? customLimits(p, price) : null;
+  return (
+    <div className="rounded-lg border border-border">
+      <div className="flex items-center justify-between p-3">
+        <div>
+          <p className="text-sm font-medium text-foreground">Let learners build their own plan</p>
+          <p className="text-xs text-muted-foreground mt-0.5">They choose a deposit and how many payments, within the rules below</p>
+        </div>
+        <Toggle checked={enabled} onChange={() => onChange(enabled ? null : { ...DEFAULT_INSTALLMENT_POLICY })} />
+      </div>
+      {enabled && (
+        <div className="space-y-3 border-t border-border p-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <PolicyNumber label="Minimum deposit" hint="Share of the course price (after any discount)" value={p.minDepositPct} max={100} suffix="%" onChange={(v) => set({ minDepositPct: v ?? 0 })} />
+            <PolicyNumber label="Minimum deposit amount" hint="The larger of this and the percentage applies" value={p.minDepositAmount} suffix={currency} onChange={(v) => set({ minDepositAmount: v ?? 0 })} />
+            <PolicyNumber label="Most payments" hint="Deposit included: 3 means deposit plus two more" value={p.maxInstallments} min={2} max={12} onChange={(v) => set({ maxInstallments: Math.min(12, Math.max(2, v ?? 2)) })} />
+            <PolicyNumber label="Smallest later payment" hint="No payment after the deposit may be below this" value={p.minInstallmentAmount} suffix={currency} onChange={(v) => set({ minInstallmentAmount: v ?? 0 })} />
+            <PolicyNumber label="Days between payments" hint="Spacing from one payment to the next" value={p.intervalDays} min={1} max={180} suffix="days" onChange={(v) => set({ intervalDays: Math.min(180, Math.max(1, v ?? 1)) })} />
+            <PolicyNumber label="Finish paying within" hint="Leave empty for no limit; spacing tightens to fit" value={p.maxSpanDays} min={1} max={730} suffix="days" onChange={(v) => set({ maxSpanDays: v === null ? null : Math.min(730, Math.max(1, v)) })} />
+          </div>
+          {limits && (
+            <p className="rounded-md bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+              {limits.counts.length === 0
+                ? 'At this price no custom plan fits these rules. Lower the smallest payment or the minimum deposit.'
+                : <>At {currency} {price.toLocaleString()}: deposit from {currency} {limits.minDeposit.toLocaleString()} to {currency} {limits.maxDeposit.toLocaleString()}, then {limits.counts.map((n) => n - 1).join(' or ')} more payment{limits.counts[limits.counts.length - 1] > 2 ? 's' : ''}.</>}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EditModal({
   course,
   isNew,
@@ -358,6 +427,7 @@ function EditModal({
     requirements: listToLines(meta.requirements),
     curriculum: meta.curriculum ?? [],
     testimonials: meta.testimonials ?? [],
+    installmentPolicy: coursePolicy(meta) as InstallmentPolicy | null,
   });
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<Tab>('details');
@@ -411,6 +481,7 @@ function EditModal({
           .filter((w) => w.title.trim())
           .map((w) => ({ ...w, title: w.title.trim(), topics: w.topics.filter(Boolean) })),
         testimonials: form.testimonials.filter((t) => t.name.trim() && t.quote.trim()),
+        installmentPolicy: form.installmentPolicy,
       },
     };
     const ok = await onSave(isNew ? null : course.id, payload);
@@ -577,6 +648,14 @@ function EditModal({
                   <p className="text-xs font-medium text-muted-foreground mb-2">Payment plans</p>
                   <InstallmentPlanEditor plans={form.installmentPlans} onChange={(plans) => set('installmentPlans', plans)} />
                 </div>
+              )}
+              {form.installmentsEnabled && (
+                <CustomPlanRules
+                  policy={form.installmentPolicy}
+                  price={Number(form.price) || 0}
+                  currency={course.currency}
+                  onChange={(policy) => set('installmentPolicy', policy)}
+                />
               )}
             </div>
           )}

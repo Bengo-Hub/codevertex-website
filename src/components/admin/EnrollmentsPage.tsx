@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw, Plus } from 'lucide-react';
+import { Search, RefreshCw, Plus, Landmark } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
@@ -9,6 +9,8 @@ import { AdminEnrollModal } from './AdminEnrollModal';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { authedFetch } from '@/lib/auth/authed-fetch';
+import { summarizeEnrollmentPayments } from '@/lib/installments';
+import { RecordPaymentDialog, type RecordPaymentTarget } from './RecordPaymentDialog';
 
 interface Enrollment {
   id: string;
@@ -24,7 +26,7 @@ interface Enrollment {
   currency: string;
   paymentStatus: string;
   createdAt: string;
-  installments: { installmentNo: number; amount: number; status: string }[];
+  installments: { installmentNo: number; amount: number; status: string; dueDate: string }[];
 }
 
 interface Response {
@@ -43,6 +45,7 @@ export function EnrollmentsPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+  const [recording, setRecording] = useState<RecordPaymentTarget | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -136,17 +139,43 @@ export function EnrollmentsPage() {
     {
       key: 'actions',
       header: '',
-      render: (row) => (
-        <select
-          value={row.paymentStatus}
-          onChange={(e) => updateStatus(row.id, e.target.value)}
-          className="text-xs rounded border border-border bg-background px-2 py-1 text-foreground"
-        >
-          {['pending', 'succeeded', 'failed', 'refunded'].map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      ),
+      render: (row) => {
+        // Same rule as the server: paid = paid installment rows, or the first payment of a
+        // confirmed upfront enrollment.
+        const { remainingBalance, nextDue } = summarizeEnrollmentPayments(
+          row,
+          row.installments.map((i) => ({ ...i, dueDate: new Date(i.dueDate) })),
+        );
+        return (
+          <div className="flex items-center gap-1.5">
+            {remainingBalance > 0 && row.paymentStatus !== 'refunded' && (
+              <button
+                onClick={() => setRecording({
+                  enrollmentId: row.id,
+                  studentName: row.fullName,
+                  courseName: row.courseName,
+                  currency: row.currency,
+                  suggestedAmount: nextDue?.amount ?? remainingBalance,
+                })}
+                title={`Balance ${formatCurrency(remainingBalance, row.currency)}`}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border hover:bg-muted transition-colors"
+              >
+                <Landmark className="h-3 w-3" /> Record payment
+              </button>
+            )}
+            <select
+              value={row.paymentStatus}
+              onChange={(e) => updateStatus(row.id, e.target.value)}
+              aria-label="Payment status"
+              className="text-xs rounded border border-border bg-background px-2 py-1 text-foreground"
+            >
+              {['pending', 'succeeded', 'failed', 'refunded'].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        );
+      },
     },
   ];
 
@@ -208,6 +237,7 @@ export function EnrollmentsPage() {
       {enrollModalOpen && (
         <AdminEnrollModal onClose={() => setEnrollModalOpen(false)} onCreated={load} />
       )}
+      {recording && <RecordPaymentDialog target={recording} onClose={() => setRecording(null)} onRecorded={load} />}
     </div>
   );
 }

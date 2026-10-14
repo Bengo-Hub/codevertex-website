@@ -10,7 +10,7 @@ import {
   Gift,
   LayoutDashboard,
   LogOut,
-  Sparkles,
+  Compass,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -40,7 +40,7 @@ function BrowseCoursesCard() {
   return (
     <div className="mx-3 mb-3 rounded-2xl bg-white/10 p-4">
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white">
-        <Sparkles className="h-4.5 w-4.5" />
+        <Compass className="h-4.5 w-4.5" />
       </span>
       <p className="mt-3 text-sm font-semibold text-white">Keep the momentum going</p>
       <p className="mt-1 text-xs leading-relaxed text-white/60">

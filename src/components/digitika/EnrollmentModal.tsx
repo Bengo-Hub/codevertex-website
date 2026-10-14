@@ -3,13 +3,22 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, CheckCircle2, CreditCard, BadgePercent, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, CreditCard, BadgePercent, Loader2, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { addDays, addWeeks, format } from 'date-fns';
-import { type CourseCategory, TREASURY_PAY_URL, computeDueDates, planKey } from '@/config/courses';
+import { format } from 'date-fns';
+import { type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
 import { type DbCourse, type InstallmentPlan } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
+import {
+  CUSTOM_PLAN_KEY,
+  buildCustomSchedule,
+  customLimits,
+  coursePolicy,
+  planKey,
+  scalePresetPlan,
+  type SchedulePayment,
+} from '@/lib/installments';
 
 // Country codes for phone validation
 const COUNTRY_CODES = [
@@ -22,12 +31,23 @@ const COUNTRY_CODES = [
   { code: '+44',  country: 'GB', label: '🇬🇧 +44',  pattern: /^0?[789]\d{9}$/ },
 ];
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function getAgeRange(audience?: string | null): { min: number; max: number } | null {
   if (!audience) return null;
   const m = audience.match(/Age\s+(\d+)[–-](\d+)/i) ?? audience.match(/(\d+)[–-](\d+)/);
   if (m) return { min: parseInt(m[1], 10), max: parseInt(m[2], 10) };
   if (/adult/i.test(audience)) return { min: 16, max: 99 };
   return null;
+}
+
+/** Age in whole years today, or null without a valid date. */
+function ageOn(dob: string | undefined, today = new Date()): number | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  return today.getFullYear() - birth.getFullYear() -
+    (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
 }
 
 const schema = z.object({
@@ -38,6 +58,9 @@ const schema = z.object({
   dob: z.string().min(1, 'Date of birth required'),
   experience: z.string().optional(),
   howHeard: z.string().optional(),
+  guardianName: z.string().optional(),
+  guardianEmail: z.string().optional(),
+  guardianPhone: z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -48,15 +71,20 @@ interface Props {
   onClose: () => void;
 }
 
-
+/** -1 stands for the learner's own plan in the plan picker. */
+const CUSTOM_IDX = -1;
 
 export function EnrollmentModal({ course, category, cohortId, onClose }: Props) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [selectedPlanIdx, setSelectedPlanIdx] = useState(0);
+  const [customDeposit, setCustomDeposit] = useState('');
+  const [customCount, setCustomCount] = useState(0);
   const [selectedCC, setSelectedCC] = useState(COUNTRY_CODES[0]);
   const [ageError, setAgeError] = useState('');
+  const [guardianError, setGuardianError] = useState('');
   const [enrollError, setEnrollError] = useState('');
+  const [chargedNow, setChargedNow] = useState<number | null>(null);
 
   // Discount code state
   const [discountInput, setDiscountInput] = useState('');
@@ -71,19 +99,30 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   const plans: InstallmentPlan[] = (course.installmentsEnabled && course.installmentPlans.length > 0)
     ? course.installmentPlans
     : [{ label: 'Upfront', payments: [{ amount: course.price, label: 'Full payment' }], totalAmount: course.price }];
-  const selectedPlan = plans[selectedPlanIdx];
-  const baseTotal = selectedPlan.totalAmount;
+  const policy = course.installmentsEnabled ? coursePolicy(course.metadata) : null;
+
+  // Every plan covers the same course price. A discount lowers the price; the schedule follows.
+  const baseTotal = course.price;
   const discountedTotal = discount?.discountedTotal ?? baseTotal;
   const discountSaving = baseTotal - discountedTotal;
-  // Scale all installment amounts proportionally when a discount is applied
-  const scaledPayments = discount
-    ? selectedPlan.payments.map((p) => ({
-        ...p,
-        amount: Math.round(p.amount * (discountedTotal / baseTotal)),
-      }))
-    : selectedPlan.payments;
-  const firstPayment = scaledPayments[0].amount;
-  const isInstallment = selectedPlan.payments.length > 1;
+  const limits = policy && discountedTotal > 0 ? customLimits(policy, discountedTotal) : null;
+  const customAvailable = !!limits && limits.counts.length > 0;
+  const isCustom = selectedPlanIdx === CUSTOM_IDX && customAvailable;
+  const selectedPlan = plans[Math.max(0, selectedPlanIdx)] ?? plans[0];
+  const customCountValue = limits && limits.counts.includes(customCount)
+    ? customCount
+    : (limits?.counts[limits.counts.length - 1] ?? 0);
+  const customResult = isCustom && policy
+    ? buildCustomSchedule(policy, discountedTotal, Math.round(Number(customDeposit) || 0), customCountValue, course.currency)
+    : null;
+  // Built by the same code the server uses, so the schedule shown is the one charged.
+  const schedule: SchedulePayment[] = isCustom
+    ? (customResult?.ok ? customResult.payments : [])
+    : scalePresetPlan(selectedPlan, discountedTotal);
+  const scheduleError = customResult && !customResult.ok && customDeposit !== '' ? customResult.error : '';
+  const firstPayment = schedule[0]?.amount ?? 0;
+  const isInstallment = schedule.length > 1;
+  const canPay = discountedTotal === 0 || (schedule.length > 0 && !(customResult && !customResult.ok));
 
   async function applyDiscount() {
     if (!discountInput.trim()) return;
@@ -123,6 +162,8 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   });
 
   const phoneValue = watch('phone', '');
+  const learnerAge = ageOn(watch('dob', ''));
+  const isMinor = learnerAge !== null && learnerAge < 18;
 
   const validatePhone = (phone: string): boolean => {
     const digits = phone.replace(/[\s\-()]/g, '');
@@ -131,39 +172,43 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
 
   const onSubmit = (data: FormData) => {
     // Validate age against course audience requirement
-    if (data.dob) {
-      const ageRange = getAgeRange(course.audience);
-      if (ageRange) {
-        const today = new Date();
-        const birth = new Date(data.dob);
-        const age = today.getFullYear() - birth.getFullYear() -
-          (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
-        if (age < ageRange.min || age > ageRange.max) {
-          setAgeError(`This course is for ages ${ageRange.min}–${ageRange.max}. Calculated age: ${age}.`);
-          return;
-        }
-      }
+    const age = ageOn(data.dob);
+    const ageRange = getAgeRange(course.audience);
+    if (age !== null && ageRange && (age < ageRange.min || age > ageRange.max)) {
+      setAgeError(`This course is for ages ${ageRange.min}–${ageRange.max}. Calculated age: ${age}.`);
+      return;
     }
     setAgeError('');
+    // Under 18: a parent or guardian must be on record; they get their own parent account.
+    if (age !== null && age < 18) {
+      const gEmail = (data.guardianEmail ?? '').trim();
+      if (!(data.guardianName ?? '').trim() || !EMAIL_RE.test(gEmail)) {
+        setGuardianError("Add the parent or guardian's name and a valid email.");
+        return;
+      }
+      if (gEmail.toLowerCase() === data.email.trim().toLowerCase()) {
+        setGuardianError("Use the parent or guardian's own email, not the learner's.");
+        return;
+      }
+    }
+    setGuardianError('');
     setStep(2);
   };
 
+  const selectCustom = () => {
+    setSelectedPlanIdx(CUSTOM_IDX);
+    if (limits && customDeposit === '') setCustomDeposit(String(limits.minDeposit));
+    if (limits && !limits.counts.includes(customCount)) setCustomCount(limits.counts[limits.counts.length - 1]);
+  };
+
   const handlePay = async () => {
-    const rawData = getValues();
-    const data = { ...rawData, phone: `${selectedCC.code}${rawData.phone.replace(/^0/, '').replace(/[\s\-()]/g, '')}` };
+    if (!canPay) return;
+    const { guardianName, guardianEmail, guardianPhone, ...learner } = getValues();
+    const data = { ...learner, phone: `${selectedCC.code}${learner.phone.replace(/^0/, '').replace(/[\s\-()]/g, '')}` };
     setSubmitting(true);
     setEnrollError('');
     try {
-      const dueDates = computeDueDates(selectedPlan);
-      const installments = scaledPayments.map((p, i) => ({
-        installmentNo: i + 1,
-        amount: p.amount,
-        label: p.label,
-        dueDate: dueDates[i].toISOString().split('T')[0],
-      }));
-
-      const selectedPlanKey = planKey(selectedPlan.label);
-
+      // Only the choice is sent; the server rebuilds the schedule from the course's own rules.
       const res = await fetch('/api/enrollments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -179,17 +224,18 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
           discountCode: discount?.code,
           discountPct: discount?.discountPct,
           discountAmount: discountSaving > 0 ? discountSaving : undefined,
-          paymentPlan: selectedPlanKey,
-          firstPaymentAmount: firstPayment,
-          installments: discountedTotal === 0 ? undefined : installments,
+          paymentPlan: isCustom ? CUSTOM_PLAN_KEY : planKey(selectedPlan.label),
+          customPlan: isCustom ? { deposit: Math.round(Number(customDeposit) || 0), count: customCountValue } : undefined,
+          ...(isMinor
+            ? { guardianName: guardianName?.trim(), guardianEmail: guardianEmail?.trim(), guardianPhone: guardianPhone?.trim() || undefined }
+            : {}),
         }),
       });
 
       const result = await res.json().catch(() => ({}));
 
-      // Enrollment was rejected (e.g. cohort filled up, registration window closed,
-      // already enrolled, or validation failed). Surface the reason and DO NOT send
-      // the learner to pay for an enrollment that was never created.
+      // Enrollment was rejected (cohort full, registration closed, already enrolled, plan outside
+      // the course rules). Show the reason and do NOT send the learner to pay.
       if (!res.ok) {
         const msg =
           typeof result?.error === 'string'
@@ -201,35 +247,33 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
 
       const invoiceRef = result.invoiceRef ?? `DGT-${course.id}-${Date.now()}`;
 
-      // Free course (or a discount code that brings the price to zero): there's nothing
-      // to pay, the enrollment was already confirmed server-side. Skip the payment
-      // gateway entirely and go straight to the same success/portal page paid
-      // enrollments land on.
+      // Free course (or a code that brings the price to zero): nothing to pay; the enrollment
+      // is already confirmed server-side.
       if (result.isFree || discountedTotal === 0) {
         window.location.href = `${window.location.origin}/digitika/success?reference=${invoiceRef}`;
         setStep(3);
         return;
       }
 
-      // Build treasury redirect URL. When the enrollment API pre-created a treasury intent
-      // (and returned initiate_url), we pass it so the treasury-ui pay page skips auto-creation
-      // and uses our intent directly — this ensures Paystack redirects to /digitika/success, not
-      // to the treasury-ui's own success page wrapper.
+      // Charge what the server recorded as the first payment.
+      const chargeNow = typeof result.firstPaymentAmount === 'number' ? result.firstPaymentAmount : firstPayment;
+      setChargedNow(chargeNow);
       const params = new URLSearchParams({
-        amount: String(firstPayment),
+        amount: String(chargeNow),
         tenant: process.env.NEXT_PUBLIC_TREASURY_TENANT ?? 'codevertex',
         reference_id: invoiceRef,
         reference_type: 'digitika_enrollment',
         currency: course.currency,
         description: isInstallment
-          ? `Digitika — ${course.name} (Installment 1 of ${selectedPlan.payments.length})`
-          : `Digitika — ${course.name}`,
+          ? `Digitika: ${course.name} (payment 1 of ${schedule.length})`
+          : `Digitika: ${course.name}`,
         redirect_url: `${window.location.origin}/digitika/success`,
         button_text: 'View My Enrollment',
         gateways: 'paystack,mpesa',
         email: data.email,
       });
 
+      // A pre-created treasury intent makes Paystack return to /digitika/success directly.
       if (result.initiateUrl) {
         params.set('initiate_url', result.initiateUrl);
       }
@@ -237,8 +281,6 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
       window.open(`${TREASURY_PAY_URL}?${params}`, '_blank');
       setStep(3);
     } catch {
-      // Network/unexpected error — the enrollment likely did not persist, so do not
-      // send the learner to pay against a non-existent enrollment. Let them retry.
       setEnrollError('Something went wrong while submitting your enrollment. Please check your connection and try again.');
     } finally {
       setSubmitting(false);
@@ -247,6 +289,11 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
 
   const inputCls = (err?: { message?: string }) =>
     `w-full px-4 py-2.5 rounded-lg bg-secondary border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all ${err ? 'border-destructive' : 'border-border'}`;
+
+  const planCardCls = (active: boolean) =>
+    `w-full text-left rounded-xl border-2 p-4 transition-all ${active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-secondary'}`;
+  const radioCls = (active: boolean) =>
+    `w-4 h-4 rounded-full border-2 shrink-0 ${active ? 'border-primary bg-primary' : 'border-muted-foreground'}`;
 
   return (
     <div
@@ -270,7 +317,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                 </p>
                 <h2 className="text-lg font-black text-foreground">{course.name}</h2>
               </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
+              <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -278,7 +325,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
             <div className="flex items-center gap-2 mt-4">
               {(['Personal Info', 'Payment Plan', 'Confirm'] as const).map((label, i) => (
                 <div key={label} className="flex items-center gap-2">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step > i + 1 ? 'bg-primary text-primary-foreground' : step === i + 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step >= i + 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}>
                     {i + 1}
                   </div>
                   <span className={`text-xs font-medium ${step === i + 1 ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
@@ -322,6 +369,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                           setSelectedCC(cc);
                           setValue('countryCode', cc.code);
                         }}
+                        aria-label="Country code"
                         className="text-xs rounded-lg bg-secondary border border-border px-2 py-2.5 text-foreground focus:outline-none shrink-0"
                       >
                         {COUNTRY_CODES.map(cc => (
@@ -344,6 +392,33 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                     <input type="email" {...register('email')} placeholder="jane@example.com" className={inputCls(errors.email)} />
                     {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
                   </div>
+
+                  {isMinor && (
+                    <div className="col-span-2 rounded-xl border border-border bg-secondary/60 p-4 space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">Parent or guardian</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Learners under 18 enrol with a parent or guardian. They get their own parent account to follow payments and progress.
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Full name *</label>
+                          <input {...register('guardianName')} placeholder="Mary Otieno" className={inputCls()} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Email *</label>
+                          <input type="email" {...register('guardianEmail')} placeholder="mary@example.com" className={inputCls()} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Phone</label>
+                          <input type="tel" {...register('guardianPhone')} placeholder="0712 345 678" className={inputCls()} />
+                        </div>
+                      </div>
+                      {guardianError && <p className="text-xs text-destructive">{guardianError}</p>}
+                    </div>
+                  )}
+
                   <div>
                     <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Experience Level</label>
                     <select {...register('experience')} className={inputCls()}>
@@ -367,7 +442,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                     </select>
                   </div>
                 </div>
-                <Button type="submit" className="w-full mt-2">Continue →</Button>
+                <Button type="submit" className="w-full mt-2">Continue</Button>
               </form>
             )}
 
@@ -375,50 +450,115 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
             {step === 2 && (
               <div className="space-y-5">
                 <div>
-                  <h3 className="font-bold text-foreground mb-1">Choose Your Payment Plan</h3>
+                  <h3 className="font-bold text-foreground mb-1">Choose your payment plan</h3>
                   <p className="text-xs text-muted-foreground">
-                    Select how you'd like to pay for {course.name}. All plans cover the full course.
+                    Every plan covers the full course. {customAvailable && 'You can also set your own deposit and split the rest.'}
                   </p>
                 </div>
 
                 <div className="space-y-3">
-                  {plans.map((plan, idx) => (
-                    <button
-                      key={plan.label}
-                      type="button"
-                      onClick={() => setSelectedPlanIdx(idx)}
-                      className={`w-full text-left rounded-xl border-2 p-4 transition-all ${selectedPlanIdx === idx ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-secondary'}`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-4 h-4 rounded-full border-2 shrink-0 ${selectedPlanIdx === idx ? 'border-primary bg-primary' : 'border-muted-foreground'}`} />
-                          <span className="font-semibold text-sm text-foreground">{plan.label}</span>
-                          {plan.badge && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">
-                              {plan.badge}
-                            </span>
+                  {plans.map((plan, idx) => {
+                    const active = selectedPlanIdx === idx;
+                    const rows = scalePresetPlan(plan, discountedTotal);
+                    return (
+                      <button key={plan.label} type="button" onClick={() => setSelectedPlanIdx(idx)} className={planCardCls(active)}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={radioCls(active)} />
+                            <span className="font-semibold text-sm text-foreground">{plan.label}</span>
+                            {plan.badge && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-bold">{plan.badge}</span>
+                            )}
+                          </div>
+                          <span className="text-sm font-bold text-primary">{formatCurrency(rows[0]?.amount ?? 0, course.currency)} now</span>
+                        </div>
+                        <div className="pl-6 space-y-1">
+                          {rows.map((p) => (
+                            <div key={p.installmentNo} className="flex justify-between text-xs text-muted-foreground">
+                              <span>{p.label}</span>
+                              <span className="font-medium">{formatCurrency(p.amount, course.currency)}</span>
+                            </div>
+                          ))}
+                          {rows.length > 1 && (
+                            <div className="flex justify-between text-xs font-semibold text-foreground border-t border-border/50 pt-1 mt-1">
+                              <span>Total</span>
+                              <span>{formatCurrency(discountedTotal, course.currency)}</span>
+                            </div>
                           )}
                         </div>
-                        <span className="text-sm font-bold text-primary">
-                          {formatCurrency(plan.payments[0].amount, course.currency)} now
-                        </span>
-                      </div>
-                      <div className="pl-6 space-y-1">
-                        {plan.payments.map((p, pi) => (
-                          <div key={pi} className="flex justify-between text-xs text-muted-foreground">
-                            <span>{p.label}</span>
-                            <span className="font-medium">{formatCurrency(p.amount, course.currency)}</span>
+                      </button>
+                    );
+                  })}
+
+                  {customAvailable && limits && (
+                    <div className={planCardCls(isCustom)}>
+                      <button type="button" onClick={selectCustom} className="flex w-full items-center justify-between text-left">
+                        <div className="flex items-center gap-2">
+                          <div className={radioCls(isCustom)} />
+                          <span className="font-semibold text-sm text-foreground">Build your own plan</span>
+                          <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                        </div>
+                        <span className="text-xs text-muted-foreground">from {formatCurrency(limits.minDeposit, course.currency)} now</span>
+                      </button>
+
+                      {isCustom && (
+                        <div className="mt-4 space-y-4 pl-6">
+                          <div>
+                            <label htmlFor="custom-deposit" className="text-xs font-semibold text-muted-foreground block mb-1.5">
+                              Your deposit today ({course.currency})
+                            </label>
+                            <input
+                              id="custom-deposit"
+                              type="number"
+                              inputMode="numeric"
+                              min={limits.minDeposit}
+                              max={limits.maxDeposit}
+                              step={100}
+                              value={customDeposit}
+                              onChange={(e) => setCustomDeposit(e.target.value)}
+                              className={inputCls(scheduleError ? { message: scheduleError } : undefined)}
+                            />
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                              Between {formatCurrency(limits.minDeposit, course.currency)} and {formatCurrency(limits.maxDeposit, course.currency)}
+                            </p>
                           </div>
-                        ))}
-                        {plan.payments.length > 1 && (
-                          <div className="flex justify-between text-xs font-semibold text-foreground border-t border-border/50 pt-1 mt-1">
-                            <span>Total</span>
-                            <span>{formatCurrency(plan.totalAmount, course.currency)}</span>
+                          <div>
+                            <p className="text-xs font-semibold text-muted-foreground mb-1.5">Pay the rest in</p>
+                            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Number of later payments">
+                              {limits.counts.map((n) => (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={customCountValue === n}
+                                  onClick={() => setCustomCount(n)}
+                                  className={`h-9 rounded-full border px-4 text-xs font-semibold transition-colors ${customCountValue === n ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:border-primary/40'}`}
+                                >
+                                  {n - 1} {n - 1 === 1 ? 'payment' : 'payments'}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                          {scheduleError ? (
+                            <p className="text-xs text-destructive">{scheduleError}</p>
+                          ) : schedule.length > 0 && (
+                            <div className="space-y-1 rounded-lg border border-border bg-background p-3">
+                              {schedule.map((p) => (
+                                <div key={p.installmentNo} className="flex justify-between text-xs text-muted-foreground">
+                                  <span>{p.label} <span className="text-[11px]">({p.installmentNo === 1 ? 'today' : format(p.dueDate, 'd MMM yyyy')})</span></span>
+                                  <span className="font-medium text-foreground">{formatCurrency(p.amount, course.currency)}</span>
+                                </div>
+                              ))}
+                              <div className="flex justify-between text-xs font-semibold text-foreground border-t border-border/50 pt-1 mt-1">
+                                <span>Total</span>
+                                <span>{formatCurrency(discountedTotal, course.currency)}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Discount Code */}
@@ -428,9 +568,9 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                     <div className="flex items-center gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/8 px-3 py-2.5">
                       <BadgePercent className="h-4 w-4 text-emerald-600 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">{discount.code} — {discount.name}</p>
+                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">{discount.code}: {discount.name}</p>
                         <p className="text-[10px] text-emerald-600">
-                          {discount.discountPct != null ? `${discount.discountPct}% off` : `KES ${discountSaving.toLocaleString()} off`}
+                          {discount.discountPct != null ? `${discount.discountPct}% off` : `${course.currency} ${discountSaving.toLocaleString()} off`}
                           {' · '}You save <strong>{formatCurrency(discountSaving, course.currency)}</strong>
                           {discount.remaining != null && ` · ${discount.remaining} use${discount.remaining !== 1 ? 's' : ''} left`}
                         </p>
@@ -445,6 +585,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                         onChange={(e) => { setDiscountInput(e.target.value.toUpperCase()); setDiscountError(''); }}
                         onKeyDown={(e) => e.key === 'Enter' && applyDiscount()}
                         placeholder="e.g. EARLY10"
+                        aria-label="Promo code"
                         className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs font-mono uppercase focus:outline-none focus:ring-1 focus:ring-primary"
                       />
                       <button
@@ -460,14 +601,13 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                   {discountError && <p className="text-xs text-destructive">{discountError}</p>}
                 </div>
 
-                <div className="rounded-lg bg-emerald-500/8 border border-emerald-500/20 p-3 text-xs text-emerald-700 dark:text-emerald-400">
-                  <CreditCard className="inline h-3.5 w-3.5 mr-1.5" />
-                  You will pay <strong>{formatCurrency(firstPayment, course.currency)}</strong> today via Paystack or M-Pesa.
-                  {discount && discountSaving > 0 && (
-                    <span className="ml-1 font-bold">(saving {formatCurrency(discountSaving, course.currency)})</span>
-                  )}
-                  {isInstallment && ` Remaining ${formatCurrency(discountedTotal - firstPayment, course.currency)} will be billed in ${selectedPlan.payments.length - 1} future installment(s).`}
-                </div>
+                {canPay && (
+                  <div className="rounded-lg bg-emerald-500/8 border border-emerald-500/20 p-3 text-xs text-emerald-700 dark:text-emerald-400">
+                    <CreditCard className="inline h-3.5 w-3.5 mr-1.5" />
+                    You will pay <strong>{formatCurrency(firstPayment, course.currency)}</strong> today via Paystack or M-Pesa.
+                    {isInstallment && ` The remaining ${formatCurrency(discountedTotal - firstPayment, course.currency)} is due in ${schedule.length - 1} later payment${schedule.length - 1 === 1 ? '' : 's'}.`}
+                  </div>
+                )}
 
                 {enrollError && (
                   <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-xs text-destructive">
@@ -476,12 +616,9 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                 )}
 
                 <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">← Back</Button>
-                  <Button onClick={handlePay} disabled={submitting} className="flex-1">
-                    {submitting ? 'Redirecting…' : `Pay ${formatCurrency(firstPayment, course.currency)} →`}
-                  {discount && discountSaving > 0 && !submitting && (
-                    <span className="ml-1 line-through text-primary-foreground/60 text-xs">{formatCurrency(selectedPlan.payments[0].amount, course.currency)}</span>
-                  )}
+                  <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
+                  <Button onClick={handlePay} disabled={submitting || !canPay} className="flex-1">
+                    {submitting ? 'Redirecting…' : `Pay ${formatCurrency(firstPayment, course.currency)}`}
                   </Button>
                 </div>
               </div>
@@ -493,11 +630,11 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-black text-foreground mb-3">Payment Window Opened!</h3>
+                <h3 className="text-xl font-black text-foreground mb-3">Payment window opened</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                  Complete your payment of <strong>{formatCurrency(firstPayment, course.currency)}</strong> in the Treasury gateway tab.
-                  {isInstallment && ` You'll receive reminders for the ${selectedPlan.payments.length - 1} remaining installment(s).`}
-                  {' '}Check your email for a receipt and enrollment details.
+                  Complete your payment of <strong>{formatCurrency(chargedNow ?? firstPayment, course.currency)}</strong> in the payment tab.
+                  {isInstallment && ` You'll get reminders for the ${schedule.length - 1} remaining payment${schedule.length - 1 === 1 ? '' : 's'}.`}
+                  {' '}Once it clears we email your receipt and your student portal login.
                 </p>
                 <p className="text-xs text-muted-foreground mb-6">
                   Questions? WhatsApp us at{' '}

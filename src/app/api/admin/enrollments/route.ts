@@ -6,7 +6,10 @@ import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
-import { getCategory, computeDueDates, findInstallmentPlan } from '@/config/courses';
+import { getCategory } from '@/config/courses';
+import { coursePolicy, resolveSchedule } from '@/lib/installments';
+import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
+import type { InstallmentPlan } from '@/types/course';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
 
@@ -79,6 +82,8 @@ const createSchema = z.object({
   // Defaults to the course's list price if omitted.
   totalAmount: z.number().int().min(0).optional(),
   paymentPlan: z.string().default('upfront'),
+  // For paymentPlan "custom": the deposit and number of payments, within the course rules.
+  customPlan: z.object({ deposit: z.number().int(), count: z.number().int() }).optional(),
   // Admin already collected payment out-of-band (cash, bank transfer, etc.) — mark it paid now.
   markAsPaid: z.boolean().default(false),
   notes: z.string().optional(),
@@ -179,29 +184,43 @@ export async function POST(req: NextRequest) {
         const enrollmentId = enrollment.id.toString();
 
  
-    // Create InstallmentSchedule rows to match paymentPlan —  mirrors the public
-    // checkout flow (POST /api/enrollments), which does this from course.installmentPlans
-    // via the same computeDueDates() helper. Without this, an admin-created
-    // installment enrollment has paymentPlan set but zero real installment rows,
-    // which breaks progress display, the "Pay Now" block, and the reminder cron.
+    // Installment rows for a pending plan, built from the course's own plans and custom-plan
+    // rules by the same builder as public checkout (src/lib/installments.ts).
     if (!isFree && !data.markAsPaid && data.paymentPlan !== 'upfront') {
-      // Plans come from the DB row (admin-editable), the same source the public checkout uses.
-      const matchedPlan = findInstallmentPlan(course.installmentPlans, data.paymentPlan);
-      if (matchedPlan) {
-        const dueDates = computeDueDates(matchedPlan);
-        // Scale the plan's stock amounts proportionally if the admin overrode totalAmount
-        const scale = totalAmount / matchedPlan.totalAmount;
-        await prisma.installmentSchedule.createMany({
-          data: matchedPlan.payments.map((p, i) => ({
-            enrollmentId: enrollment.id,
-            installmentNo: i + 1,
-            amount: Math.round(p.amount * scale),
-            currency: course.currency,
-            dueDate: dueDates[i],
-            status: 'pending',
-          })),
-        });
+      const schedule = resolveSchedule({
+        plans: (Array.isArray(course.installmentPlans) ? course.installmentPlans : []) as unknown as InstallmentPlan[],
+        installmentsEnabled: course.installmentsEnabled,
+        policy: coursePolicy(course.metadata),
+        total: totalAmount,
+        currency: course.currency,
+        paymentPlan: data.paymentPlan,
+        custom: data.customPlan,
+      });
+      if (!schedule.ok) {
+        // Roll back the enrollment rather than leave one with no schedule behind it.
+        await prisma.enrollment.delete({ where: { id: enrollment.id } });
+        return NextResponse.json({ error: schedule.error }, { status: 400 });
       }
+      await prisma.installmentSchedule.createMany({
+        data: schedule.payments.map((p) => ({
+          enrollmentId: enrollment.id,
+          installmentNo: p.installmentNo,
+          amount: p.amount,
+          currency: course.currency,
+          dueDate: p.dueDate,
+          status: 'pending',
+        })),
+      });
+      await prisma.enrollment.update({
+        where: { id: enrollment.id },
+        data: { amount: schedule.payments[0]?.amount ?? totalAmount },
+      });
+    }
+
+    if (paymentStatus === 'succeeded') {
+      provisionEnrollmentAccounts(enrollment.id).catch((err) =>
+        console.error('[admin-enrollment] portal account provisioning failed:', err)
+      );
     }
 
     const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { CourseMetadata } from '@/types/course';
+import { installmentPolicySchema } from '@/lib/installments';
 
 // Shared validation for admin course create/update (POST /api/admin/courses and
 // PATCH /api/admin/courses/[id]). One schema so both routes accept the same fields.
@@ -7,12 +8,18 @@ import type { CourseMetadata } from '@/types/course';
 const text = (max: number) => z.string().trim().max(max);
 const list = (maxItems: number, maxLen = 300) => z.array(text(maxLen).min(1)).max(maxItems);
 
-export const installmentPlanSchema = z.object({
-  label: text(60).min(1),
-  payments: z.array(z.object({ amount: z.number().int().min(0), label: text(60).min(1) })).min(1).max(12),
-  totalAmount: z.number().int().min(0),
-  badge: text(30).optional(),
-});
+// A plan's payments must add up to its total, or checkout would charge a different price
+// than the one shown.
+export const installmentPlanSchema = z
+  .object({
+    label: text(60).min(1),
+    payments: z.array(z.object({ amount: z.number().int().min(0), label: text(60).min(1) })).min(1).max(12),
+    totalAmount: z.number().int().min(0),
+    badge: text(30).optional(),
+  })
+  .refine((p) => p.payments.reduce((sum, x) => sum + x.amount, 0) === p.totalAmount, {
+    message: 'Plan payments must add up to the plan total',
+  });
 
 // Admin-editable metadata keys only. System keys (prefixed "_") are rejected here and
 // preserved server-side by mergeCourseMetadata().
@@ -32,6 +39,8 @@ export const courseMetadataSchema = z
     schedule: text(300),
     requirements: list(20, 200),
     highlights: list(8, 80),
+    // null turns custom plans off.
+    installmentPolicy: installmentPolicySchema.nullable(),
   })
   .partial()
   .strict();

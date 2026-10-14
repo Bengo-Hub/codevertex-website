@@ -5,12 +5,17 @@ import { X, Search, Loader2, UserPlus, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { authedFetch } from '@/lib/auth/authed-fetch';
+import { CUSTOM_PLAN_KEY, coursePolicy, customLimits, planKey } from '@/lib/installments';
+import type { InstallmentPlan } from '@/types/course';
 
 interface CourseOption {
   id: string;
   name: string;
   price: number;
   currency: string;
+  installmentsEnabled: boolean;
+  installmentPlans: InstallmentPlan[] | null;
+  metadata?: unknown;
 }
 
 interface CohortOption {
@@ -53,12 +58,23 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
 
   const [totalAmount, setTotalAmount] = useState<number | ''>('');
   const [paymentPlan, setPaymentPlan] = useState('upfront');
+  const [customDeposit, setCustomDeposit] = useState<number | ''>('');
+  const [customCount, setCustomCount] = useState(2);
   const [markAsPaid, setMarkAsPaid] = useState(true);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const selectedCourse = useMemo(() => courses.find((c) => c.id === courseId) ?? null, [courses, courseId]);
+  // The course's own plans, the same ones checkout offers, plus a custom plan when allowed.
+  const coursePlans = selectedCourse?.installmentsEnabled ? (selectedCourse.installmentPlans ?? []) : [];
+  const policy = selectedCourse?.installmentsEnabled ? coursePolicy(selectedCourse.metadata) : null;
+  const limits = policy && typeof totalAmount === 'number' && totalAmount > 0 ? customLimits(policy, totalAmount) : null;
+  const planOptions = [
+    ...(coursePlans.some((p) => planKey(p.label) === 'upfront') ? [] : [{ key: 'upfront', label: 'Upfront' }]),
+    ...coursePlans.map((p) => ({ key: planKey(p.label), label: p.label })),
+    ...(limits && limits.counts.length > 0 ? [{ key: CUSTOM_PLAN_KEY, label: 'Custom deposit and split' }] : []),
+  ];
 
   // Load course list once.
   useEffect(() => {
@@ -71,6 +87,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
   // Prefill amount whenever the course changes, unless the admin already typed a custom one.
   useEffect(() => {
     if (selectedCourse) setTotalAmount(selectedCourse.price);
+    setPaymentPlan('upfront');
     setCohortId('');
     setCohorts([]);
   }, [selectedCourse]);
@@ -122,6 +139,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
           cohortId: cohortId || undefined,
           totalAmount: Number(totalAmount),
           paymentPlan,
+          customPlan: paymentPlan === CUSTOM_PLAN_KEY ? { deposit: Number(customDeposit) || 0, count: customCount } : undefined,
           markAsPaid,
         }),
       });
@@ -272,7 +290,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Total amount (KES)
+                Total amount ({selectedCourse?.currency ?? 'KES'})
               </label>
               <input
                 type="number"
@@ -286,12 +304,33 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
             <div>
               <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment plan</label>
               <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls}>
-                <option value="upfront">Upfront</option>
-                <option value="2-installments">2 installments</option>
-                <option value="3-installments">3 installments</option>
+                {planOptions.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
               </select>
             </div>
           </div>
+
+          {paymentPlan === CUSTOM_PLAN_KEY && limits && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Deposit</label>
+                <input
+                  type="number"
+                  min={limits.minDeposit}
+                  max={limits.maxDeposit}
+                  value={customDeposit}
+                  onChange={(e) => setCustomDeposit(e.target.value === '' ? '' : Number(e.target.value))}
+                  className={inputCls}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">{limits.minDeposit.toLocaleString()} to {limits.maxDeposit.toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payments in all</label>
+                <select value={customCount} onChange={(e) => setCustomCount(Number(e.target.value))} className={inputCls}>
+                  {limits.counts.map((n) => <option key={n} value={n}>{n} (deposit + {n - 1})</option>)}
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Payment status */}
           {totalAmount !== 0 && (

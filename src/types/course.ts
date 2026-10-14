@@ -1,3 +1,5 @@
+import type { InstallmentPolicy } from '@/lib/installments';
+
 // DB-sourced course type (mirrors Prisma Course model)
 export interface InstallmentPayment {
   amount: number;
@@ -52,6 +54,11 @@ export interface CourseMetadata {
   requirements?: string[];
   /** Short highlight bullets shown under the hero. */
   highlights?: string[];
+  /**
+   * Rules for a plan the learner builds (deposit + number of payments). Null or absent =
+   * learners pick only the preset plans. See src/lib/installments.ts.
+   */
+  installmentPolicy?: InstallmentPolicy | null;
   /** System-owned: last seed revision applied to this row. */
   _seedVersion?: number;
 }

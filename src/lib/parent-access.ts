@@ -162,12 +162,21 @@ export async function verifyParentCode(studentId: string, code: string): Promise
   });
   if (claimed.count === 0) return { ok: false, status: 400, error: 'This code was already used. Request a new one.' };
 
+  return { ok: true, ...(await issueParentSession(studentId)) };
+}
+
+/**
+ * Signs the parent session for one student. Used after a one-time code and when a signed-in
+ * parent SSO account (role parent, matched by the child's guardian email) opens a child, so
+ * both ways in reach the same overview and pay routes.
+ */
+export async function issueParentSession(studentId: string): Promise<{ token: string; maxAgeSeconds: number }> {
   const maxAgeSeconds = SESSION_TTL_MINUTES * 60;
   const token = await signScopedToken(TOKEN_PURPOSE, {
     sid: studentId,
     exp: Math.floor(Date.now() / 1000) + maxAgeSeconds,
   });
-  return { ok: true, token, maxAgeSeconds };
+  return { token, maxAgeSeconds };
 }
 
 /** Student ID bound to the caller's parent session, or null. */

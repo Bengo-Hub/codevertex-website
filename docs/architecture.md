@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
   currency        TEXT DEFAULT 'KES',
   payment_ref     TEXT,
   payment_status  TEXT DEFAULT 'pending',
-  payment_plan    TEXT,          -- 'upfront' | '2-installments' | '3-installments'
+  payment_plan    TEXT,          -- a preset plan key ('upfront', '2-installments', ...) or 'custom'
   installment_no  INTEGER,       -- which installment (1, 2, 3)
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
@@ -103,6 +103,35 @@ CREATE TABLE IF NOT EXISTS enrollments (
 CREATE INDEX IF NOT EXISTS idx_enrollments_email ON enrollments(email);
 CREATE INDEX IF NOT EXISTS idx_enrollments_status ON enrollments(payment_status);
 ```
+
+### Payment plans and custom plan rules (Oct 2026)
+
+Each course has preset plans (`courses.installment_plans`) and, optionally, rules for a plan
+the learner builds (`courses.metadata.installmentPolicy`, edited on the Pricing tab):
+
+| Rule | Meaning |
+|------|---------|
+| `minDepositPct` / `minDepositAmount` | smallest deposit; the larger applies, on the price after any discount |
+| `maxInstallments` | most payments in all, deposit included |
+| `minInstallmentAmount` | smallest later payment |
+| `intervalDays` | days between payments |
+| `maxSpanDays` | last payment within this many days of enrolling (spacing tightens to fit); null = no limit |
+
+A learner picking "Build your own plan" chooses a deposit and a number of payments; the rest is
+split evenly (rounded to 100, the last payment takes the remainder). On a KES 30,000 course with
+a 15% minimum deposit and three payments at most, a KES 5,000 deposit gives two payments of
+KES 12,500.
+
+`src/lib/installments.ts` is the only code that turns a plan into payments. The checkout modal
+uses it to show the schedule; `POST /api/enrollments` and the admin enrollment route use it to
+write `installment_schedules`. The server ignores amounts or dates the browser sends and refuses
+a plan key the course does not have, or a custom plan outside its rules. Preset plans scaled by
+a discount still add up to the discounted total exactly. Payments received are applied by
+`src/lib/enrollment-payments.ts` (see docs/integrations.md, "Payments received outside the
+website").
+
+Learners under 18 must give a parent or guardian (`student_users.guardian_name`,
+`guardian_email`, `guardian_phone`), who gets a parent account.
 
 ### `leads`
 ```sql

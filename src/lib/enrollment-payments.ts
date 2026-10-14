@@ -1,0 +1,212 @@
+/**
+ * Applying money received to an enrollment's installment schedule. One allocator for every
+ * way a payment arrives: treasury's payment.succeeded event (Paystack, M-Pesa through the
+ * hosted page) and a deposit an admin records by hand (bank transfer, cash, cheque, M-Pesa
+ * sent straight to the till).
+ *
+ * The payment becomes the next unpaid installment, at the amount actually received. What is
+ * still owed (total minus everything paid) is then spread over the remaining unpaid
+ * installments, keeping their due dates:
+ *   - paid less than due: the shortfall moves onto the later installments, or onto a new one
+ *     on the same due date when nothing is left after it
+ *   - paid more than due: the later installments shrink, and any that are no longer needed
+ *     are removed rather than marked paid (marking them paid overstated what came in)
+ * An upfront enrollment with no rows gets them: the payment as row 1 and the balance, if any,
+ * as row 2.
+ */
+
+import { addDays } from 'date-fns';
+import { prisma } from '@/lib/db';
+import { splitEvenly } from '@/lib/installments';
+import { summarizeEnrollmentPayments } from '@/lib/enrollment-helpers';
+import { publishInstallmentPaid } from '@/lib/events';
+import { buildPortalLink } from '@/lib/notifications';
+import { TREASURY } from '@/lib/constants';
+
+/** Days until the balance is due when an upfront enrollment is only partly paid. */
+const BALANCE_DUE_DAYS = 28;
+
+export interface AppliedPayment {
+  enrollmentId: bigint;
+  installmentNo: number;
+  amount: number;
+  totalAmount: number;
+  amountPaid: number;
+  remainingBalance: number;
+}
+
+export class PaymentRejected extends Error {}
+
+/**
+ * Records `amount` against the enrollment and re-spreads the balance. Runs in one transaction
+ * so a concurrent payment can never see half an update. `maxAmount` lets a caller refuse more
+ * than is owed (admin entry); treasury events are applied as received.
+ */
+export async function applyEnrollmentPayment(
+  enrollmentId: bigint,
+  amount: number,
+  opts: { paymentRef?: string | null; paidAt?: Date; rejectOverpayment?: boolean } = {},
+): Promise<AppliedPayment> {
+  if (!Number.isInteger(amount) || amount <= 0) throw new PaymentRejected('Enter a whole amount above zero.');
+  const paidAt = opts.paidAt ?? new Date();
+
+  return prisma.$transaction(async (tx) => {
+    // Row lock: two payments for one enrollment are applied one after the other.
+    await tx.$executeRaw`SELECT id FROM enrollments WHERE id = ${enrollmentId} FOR UPDATE`;
+    const enrollment = await tx.enrollment.findUnique({
+      where: { id: enrollmentId },
+      include: { installments: { orderBy: { installmentNo: 'asc' } } },
+    });
+    if (!enrollment) throw new PaymentRejected('Enrollment not found.');
+
+    const before = summarizeEnrollmentPayments(enrollment, enrollment.installments);
+    if (before.remainingBalance <= 0) throw new PaymentRejected('This enrollment is already paid in full.');
+    if (opts.rejectOverpayment && amount > before.remainingBalance) {
+      throw new PaymentRejected(`That is more than the balance of ${enrollment.currency} ${before.remainingBalance.toLocaleString()}.`);
+    }
+
+    const rows = enrollment.installments;
+    const unpaid = rows.filter((i) => i.status !== 'paid');
+    let installmentNo: number;
+
+    if (rows.length === 0) {
+      // Upfront enrollment: give it a schedule so the balance has somewhere to live.
+      installmentNo = 1;
+      await tx.installmentSchedule.create({
+        data: { enrollmentId, installmentNo: 1, amount, currency: enrollment.currency, dueDate: paidAt, status: 'paid', paidAt, paymentRef: opts.paymentRef ?? null },
+      });
+      const balance = before.totalAmount - amount;
+      if (balance > 0) {
+        await tx.installmentSchedule.create({
+          data: { enrollmentId, installmentNo: 2, amount: balance, currency: enrollment.currency, dueDate: addDays(paidAt, BALANCE_DUE_DAYS), status: 'pending' },
+        });
+      }
+    } else if (unpaid.length === 0) {
+      // Every row is paid yet a balance remains (rows edited by hand): record it as a new row.
+      installmentNo = rows[rows.length - 1].installmentNo + 1;
+      await tx.installmentSchedule.create({
+        data: { enrollmentId, installmentNo, amount, currency: enrollment.currency, dueDate: paidAt, status: 'paid', paidAt, paymentRef: opts.paymentRef ?? null },
+      });
+    } else {
+      const [next, ...later] = unpaid;
+      installmentNo = next.installmentNo;
+      await tx.installmentSchedule.update({
+        where: { id: next.id },
+        data: { status: 'paid', paidAt, paymentRef: opts.paymentRef ?? null, amount },
+      });
+      const owed = before.remainingBalance - amount;
+      if (owed <= 0) {
+        if (later.length > 0) {
+          await tx.installmentSchedule.deleteMany({ where: { id: { in: later.map((i) => i.id) } } });
+        }
+      } else if (later.length > 0) {
+        const amounts = splitEvenly(owed, later.length);
+        for (let i = 0; i < later.length; i++) {
+          await tx.installmentSchedule.update({ where: { id: later[i].id }, data: { amount: amounts[i], status: 'pending' } });
+        }
+      } else {
+        // Short on the last installment: the rest is still due when that one was.
+        await tx.installmentSchedule.create({
+          data: {
+            enrollmentId,
+            installmentNo: rows[rows.length - 1].installmentNo + 1,
+            amount: owed,
+            currency: enrollment.currency,
+            dueDate: next.dueDate > paidAt ? next.dueDate : paidAt,
+            status: 'pending',
+          },
+        });
+      }
+    }
+
+    await tx.enrollment.update({
+      where: { id: enrollmentId },
+      data: { paymentStatus: 'succeeded', paymentRef: opts.paymentRef ?? enrollment.paymentRef, notifiedAt: new Date() },
+    });
+
+    const after = await tx.installmentSchedule.findMany({ where: { enrollmentId }, orderBy: { installmentNo: 'asc' } });
+    const summary = summarizeEnrollmentPayments({ ...enrollment, paymentStatus: 'succeeded' }, after);
+    return {
+      enrollmentId,
+      installmentNo,
+      amount,
+      totalAmount: summary.totalAmount,
+      amountPaid: summary.amountPaid,
+      remainingBalance: summary.remainingBalance,
+    };
+  });
+}
+
+/** The receipt email (notifications-api digitika_consumer) for a payment just applied. */
+export async function publishPaymentReceipt(applied: AppliedPayment, paymentRef?: string | null): Promise<void> {
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: applied.enrollmentId },
+    include: { installments: { orderBy: { installmentNo: 'asc' } }, studentUser: true },
+  });
+  if (!enrollment?.studentUser) return;
+  const nextUnpaid = enrollment.installments.find((i) => i.status !== 'paid');
+  await publishInstallmentPaid({
+    studentName: enrollment.fullName,
+    studentEmail: enrollment.email,
+    courseName: enrollment.courseName,
+    installmentNo: applied.installmentNo,
+    totalInstallments: enrollment.installments.length,
+    amountPaid: applied.amount,
+    currency: enrollment.currency,
+    paymentRef: paymentRef ?? undefined,
+    studentId: enrollment.studentUser.id,
+    enrollmentId: enrollment.id.toString(),
+    remainingBalance: applied.remainingBalance,
+    nextInstallmentDate: nextUnpaid ? nextUnpaid.dueDate.toISOString().split('T')[0] : undefined,
+    nextInstallmentAmount: nextUnpaid ? nextUnpaid.amount : undefined,
+    portalLink: buildPortalLink(enrollment.id, enrollment.studentUser.id),
+    tenantId: 'codevertex',
+  });
+}
+
+export const MANUAL_PAYMENT_METHODS = ['bank_transfer', 'cash', 'cheque', 'mpesa'] as const;
+export type ManualPaymentMethod = (typeof MANUAL_PAYMENT_METHODS)[number];
+
+const TREASURY_API_URL = process.env.TREASURY_API_URL ?? 'https://booksapi.codevertexafrica.com';
+const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
+
+/**
+ * Books a payment received outside the website (bank deposit, cash, cheque, M-Pesa to the
+ * till) in treasury, so the books and the enrollment agree. Uses treasury's S2S manual account
+ * payment route: a succeeded account_payment intent through treasury's one settle path, on the
+ * enrollment's receipt reference. Treasury refuses to book the same method and reference twice
+ * (booked: false), which is how a slip entered twice is caught.
+ */
+export async function bookManualPaymentInTreasury(p: {
+  accountRef: string;
+  enrollmentId: string;
+  amount: number;
+  currency: string;
+  method: ManualPaymentMethod;
+  reference: string;
+  payerName: string;
+  requestId: string;
+}): Promise<{ intentId: string; booked: boolean }> {
+  if (!SERVICE_KEY) throw new Error('INTERNAL_SERVICE_KEY is not set, so treasury cannot be updated');
+  const res = await fetch(
+    `${TREASURY_API_URL}/api/v1/s2s/${encodeURIComponent(TREASURY.tenant)}/accounts/${encodeURIComponent(p.accountRef)}/manual-payments`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': SERVICE_KEY, 'X-Request-ID': p.requestId },
+      body: JSON.stringify({
+        account_id: p.enrollmentId,
+        amount: p.amount,
+        currency: p.currency,
+        method: p.method,
+        reference: p.reference,
+        payer_name: p.payerName,
+        source_service: 'codevertex-website',
+      }),
+    },
+  );
+  if (!res.ok) {
+    throw new Error(`treasury refused the payment (${res.status}): ${await res.text().catch(() => '')}`);
+  }
+  const body = (await res.json()) as { intent_id?: string; booked?: boolean };
+  return { intentId: body.intent_id ?? '', booked: body.booked !== false };
+}

@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, Bell } from 'lucide-react';
+import { RefreshCw, Bell, Landmark } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { authedFetch } from '@/lib/auth/authed-fetch';
+import { RecordPaymentDialog, type RecordPaymentTarget } from './RecordPaymentDialog';
 
 interface InstallmentItem {
   id: string;
@@ -41,6 +42,7 @@ export function InstallmentsPage() {
   const [status, setStatus] = useState('');
   const [daysAhead, setDaysAhead] = useState(30);
   const [sending, setSending] = useState<string | null>(null);
+  const [recording, setRecording] = useState<RecordPaymentTarget | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -147,14 +149,29 @@ export function InstallmentsPage() {
       key: 'actions',
       header: '',
       render: (row) => row.status !== 'paid' ? (
-        <button
-          onClick={() => sendReminder(row.id)}
-          disabled={sending === row.id}
-          className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border hover:bg-muted disabled:opacity-50 transition-colors"
-        >
-          <Bell className="h-3 w-3" />
-          {sending === row.id ? 'Sending…' : 'Remind'}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setRecording({
+              enrollmentId: row.enrollmentId,
+              studentName: row.enrollment.fullName,
+              courseName: row.enrollment.courseName,
+              currency: row.currency,
+              suggestedAmount: row.amount,
+            })}
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border hover:bg-muted transition-colors"
+          >
+            <Landmark className="h-3 w-3" />
+            Record payment
+          </button>
+          <button
+            onClick={() => sendReminder(row.id)}
+            disabled={sending === row.id}
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-border hover:bg-muted disabled:opacity-50 transition-colors"
+          >
+            <Bell className="h-3 w-3" />
+            {sending === row.id ? 'Sending…' : 'Remind'}
+          </button>
+        </div>
       ) : null,
     },
   ];
@@ -199,6 +216,7 @@ export function InstallmentsPage() {
         loading={loading}
         emptyMessage="No upcoming installments."
       />
+      {recording && <RecordPaymentDialog target={recording} onClose={() => setRecording(null)} onRecorded={load} />}
     </div>
   );
 }

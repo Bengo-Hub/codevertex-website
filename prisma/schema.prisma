@@ -84,6 +84,16 @@ model StudentUser {
   fullName  String   @map("full_name")
   phone     String
   dob       DateTime? @db.Date
+  // SSO account (auth-api user id, role student), created once the first payment clears.
+  // Set once, so provisioning never runs twice for a student.
+  ssoUserId String?  @unique @map("sso_user_id")
+  // Parent or guardian for learners under 18. guardianEmail is indexed: a signed-in parent
+  // account finds every child that named it.
+  guardianName      String? @map("guardian_name")
+  guardianEmail     String? @map("guardian_email")
+  guardianPhone     String? @map("guardian_phone")
+  // The guardian's SSO account (role parent), set once it is provisioned for this child.
+  guardianSsoUserId String? @map("guardian_sso_user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -96,6 +106,7 @@ model StudentUser {
   parentAccessCodes ParentAccessCode[]
 
   @@index([email])
+  @@index([guardianEmail])
   @@map("student_users")
 }
 

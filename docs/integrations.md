@@ -65,6 +65,28 @@ subscriber described above.
 
 ---
 
+### Payments received outside the website (Oct 2026)
+
+Bank deposits, cash, cheques and M-Pesa sent straight to the till are recorded by an admin
+("Record payment" on the Enrollments and Installments pages, permission
+`digitika.installments.manage`): `POST /api/admin/enrollments/{id}/payments`
+`{ amount, method, reference, paidAt }`.
+
+1. Treasury books it first: S2S `POST /api/v1/s2s/{tenant}/accounts/{receipt reference}/manual-payments`
+   (a succeeded `account_payment` intent with source `codevertex-website`, in the course
+   currency). Treasury refuses the same method and reference twice, which catches a slip
+   entered twice. If treasury is down nothing is recorded.
+2. `src/lib/enrollment-payments.ts applyEnrollmentPayment` applies it, the same allocator the
+   treasury subscriber uses for online payments: the payment becomes the next unpaid
+   installment at the amount received, and the balance is spread over the remaining
+   installments, keeping their due dates. A shortfall moves onto later installments (or a new
+   one on the same due date); an overpayment shrinks them and removes the ones no longer owed.
+   A part-paid upfront enrollment gets a schedule (the payment, then the balance due in 28 days).
+3. The student gets the usual receipt event, and portal accounts if it was the first payment.
+
+The old student-callable `POST /api/enrollments/{id}/sync` is gone: it marked installments paid
+without treasury knowing.
+
 ## 2. Vera Chatbot (marketflow-ai widget)
 
 **Superseded architecture note:** this section previously described a direct Anthropic API call
@@ -137,30 +159,37 @@ export const SSO_URL = 'https://accounts.codevertexafrica.com';
 <Link href={SSO_URL} target="_blank">Client portal →</Link>
 ```
 
-### Future Integration (Sprint 10)
+### Student and parent accounts (Oct 2026)
 
-For a future "Student Portal" or "Client Dashboard" on this domain:
+Students and parents have SSO accounts in auth-api under the platform tenant (`codevertex`),
+with roles kept apart from staff:
 
-**Token Validation Pattern:**
-```typescript
-// Reuse auth-service JWKS validation pattern from other services
-const JWKS_URL = 'https://sso.codevertexafrica.com/api/v1/.well-known/jwks.json';
-const AUTH_AUDIENCE = 'codevertex';
-const AUTH_ISSUER = 'https://sso.codevertexafrica.com';
-```
+| Role | Who | How the account is made | Where they go |
+|------|-----|-------------------------|---------------|
+| `student` | the learner | `src/lib/portal-accounts.ts` once the enrollment is confirmed | `/student` |
+| `parent` | guardian of a learner under 18 | same run, from the guardian on the student record | `/digitika/parent`, picks a child (see section 8) |
+| `digitika_admin`, `digitika_staff`, `digitika_instructor` | Digitika team | admin Users page only | `/admin`, by permission |
 
-**Middleware (planned):**
-```typescript
-// middleware.ts
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token');
-  if (!token && request.nextUrl.pathname.startsWith('/portal')) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-}
-```
+"Confirmed" means the first payment cleared (treasury subscriber), a free course, an admin
+marking the enrollment paid, or an admin recording a deposit. Abandoned checkouts never create
+accounts.
 
----
+Provisioning calls auth-api `POST /api/v1/s2s/tenants/{platform tenant id}/members` with
+`roles`, `merge_roles: true` (a learner who is also staff keeps their staff roles) and
+`skip_welcome: true`. auth-api returns the real auth user id, stored on
+`StudentUser.ssoUserId` (or `guardianSsoUserId` for the parent), and a temporary password only
+when the account is new. The website sends notifications-api template `digitika/portal_account`
+with the login link and that password. auth-ui makes the person choose their own password on
+first sign-in, even when they arrive through the website's redirect.
+
+Claims on `ssoUserId` and `guardianSsoUserId` are conditional updates, so repeated payment
+events never send credentials twice. A new guardian email on a later enrollment clears
+`guardianSsoUserId`, and the new guardian gets their own account.
+
+Students are matched to their SSO account by email. Student emails are stored lowercased;
+`findStudentByEmail` also finds older rows that kept capitals. A signed-in account with no
+student record goes to the parent portal when it is someone's guardian, else sees "No
+enrollment on this account".
 
 ## 4. PostgreSQL Database
 
@@ -255,9 +284,9 @@ Trigger for the payment-receipt email: `treasury.payment.succeeded` (NATS) →
 
 ---
 
-## 8. Parent Portal (no login)
+## 8. Parent Portal (account or one-time code)
 
-Route: `/digitika/parent`. Parents track progress and pay fee arrears with the Student ID plus a one-time code.
+Route: `/digitika/parent`. Parents track progress and pay fee arrears either with their parent account (signed in, they pick a child) or with the Student ID plus a one-time code. Both ways end in the same `cv_parent` session for one child, so overview and pay have one code path.
 
 | Step | Endpoint | Notes |
 |------|----------|-------|
@@ -266,6 +295,8 @@ Route: `/digitika/parent`. Parents track progress and pay fee arrears with the S
 | Overview | `GET /api/parent/overview` | Per-course progress (one grouped SQL query, `src/lib/student-progress.ts`), quiz results, certificates, announcements, balances and arrears. No email, phone or DOB returned. |
 | Pay | `POST /api/parent/pay` `{ enrollmentId, installmentNo? }` | Server builds the treasury pay link; amount comes from the DB; only the session student's enrollments. |
 | Sign out | `POST /api/parent/logout` | Clears the cookie. |
+| Account children | `GET /api/parent/account` | Signed-in parent account: children whose `guardianEmail` is the account email (indexed), names and Student IDs only. |
+| Open a child | `POST /api/parent/account` `{ studentId }` | Same session as Verify, only for a child that named this account; "not yours" and "no such student" both answer 404. |
 
 Security and data protection (Kenya Data Protection Act 2019 principles): codes are random, single-use, expire in 5 minutes, stored only as a keyed HMAC, max 5 guesses per code; rate limits of 3 codes per student per hour and 10 requests per IP per hour, DB-backed (`parent_access_codes`, IP stored as a keyed hash) so they hold across pods; every request is an audit row, pruned after 30 days. Requires `SESSION_SECRET`, `INTERNAL_SERVICE_KEY` and `NOTIFICATIONS_API_URL`.
 

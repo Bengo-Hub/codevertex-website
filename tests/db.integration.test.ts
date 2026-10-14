@@ -14,11 +14,13 @@ type Lib = {
   prisma: typeof import('../src/lib/db').prisma;
   parent: typeof import('../src/lib/parent-access');
   progress: typeof import('../src/lib/student-progress');
+  payments: typeof import('../src/lib/enrollment-payments');
 };
 let lib: Lib;
 
 function run(cmd: string, args: string[]) {
-  return execFileSync(cmd, args, { env: { ...process.env, DATABASE_URL: DB }, encoding: 'utf8', stdio: 'pipe' });
+  // Windows resolves npx through npx.cmd, which only a shell can start.
+  return execFileSync(cmd, args, { env: { ...process.env, DATABASE_URL: DB }, encoding: 'utf8', stdio: 'pipe', shell: process.platform === 'win32' });
 }
 
 before(async () => {
@@ -29,6 +31,7 @@ before(async () => {
     prisma: (await import('../src/lib/db')).prisma,
     parent: await import('../src/lib/parent-access'),
     progress: await import('../src/lib/student-progress'),
+    payments: await import('../src/lib/enrollment-payments'),
   };
 });
 
@@ -135,4 +138,70 @@ test('a bumped seedVersion re-applies the course once (kits wording removed)', {
   const updated = await prisma.course.findUniqueOrThrow({ where: { id: 'kids-robotics-ai' } });
   assert.doesNotMatch(JSON.stringify(updated.includes), /kits/i);
   assert.equal((updated.metadata as { _seedVersion?: number })._seedVersion, 2);
+});
+
+// Payments received (treasury events and admin-recorded deposits) settle the next installment
+// and re-spread the balance over the rest.
+async function makeEnrollment(rows: number[] | null, total = 30000) {
+  const e = await lib.prisma.enrollment.create({
+    data: {
+      courseId: 'alloc-test', courseName: 'Allocation test', category: 'test', fullName: 'Alloc Test',
+      email: `alloc-${Date.now()}-${Math.random()}@example.com`, phone: '+254700000000',
+      amount: rows ? rows[0] : total, totalAmount: total, currency: 'KES', paymentPlan: rows ? 'custom' : 'upfront',
+    },
+  });
+  if (rows) {
+    await lib.prisma.installmentSchedule.createMany({
+      data: rows.map((amount, i) => ({
+        enrollmentId: e.id, installmentNo: i + 1, amount, currency: 'KES',
+        dueDate: new Date(Date.UTC(2026, 10 + i, 1)), status: 'pending',
+      })),
+    });
+  }
+  return e.id;
+}
+async function schedule(id: bigint) {
+  const rows = await lib.prisma.installmentSchedule.findMany({ where: { enrollmentId: id }, orderBy: { installmentNo: 'asc' } });
+  return rows.map((r) => `${r.amount}:${r.status}`);
+}
+
+test('an underpayment moves the shortfall onto later installments', { skip }, async () => {
+  const id = await makeEnrollment([12000, 10000, 8000]);
+  await lib.payments.applyEnrollmentPayment(id, 5000, { paymentRef: 'bank_transfer:A1' });
+  assert.deepEqual(await schedule(id), ['5000:paid', '12500:pending', '12500:pending']);
+  await lib.payments.applyEnrollmentPayment(id, 20000, { paymentRef: 'bank_transfer:A2' });
+  assert.deepEqual(await schedule(id), ['5000:paid', '20000:paid', '5000:pending']);
+  const last = await lib.payments.applyEnrollmentPayment(id, 5000, { paymentRef: 'cash:A3' });
+  assert.equal(last.remainingBalance, 0);
+  assert.equal((await lib.prisma.enrollment.findUnique({ where: { id } }))?.paymentStatus, 'succeeded');
+});
+
+test('an overpayment shrinks later installments and drops the ones no longer owed', { skip }, async () => {
+  const a = await makeEnrollment([12000, 10000, 8000]);
+  await lib.payments.applyEnrollmentPayment(a, 25000);
+  assert.deepEqual(await schedule(a), ['25000:paid', '2500:pending', '2500:pending']);
+  const b = await makeEnrollment([12000, 10000, 8000]);
+  const done = await lib.payments.applyEnrollmentPayment(b, 30000);
+  assert.deepEqual(await schedule(b), ['30000:paid']);
+  assert.equal(done.amountPaid, 30000);
+});
+
+test('short on the last installment leaves the rest due, and paid-in-full is refused', { skip }, async () => {
+  const id = await makeEnrollment([20000, 10000]);
+  await lib.payments.applyEnrollmentPayment(id, 20000);
+  await lib.payments.applyEnrollmentPayment(id, 6000);
+  assert.deepEqual(await schedule(id), ['20000:paid', '6000:paid', '4000:pending']);
+  await lib.payments.applyEnrollmentPayment(id, 4000);
+  await assert.rejects(lib.payments.applyEnrollmentPayment(id, 100), lib.payments.PaymentRejected);
+});
+
+test('a part-paid upfront enrollment gets a schedule; admin entry cannot overpay', { skip }, async () => {
+  const id = await makeEnrollment(null);
+  await assert.rejects(
+    lib.payments.applyEnrollmentPayment(id, 30001, { rejectOverpayment: true }),
+    /more than the balance/,
+  );
+  const r = await lib.payments.applyEnrollmentPayment(id, 10000, { paymentRef: 'mpesa:QX1', rejectOverpayment: true });
+  assert.equal(r.remainingBalance, 20000);
+  assert.deepEqual(await schedule(id), ['10000:paid', '20000:pending']);
 });

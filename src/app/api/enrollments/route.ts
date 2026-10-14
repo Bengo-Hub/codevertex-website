@@ -4,7 +4,10 @@ import { prisma } from '@/lib/db';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
-import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
+import { upsertStudentUser, hasActiveEnrollment, isUnder18 } from '@/lib/enrollment-helpers';
+import { coursePolicy, resolveSchedule, scheduleSummary } from '@/lib/installments';
+import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
+import type { InstallmentPlan } from '@/types/course';
 
 const TREASURY_API_URL =
   process.env.TREASURY_API_URL ?? 'https://booksapi.codevertexafrica.com';
@@ -73,21 +76,20 @@ const schema = z.object({
   totalAmount: z.number(),
   currency: z.string().default('KES'),
   paymentPlan: z.string().default('upfront'),
-  firstPaymentAmount: z.number(),
+  // A plan the learner built: their deposit and how many payments in all. Only honoured
+  // within the course's InstallmentPolicy.
+  customPlan: z.object({ deposit: z.number().int(), count: z.number().int() }).optional(),
   discountRuleId: z.string().optional(),
   discountCode: z.string().optional(),
   discountPct: z.number().int().optional(),
   discountAmount: z.number().int().optional(),
-  installments: z
-    .array(
-      z.object({
-        installmentNo: z.number(),
-        amount: z.number(),
-        label: z.string(),
-        dueDate: z.string(),
-      })
-    )
-    .optional(),
+  // Parent or guardian, required when the learner is under 18.
+  guardianName: z.string().trim().max(120).optional(),
+  guardianEmail: z.string().trim().email().optional().or(z.literal('')),
+  guardianPhone: z.string().trim().max(32).optional(),
+  // Older clients still send these; the server builds the schedule itself and ignores them.
+  firstPaymentAmount: z.number().optional(),
+  installments: z.array(z.unknown()).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -150,7 +152,14 @@ export async function POST(req: NextRequest) {
     // does — then require the client's totals to match exactly.
     const course = await prisma.course.findUnique({
       where: { id: data.courseId, isActive: true },
-      select: { price: true, currency: true },
+      select: {
+        name: true,
+        price: true,
+        currency: true,
+        installmentsEnabled: true,
+        installmentPlans: true,
+        metadata: true,
+      },
     });
     if (!course) {
       return NextResponse.json({ error: 'Course not found or not available' }, { status: 400 });
@@ -200,29 +209,53 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    if (data.firstPaymentAmount > data.totalAmount || data.firstPaymentAmount < 0) {
-      return NextResponse.json({ error: 'Invalid payment amount' }, { status: 400 });
+
+    // 0d. The schedule comes from the course's own plans and policy, never from the browser:
+    // a client could otherwise send "1 shilling now, the rest next year".
+    const schedule = resolveSchedule({
+      plans: (Array.isArray(course.installmentPlans) ? course.installmentPlans : []) as unknown as InstallmentPlan[],
+      installmentsEnabled: course.installmentsEnabled,
+      policy: coursePolicy(course.metadata),
+      total: canonicalTotal,
+      currency: course.currency,
+      paymentPlan: data.paymentPlan,
+      custom: data.customPlan,
+    });
+    if (!schedule.ok) {
+      return NextResponse.json({ error: schedule.error }, { status: 400 });
+    }
+    const payments = schedule.payments;
+    const firstPaymentAmount = payments[0]?.amount ?? 0;
+
+    // 0e. Minors need a parent or guardian on record; the guardian gets a parent portal account.
+    const guardianEmail = data.guardianEmail ? data.guardianEmail.toLowerCase() : '';
+    if (isUnder18(data.dob) && (!data.guardianName || !guardianEmail)) {
+      return NextResponse.json({ error: 'Learners under 18 need a parent or guardian name and email.' }, { status: 400 });
+    }
+    if (guardianEmail && guardianEmail === data.email.toLowerCase()) {
+      return NextResponse.json({ error: "Use the parent or guardian's own email, not the learner's." }, { status: 400 });
     }
 
-    // Self-referral guard: a referral code's owner may not redeem their own code.
-
-
-    // 1. Upsert student user â€” one record per unique email
+    // 1. Upsert student user, one record per unique email
     const studentUser = await upsertStudentUser({
       email: data.email,
       fullName: data.fullName,
       phone: data.phone,
       dob: data.dob,
+      guardian: guardianEmail
+        ? { name: data.guardianName ?? '', email: guardianEmail, phone: data.guardianPhone ?? '' }
+        : undefined,
     });
 
-    // A course with a total price of 0 needs no payment step â€” confirm it immediately.
+    // A course with a total price of 0 needs no payment step, so it is confirmed immediately.
     const isFree = canonicalTotal === 0;
 
-    // 2. Create enrollment (amount = first payment only)
+    // 2. Create enrollment (amount = first payment only). Names, amounts and currency come
+    // from the course row and the server-built schedule, not from the request.
     const enrollment = await prisma.enrollment.create({
       data: {
         courseId: data.courseId,
-        courseName: data.courseName,
+        courseName: course.name,
         category: data.category,
         fullName: data.fullName,
         email: data.email,
@@ -230,9 +263,9 @@ export async function POST(req: NextRequest) {
         dob: data.dob ? new Date(data.dob) : null,
         experience: data.experience ?? null,
         howHeard: data.howHeard ?? null,
-        amount: data.firstPaymentAmount,
-        totalAmount: data.totalAmount,
-        currency: data.currency,
+        amount: firstPaymentAmount,
+        totalAmount: canonicalTotal,
+        currency: course.currency,
         paymentPlan: data.paymentPlan,
         paymentStatus: isFree ? 'succeeded' : 'pending',
         installmentNo: 1,
@@ -247,86 +280,83 @@ export async function POST(req: NextRequest) {
 
     const enrollmentId = enrollment.id.toString();
 
-    // 3. Create installment schedule rows (skipped for free courses — nothing owed)
-    if (!isFree && data.installments && data.installments.length > 0) {
+    // 3. Installment schedule rows (none for free courses: nothing owed)
+    if (!isFree && payments.length > 0) {
       await prisma.installmentSchedule.createMany({
-        data: data.installments.map((inst) => ({
+        data: payments.map((p) => ({
           enrollmentId: enrollment.id,
-          installmentNo: inst.installmentNo,
-          amount: inst.amount,
-          currency: data.currency,
-          dueDate: new Date(inst.dueDate),
+          installmentNo: p.installmentNo,
+          amount: p.amount,
+          currency: course.currency,
+          dueDate: p.dueDate,
           status: 'pending',
         })),
       });
     }
 
-    // 4. Unique invoice ref — DGT-{enrollmentId}-DGT-{studentId} parsed by treasury webhook
-    const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;
-    const remainingBalance = data.totalAmount - data.firstPaymentAmount;
+    // A free enrollment is confirmed now, so its portal accounts are due now. Paid ones get
+    // theirs when the first payment clears (treasury subscriber).
+    if (isFree) {
+      provisionEnrollmentAccounts(enrollment.id, requestId).catch((err) =>
+        console.error('[enrollments] portal account provisioning failed:', err)
+      );
+    }
 
-    // 5. Pre-create treasury payment intent so Paystack's success redirect goes directly to
-    //    our /digitika/success page (not via treasury-ui's intermediate success page).
-    //    Free courses (totalAmount === 0) skip this entirely — there's nothing to pay for
-    //    and the enrollment was already created with paymentStatus: 'succeeded' above.
+    // 4. Unique invoice ref, DGT-{enrollmentId}-DGT-{studentId}, parsed by the treasury subscriber
+    const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;
+    const remainingBalance = canonicalTotal - firstPaymentAmount;
+
+    // 5. Pre-create the treasury payment intent so Paystack's success redirect lands on our
+    //    /digitika/success page. Free courses skip it: nothing to pay.
     const successUrl = `${SITE_URL}/digitika/success`;
-    const isInstallment = data.installments && data.installments.length > 1;
-    const intentDescription = isInstallment
-      ? `${data.courseName} — Installment 1 of ${data.installments!.length}`
-      : data.courseName;
+    const intentDescription = payments.length > 1
+      ? `${course.name}, payment 1 of ${payments.length}`
+      : course.name;
 
     const treasuryIntent = isFree
       ? null
       : await createTreasuryIntent({
           invoiceRef,
-          amount: data.firstPaymentAmount,
-          currency: data.currency,
-          description: `Digitika — ${intentDescription}`,
+          amount: firstPaymentAmount,
+          currency: course.currency,
+          description: `Digitika: ${intentDescription}`,
           customerEmail: data.email,
           returnUrl: successUrl,
           requestId,
         });
 
-    // Build portal link for email
     const portalLink = `${SITE_URL}/digitika/success?reference=${invoiceRef}`;
+    const installmentsSummary = scheduleSummary(payments, course.currency);
 
-    // Build installments summary for email
-    const installmentsSummary = data.installments && data.installments.length > 1
-      ? data.installments
-          .map((i) => `${i.label}: ${data.currency} ${i.amount.toLocaleString()} (due ${i.dueDate})`)
-          .join(' • ')
-      : '';
-
-    // 6. Publish domain event to NATS (consumed by notifications-api digitika_consumer)
-    //    and send HTTP notification as fallback/supplement
+    // 6. Domain event on NATS (notifications-api digitika_consumer sends the email); HTTP is
+    //    the fallback when NATS is not configured.
     const enrollmentEventData = {
       enrollmentId,
       studentId: studentUser.id,
       studentName: data.fullName,
       studentEmail: data.email,
-      courseName: data.courseName,
+      courseName: course.name,
       courseCategory: data.category,
       paymentPlan: data.paymentPlan,
-      totalAmount: data.totalAmount,
-      firstPaymentAmount: data.firstPaymentAmount,
-      currency: data.currency,
+      totalAmount: canonicalTotal,
+      firstPaymentAmount,
+      currency: course.currency,
       portalLink,
       installmentsSummary,
       tenantId: 'codevertex',
     };
     publishEnrollmentConfirmed(enrollmentEventData).catch(() => {});
 
-    // HTTP fallback: only call when NATS is not configured (digitika_consumer handles email when NATS is active)
     if (!process.env.EVENTS_NATS_URL) {
       sendEnrollmentConfirmation({
         studentName: data.fullName,
         studentEmail: data.email,
-        courseName: data.courseName,
+        courseName: course.name,
         courseCategory: data.category,
         paymentPlan: data.paymentPlan,
-        firstPaymentAmount: data.firstPaymentAmount,
-        totalAmount: data.totalAmount,
-        currency: data.currency,
+        firstPaymentAmount,
+        totalAmount: canonicalTotal,
+        currency: course.currency,
         studentId: studentUser.id,
         enrollmentId,
         remainingBalance,
@@ -342,10 +372,16 @@ export async function POST(req: NextRequest) {
         enrollmentId,
         studentId: studentUser.id,
         invoiceRef,
-        firstPaymentAmount: data.firstPaymentAmount,
-        totalAmount: data.totalAmount,
+        firstPaymentAmount,
+        totalAmount: canonicalTotal,
         remainingBalance,
-        currency: data.currency,
+        currency: course.currency,
+        installments: payments.map((p) => ({
+          installmentNo: p.installmentNo,
+          amount: p.amount,
+          label: p.label,
+          dueDate: p.dueDate.toISOString().split('T')[0],
+        })),
         // If intent pre-creation succeeded, pass initiate_url so treasury-ui skips auto-create
         initiateUrl: treasuryIntent?.initiateUrl ?? null,
       },

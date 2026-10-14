@@ -4,8 +4,8 @@
 // Stream: treasury  Subject: treasury.payment.succeeded  Consumer: codevertex-website-treasury
 
 import { prisma } from './db';
-import { publishInstallmentPaid } from './events';
-import { buildPortalLink } from './notifications';
+import { provisionEnrollmentAccounts } from './portal-accounts';
+import { applyEnrollmentPayment, publishPaymentReceipt, PaymentRejected } from './enrollment-payments';
 
 interface TreasuryEventEnvelope {
   id: string;
@@ -150,104 +150,35 @@ async function updateEnrollmentPayment(
 
   const enrollment = await prisma.enrollment.findUnique({
     where: { id: enrollmentId },
-    include: { installments: { orderBy: { installmentNo: 'asc' } } },
+    include: { installments: { where: { status: { not: 'paid' } }, orderBy: { installmentNo: 'asc' }, take: 1 } },
   });
-
   if (!enrollment) {
     console.error('[treasury-subscriber] enrollment not found:', enrollmentId.toString());
     return;
   }
 
-  if (enrollment.installments.length > 0 && enrollment.installments.every((i) => i.status === 'paid')) {
-    console.log(`[treasury-subscriber] enrollment ${enrollmentId} already fully paid — skipping`);
-    return;
-  }
-
-  const unpaidInsts = enrollment.installments.filter((i) => i.status !== 'paid');
-  const nextInst = unpaidInsts[0];
-
-  if (nextInst) {
-    await prisma.installmentSchedule.update({
-      where: { id: nextInst.id },
-      data: {
-        status: 'paid',
-        paidAt: new Date(),
-        paymentRef: paymentRef ?? null,
-        amount: paidAmount > 0 ? paidAmount : nextInst.amount,
-      },
-    });
-
-    if (paidAmount > 0 && paidAmount > nextInst.amount && unpaidInsts.length > 1) {
-      const totalPaidSoFar =
-        enrollment.installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0) +
-        paidAmount;
-      const totalAmount = enrollment.totalAmount ?? enrollment.amount;
-      const remainingBalance = Math.max(0, totalAmount - totalPaidSoFar);
-      const remainingInsts = unpaidInsts.slice(1);
-
-      if (remainingInsts.length > 0 && remainingBalance > 0) {
-        const perInst = Math.ceil(remainingBalance / remainingInsts.length);
-        for (let i = 0; i < remainingInsts.length; i++) {
-          const isLast = i === remainingInsts.length - 1;
-          const newAmount = isLast
-            ? remainingBalance - perInst * (remainingInsts.length - 1)
-            : perInst;
-          await prisma.installmentSchedule.update({
-            where: { id: remainingInsts[i].id },
-            data: { amount: newAmount },
-          });
-        }
-      } else if (remainingBalance <= 0) {
-        await prisma.installmentSchedule.updateMany({
-          where: { enrollmentId, status: { not: 'paid' } },
-          data: { status: 'paid', paidAt: new Date(), paymentRef: paymentRef ?? null },
-        });
-      }
+  // The amount treasury says was paid; an event without one counts as the next installment
+  // (or the full first payment of an upfront enrollment).
+  const received = Math.round(paidAmount > 0 ? paidAmount : (enrollment.installments[0]?.amount ?? enrollment.amount));
+  let applied;
+  try {
+    applied = await applyEnrollmentPayment(enrollmentId, received, { paymentRef });
+  } catch (err) {
+    if (err instanceof PaymentRejected) {
+      console.warn(`[treasury-subscriber] enrollment ${enrollmentId}: ${err.message} (ref=${paymentRef})`);
+      return;
     }
+    throw err;
   }
+  publishPaymentReceipt(applied, paymentRef).catch((err) =>
+    console.error('[treasury-subscriber] receipt event failed:', err)
+  );
 
-  const updatedEnrollment = await prisma.enrollment.update({
-    where: { id: enrollmentId },
-    data: {
-      paymentStatus: 'succeeded',
-      paymentRef: paymentRef ?? null,
-      notifiedAt: new Date(),
-    },
-    include: {
-      installments: { orderBy: { installmentNo: 'asc' } },
-      studentUser: true,
-    },
-  });
-
-  // Publish the receipt domain event (consumed by notifications-api's digitika_consumer,
-  // subject digitika.payment.succeeded) so the student gets a payment confirmation email.
-  if (nextInst && updatedEnrollment.studentUser) {
-    const remaining = updatedEnrollment.installments.filter((i) => i.status !== 'paid');
-    const nextUnpaid = remaining[0];
-    const totalAmount = updatedEnrollment.totalAmount ?? updatedEnrollment.amount;
-    const totalPaid = updatedEnrollment.installments
-      .filter((i) => i.status === 'paid')
-      .reduce((s, i) => s + i.amount, 0);
-    const studentId = updatedEnrollment.studentUser.id;
-
-    publishInstallmentPaid({
-      studentName: updatedEnrollment.fullName,
-      studentEmail: updatedEnrollment.email,
-      courseName: updatedEnrollment.courseName,
-      installmentNo: nextInst.installmentNo,
-      totalInstallments: updatedEnrollment.installments.length,
-      amountPaid: paidAmount > 0 ? paidAmount : nextInst.amount,
-      currency: updatedEnrollment.currency,
-      paymentRef: paymentRef ?? undefined,
-      studentId,
-      enrollmentId: enrollmentId.toString(),
-      remainingBalance: Math.max(0, totalAmount - totalPaid),
-      nextInstallmentDate: nextUnpaid ? nextUnpaid.dueDate.toISOString().split('T')[0] : undefined,
-      nextInstallmentAmount: nextUnpaid ? nextUnpaid.amount : undefined,
-      portalLink: buildPortalLink(enrollmentId, studentId),
-      tenantId: 'codevertex',
-    }).catch((err) => console.error('[treasury-subscriber] publishInstallmentPaid failed:', err));
-  }
+  // First confirmed payment: the learner (and a minor's guardian) get their portal accounts.
+  // Idempotent, so later installments just find the accounts already there.
+  provisionEnrollmentAccounts(enrollmentId).catch((err) =>
+    console.error('[treasury-subscriber] portal account provisioning failed:', err)
+  );
 
   console.log(`[treasury-subscriber] enrollment ${enrollmentId} payment recorded (ref=${paymentRef})`);
 }

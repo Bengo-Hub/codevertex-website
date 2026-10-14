@@ -83,13 +83,27 @@ interface StudentData {
   }[];
 }
 
+class PortalError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
 async function fetchStudentData(): Promise<StudentData> {
   const response = await authedFetch('/api/students/me', { cache: 'no-store' });
-  const result = await response.json();
+  const result = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(result.error ?? 'Unable to load student portal.');
+    throw new PortalError(result.error ?? 'Unable to load student portal.', response.status);
   }
   return result;
+}
+
+/** True when the signed-in account is a parent or guardian of at least one learner. */
+async function isGuardianAccount(): Promise<boolean> {
+  const response = await authedFetch('/api/parent/account', { cache: 'no-store' });
+  if (!response.ok) return false;
+  const result = await response.json().catch(() => ({}));
+  return Array.isArray(result.children) && result.children.length > 0;
 }
 
 interface CourseContentLesson {
@@ -172,6 +186,8 @@ export function StudentDashboard() {
   const [data, setData] = useState<StudentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  // Signed in, but this account has no student record here (and is nobody's guardian).
+  const [noEnrollment, setNoEnrollment] = useState(false);
 
   const [content, setContent] = useState<CourseContent | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
@@ -183,7 +199,17 @@ export function StudentDashboard() {
         const result = await fetchStudentData();
         if (!cancelled) setData(result);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err : new Error('Unable to connect to the student portal.'));
+        if (cancelled) return;
+        if (err instanceof PortalError && err.status === 404) {
+          // A parent account belongs in the parent portal, which shows each child.
+          if (await isGuardianAccount().catch(() => false)) {
+            window.location.replace('/digitika/parent');
+            return;
+          }
+          setNoEnrollment(true);
+          return;
+        }
+        setError(err instanceof Error ? err : new Error('Unable to connect to the student portal.'));
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -308,6 +334,23 @@ export function StudentDashboard() {
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">Loading your student portal…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (noEnrollment) {
+    return (
+      <main className="flex min-h-[70vh] items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-center">
+          <BookOpen className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+          <h1 className="text-xl font-bold">No enrollment on this account</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            We could not find a Digitika enrollment for this account. Sign in with the email you enrolled with, or browse our courses.
+          </p>
+          <a href="/digitika#courses" className="mt-5 inline-block rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground hover:opacity-90">
+            Browse courses
+          </a>
         </div>
       </main>
     );

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
+import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
 
 const patchSchema = z.object({
   paymentStatus: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
@@ -61,6 +62,12 @@ export async function PATCH(
       ...(data.cohortId ? { cohortId: BigInt(data.cohortId) } : {}),
     },
   });
+
+  if (data.paymentStatus === 'succeeded') {
+    provisionEnrollmentAccounts(updated.id).catch((err) =>
+      console.error('[admin-enrollment] portal account provisioning failed:', err)
+    );
+  }
 
   return NextResponse.json({ ...updated, id: updated.id.toString() });
 }

@@ -4,9 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ShieldCheck, KeyRound, LogOut, BookOpen, Award, CreditCard, Megaphone, AlertCircle,
-  CheckCircle2, Clock, Loader2, ArrowLeft, Lock,
+  CheckCircle2, Clock, Loader2, ArrowLeft, Lock, Users, UserRound,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { authedFetch } from '@/lib/auth/authed-fetch';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 interface Installment {
   installmentNo: number;
@@ -43,7 +45,8 @@ interface Overview {
   announcements: { title: string; body: string; courseName: string; postedAt: string }[];
 }
 
-type Step = 'loading' | 'id' | 'code' | 'dashboard';
+// children: a signed-in parent account picks which child to open.
+type Step = 'loading' | 'children' | 'id' | 'code' | 'dashboard';
 
 const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -56,6 +59,10 @@ export function ParentPortalClient() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Overview | null>(null);
   const [paying, setPaying] = useState<string | null>(null);
+  const [children, setChildren] = useState<{ id: string; fullName: string }[]>([]);
+  const authReady = useAuthStore((s) => s.ready);
+  const signedIn = useAuthStore((s) => !!s.accessToken);
+  const login = useAuthStore((s) => s.login);
 
   const loadOverview = useCallback(async () => {
     const res = await fetch('/api/parent/overview', { cache: 'no-store' });
@@ -67,10 +74,45 @@ export function ParentPortalClient() {
     return false;
   }, []);
 
-  // Resume an existing (still valid) parent session.
+  // A signed-in parent account lists the children that named it as guardian.
+  const loadChildren = useCallback(async () => {
+    if (!signedIn) return [];
+    const res = await authedFetch('/api/parent/account', { cache: 'no-store' });
+    if (!res.ok) return [];
+    const list = ((await res.json()).children ?? []) as { id: string; fullName: string }[];
+    setChildren(list);
+    return list;
+  }, [signedIn]);
+
+  // Resume an existing (still valid) parent session, else offer the account's children,
+  // else the Student ID and code flow.
   useEffect(() => {
-    loadOverview().then((ok) => { if (!ok) setStep('id'); }).catch(() => setStep('id'));
-  }, [loadOverview]);
+    if (!authReady) return;
+    (async () => {
+      try {
+        const list = await loadChildren();
+        if (await loadOverview()) return;
+        setStep(list.length > 0 ? 'children' : 'id');
+      } catch {
+        setStep('id');
+      }
+    })();
+  }, [authReady, loadChildren, loadOverview]);
+
+  async function openChild(id: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await authedFetch('/api/parent/account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: id }),
+      });
+      if (!res.ok || !(await loadOverview())) setError('Could not open this learner. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function requestCode(e?: React.FormEvent) {
     e?.preventDefault();
@@ -118,7 +160,8 @@ export function ParentPortalClient() {
     await fetch('/api/parent/logout', { method: 'POST' }).catch(() => {});
     setData(null);
     setCode('');
-    setStep('id');
+    // A parent account goes back to its learner list; the code flow starts over.
+    setStep(children.length > 0 ? 'children' : 'id');
   }
 
   async function pay(enrollmentId: string, installmentNo?: number) {
@@ -142,7 +185,7 @@ export function ParentPortalClient() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/70 pt-28 pb-12 px-4 text-primary-foreground">
+      <div className="bg-primary pt-28 pb-12 px-4 text-primary-foreground">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-bold uppercase tracking-widest mb-3">
@@ -152,9 +195,14 @@ export function ParentPortalClient() {
               {step === 'dashboard' && data ? `${data.student.firstName}'s learning` : 'Track your child\'s learning'}
             </h1>
             <p className="mt-2 text-primary-foreground/80 max-w-xl">
-              Progress, results and fees in one place. No account needed: just the Student ID and a one-time code.
+              Progress, results and fees in one place. Sign in with your parent account, or use the Student ID and a one-time code.
             </p>
           </div>
+          {step === 'dashboard' && children.length > 1 && (
+            <button onClick={() => setStep('children')} className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-2 rounded-full bg-white/15 border border-white/25 text-sm font-semibold hover:bg-white/25">
+              <Users className="h-4 w-4" /> Switch learner
+            </button>
+          )}
           {step === 'dashboard' && (
             <button onClick={signOut} className="inline-flex items-center gap-2 self-start sm:self-auto px-4 py-2 rounded-full bg-white/15 border border-white/25 text-sm font-semibold hover:bg-white/25">
               <LogOut className="h-4 w-4" /> Sign out
@@ -174,6 +222,30 @@ export function ParentPortalClient() {
           <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         )}
 
+        {step === 'children' && (
+          <div className="max-w-md mx-auto rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Choose a learner</p>
+              <p className="mt-1 text-xs text-muted-foreground">Learners who named you as their parent or guardian.</p>
+            </div>
+            <ul className="space-y-2">
+              {children.map((c) => (
+                <li key={c.id}>
+                  <button
+                    onClick={() => openChild(c.id)}
+                    disabled={busy}
+                    className="flex w-full items-center gap-3 rounded-xl border border-border px-4 py-3 text-left hover:border-primary/40 hover:bg-muted/40 disabled:opacity-50"
+                  >
+                    <UserRound className="h-4 w-4 text-primary" />
+                    <span className="flex-1 text-sm font-medium text-foreground">{c.fullName}</span>
+                    <span className="text-xs text-muted-foreground">{c.id}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {step === 'id' && (
           <form onSubmit={requestCode} className="max-w-md mx-auto rounded-2xl border border-border bg-card p-6 shadow-sm space-y-5">
             <div>
@@ -188,6 +260,14 @@ export function ParentPortalClient() {
               <Lock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               For your child&apos;s privacy, the code goes only to the email and phone number used at enrollment.
             </p>
+            {!signedIn && (
+              <p className="border-t border-border pt-4 text-center text-xs text-muted-foreground">
+                Have a parent account?{' '}
+                <button type="button" onClick={() => login('/digitika/parent', 'student')} className="font-semibold text-primary hover:underline">
+                  Sign in
+                </button>
+              </p>
+            )}
           </form>
         )}
 

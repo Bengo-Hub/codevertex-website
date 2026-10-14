@@ -226,6 +226,43 @@ export async function sendParentAccessCode(data: {
   ]);
 }
 
+export interface PortalAccountData {
+  to: string;
+  name: string;
+  role: 'student' | 'parent';
+  courseName: string;
+  /** The learner, for a parent's email. */
+  studentName: string;
+  /** Only for a brand-new account; an existing account keeps its own password. */
+  tempPassword?: string;
+  loginUrl: string;
+}
+
+/**
+ * Login details for a Digitika student or parent portal account (notifications-api template
+ * digitika/portal_account). The temporary password stops working after the first sign-in,
+ * when SSO makes the person choose their own.
+ */
+export async function sendPortalAccount(data: PortalAccountData, requestId?: string): Promise<void> {
+  await postNotification(
+    'digitika/portal_account',
+    data.to,
+    {
+      name: data.name,
+      email: data.to,
+      account_role: data.role,
+      course_name: data.courseName,
+      student_name: data.studentName,
+      temp_password: data.tempPassword ?? '',
+      login_url: data.loginUrl,
+    },
+    data.role === 'parent'
+      ? `Your parent account for ${data.studentName} at Digitika`
+      : `Your Digitika student account`,
+    requestId
+  );
+}
+
 export function buildPortalLink(enrollmentId: string | bigint, studentId: string): string {
   return `${APP_URL}/digitika/success?reference=DGT-${enrollmentId}-DGT-${studentId}`;
 }

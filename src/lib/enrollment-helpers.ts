@@ -10,15 +10,67 @@ function generateStudentId(): string {
   return id;
 }
 
-/** Find a StudentUser by email, or create one with a fresh unique DGT- id. */
+/**
+ * The student record for an email, whatever case it was typed in. Rows from before emails were
+ * lowercased can hold capitals, so an exact miss falls back to a case-insensitive match.
+ */
+export async function findStudentByEmail(email: string) {
+  const normalised = email.trim().toLowerCase();
+  return (
+    (await prisma.studentUser.findUnique({ where: { email: normalised } })) ??
+    (await prisma.studentUser.findFirst({ where: { email: { equals: normalised, mode: 'insensitive' } } }))
+  );
+}
+
+/** True when a date of birth (YYYY-MM-DD) puts the learner under 18 today. */
+export function isUnder18(dob?: string | null, today = new Date()): boolean {
+  if (!dob) return false;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return false;
+  let age = today.getFullYear() - birth.getFullYear();
+  const beforeBirthday =
+    today.getMonth() < birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+  if (beforeBirthday) age -= 1;
+  return age < 18;
+}
+
+export interface GuardianInput {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+/**
+ * Find a StudentUser by email, or create one with a fresh unique DGT- id. A guardian given
+ * on a later enrollment replaces the one on record (the newest details win).
+ */
 export async function upsertStudentUser(input: {
   email: string;
   fullName: string;
   phone: string;
   dob?: string | null;
+  guardian?: GuardianInput;
 }) {
-  const existing = await prisma.studentUser.findUnique({ where: { email: input.email } });
-  if (existing) return existing;
+  const guardianData = input.guardian
+    ? {
+        guardianName: input.guardian.name.trim() || null,
+        guardianEmail: input.guardian.email.trim().toLowerCase(),
+        guardianPhone: input.guardian.phone.trim() || null,
+      }
+    : {};
+  // Stored lowercased so it matches the SSO account (auth-api lowercases emails).
+  const email = input.email.trim().toLowerCase();
+  const existing = await findStudentByEmail(email);
+  if (existing) {
+    if (!input.guardian) return existing;
+    // A different guardian needs their own parent account, so the old link is dropped.
+    const guardianChanged = existing.guardianEmail !== guardianData.guardianEmail;
+    return prisma.studentUser.update({
+      where: { id: existing.id },
+      data: { ...guardianData, ...(guardianChanged ? { guardianSsoUserId: null } : {}) },
+    });
+  }
 
   let studentId = generateStudentId();
   let attempts = 0;
@@ -32,10 +84,11 @@ export async function upsertStudentUser(input: {
   return prisma.studentUser.create({
     data: {
       id: studentId,
-      email: input.email,
+      email,
       fullName: input.fullName,
       phone: input.phone,
       dob: input.dob ? new Date(input.dob) : null,
+      ...guardianData,
     },
   });
 }
@@ -54,35 +107,5 @@ export async function hasActiveEnrollment(email: string, courseId: string): Prom
   });
   return Boolean(existing);
 }
-export interface InstallmentLike {
-  installmentNo: number;
-  amount: number;
-  dueDate: Date;
-  status: string;
-}
-
-/**
- * Single source for "how much is paid / owed" on an enrollment. Used by the receipt
- * summary and the parent portal so both always agree. Paid = sum of paid installment
- * rows; an upfront enrollment (no rows) counts its first payment once it succeeded.
- */
-export function summarizeEnrollmentPayments(
-  enrollment: { amount: number; totalAmount: number | null; paymentStatus: string },
-  installments: InstallmentLike[],
-  now: Date = new Date(),
-) {
-  const totalAmount = enrollment.totalAmount ?? enrollment.amount;
-  const paidFromInstallments = installments.filter((i) => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
-  const amountPaid =
-    paidFromInstallments || (ACTIVE_ENROLLMENT_STATUSES.includes(enrollment.paymentStatus) ? enrollment.amount : 0);
-  const unpaid = installments.filter((i) => i.status !== 'paid');
-  const overdue = unpaid.filter((i) => i.dueDate < now);
-  return {
-    totalAmount,
-    amountPaid,
-    remainingBalance: Math.max(0, totalAmount - amountPaid),
-    nextDue: unpaid[0] ?? null,
-    overdueAmount: overdue.reduce((s, i) => s + i.amount, 0),
-    overdueCount: overdue.length,
-  };
-}
+// Payment summary moved to the pure installments module so client components can use it too.
+export { summarizeEnrollmentPayments, type InstallmentLike } from '@/lib/installments';

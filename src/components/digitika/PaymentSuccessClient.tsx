@@ -58,8 +58,6 @@ export function PaymentSuccessClient() {
   // Treasury-api redirects with ?reference=DGT-{id}-DGT-{suffix}&payment=succeeded&payment_ref=<paystack_ref>
   // Fallback to ?reference_id= and ?status= for direct portal links
   const referenceId = searchParams.get('reference') ?? searchParams.get('reference_id');
-  const paymentStatus = searchParams.get('payment');
-  const paymentRef = searchParams.get('payment_ref') ?? undefined;
 
   useEffect(() => {
     if (!referenceId) {
@@ -85,17 +83,10 @@ export function PaymentSuccessClient() {
           setSummary(data);
         });
 
-    // When redirected from Paystack (payment=succeeded), call the sync endpoint first
-    // to ensure the DB reflects the payment before loading the summary.
+    // Payments are recorded by the treasury event subscriber, never on the browser's word: the
+    // old "sync" call here could have let anyone mark an enrollment paid.
     const run = async () => {
       try {
-        if (paymentStatus === 'succeeded') {
-          await fetch(`/api/enrollments/${enrollmentId}/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentRef }),
-          }).catch(() => {}); // non-fatal
-        }
         await loadSummary();
       } catch (err: unknown) {
         setError((err as Error).message ?? 'Could not load enrollment details');
@@ -105,7 +96,7 @@ export function PaymentSuccessClient() {
     };
 
     run();
-  }, [referenceId, paymentStatus, paymentRef]);
+  }, [referenceId]);
 
   function copyPageLink() {
     const url = typeof window !== 'undefined' ? window.location.href : '';

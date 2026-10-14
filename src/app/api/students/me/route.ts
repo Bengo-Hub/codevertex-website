@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { resolveDigitikaSession } from '@/lib/auth/rbac';
+import { findStudentByEmail } from '@/lib/enrollment-helpers';
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,10 +14,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Find the local student using the logged-in account email.
-    const student = await prisma.studentUser.findUnique({
+    // Find the local student using the signed-in account's email (any letter case).
+    const match = await findStudentByEmail(session.email);
+    const student = !match ? null : await prisma.studentUser.findUnique({
       where: {
-        email: session.email,
+        id: match.id,
       },
       include: {
         enrollments: {

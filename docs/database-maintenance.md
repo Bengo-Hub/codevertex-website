@@ -31,6 +31,15 @@ The codevertex-website uses **PostgreSQL** via **Prisma ORM** (not Ent/Atlas). S
 
 ---
 
+## Admin password
+
+The commands below read the Postgres admin password from `PG_ADMIN_PASSWORD` in your own shell.
+Set it from the cluster secret first, never paste it into a tracked file:
+
+```bash
+export PG_ADMIN_PASSWORD="<from the postgresql admin secret in the infra namespace>"
+```
+
 ## Full DB Reset (Clean Slate)
 
 Use when: schema is corrupt, migrations are broken, or you need a fresh seed.
@@ -40,22 +49,22 @@ Use when: schema is corrupt, migrations are broken, or you need a fresh seed.
 kubectl scale deployment codevertex-website -n codevertex --replicas=0
 
 # 2. Terminate any active sessions
-kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMIN_PASSWORD'; \
+kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='$PG_ADMIN_PASSWORD'; \
   psql -h 127.0.0.1 -U admin_user -d postgres -c \
   \"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='codevertex' AND pid<>pg_backend_pid();\""
 
 # 3. Drop and recreate the database
-kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMIN_PASSWORD'; \
+kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='$PG_ADMIN_PASSWORD'; \
   dropdb -h 127.0.0.1 -U admin_user codevertex --if-exists; \
   createdb -h 127.0.0.1 -U admin_user codevertex"
 
 # 4. Fix ownership and privileges
-kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMIN_PASSWORD'; \
+kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='$PG_ADMIN_PASSWORD'; \
   psql -h 127.0.0.1 -U admin_user -d postgres -c \
   \"ALTER DATABASE codevertex OWNER TO codevertex_user; \
     GRANT ALL PRIVILEGES ON DATABASE codevertex TO codevertex_user;\""
 
-kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMIN_PASSWORD'; \
+kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='$PG_ADMIN_PASSWORD'; \
   psql -h 127.0.0.1 -U admin_user -d codevertex -c \
   \"GRANT ALL ON SCHEMA public TO codevertex_user; \
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO codevertex_user; \
@@ -139,7 +148,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/codevertex?sslmode=d
 
 ```bash
 # Check table row counts
-kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMIN_PASSWORD'; \
+kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='$PG_ADMIN_PASSWORD'; \
   psql -h 127.0.0.1 -U admin_user -d codevertex -c \
   \"SELECT 'courses' AS t, count(*) FROM courses \
   UNION ALL SELECT 'cohorts', count(*) FROM cohorts \
@@ -149,7 +158,7 @@ kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMI
   UNION ALL SELECT 'enrollments', count(*) FROM enrollments;\""
 
 # Check DB size
-kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='REDACTED_PG_ADMIN_PASSWORD'; \
+kubectl exec postgresql-0 -n infra -- sh -c "export PGPASSWORD='$PG_ADMIN_PASSWORD'; \
   psql -h 127.0.0.1 -U admin_user -d postgres -c \
   \"SELECT datname, pg_size_pretty(pg_database_size(datname)) FROM pg_database WHERE datname='codevertex';\""
 ```
