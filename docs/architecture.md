@@ -133,6 +133,14 @@ website").
 Learners under 18 must give a parent or guardian (`student_users.guardian_name`,
 `guardian_email`, `guardian_phone`), who gets a parent account.
 
+Who may enrol and who must vouch for them is decided in `src/lib/learner-rules.ts` (age limits
+read from the course audience, the under 18 guardian rule, the confirmed statuses that block a
+second enrollment) and `src/lib/phone-countries.ts`. The public checkout modal, the admin New
+Enrollment modal and both enrollment routes all use them, so the server refuses what the form
+refuses. The admin form takes a date of birth, flags courses the student is already confirmed
+in, finds an existing student by email, prefills the guardian on record and asks for one when
+the learner is under 18.
+
 ### `leads`
 ```sql
 CREATE TABLE IF NOT EXISTS leads (

@@ -16,5 +16,7 @@
 
 - [x] Payment status can no longer be typed in: the admin PATCH refuses `succeeded`/`refunded` and any change once money is received; "Payment already collected" on enroll books treasury (method and reference required) through the same path.
 
+- [x] 2026-10-18: admin New Enrollment form matches public checkout (date of birth, course age limits, parent or guardian details, already-enrolled courses, existing student by email, country phone check) and is wider with two columns. Age, guardian and phone rules moved to `src/lib/learner-rules.ts` and `src/lib/phone-countries.ts`, shared by both modals and both routes (the public route now enforces the course age limit server side too). Tests: `tests/learner-rules.test.ts`.
+
 ## Follow-ups
 - Rotate the Postgres admin password: it was in this repo's history.
