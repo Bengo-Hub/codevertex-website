@@ -2,7 +2,10 @@
 
 import { displayEmail } from '@/lib/learner-rules';
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw, Plus, Landmark } from 'lucide-react';
+import { Search, RefreshCw, Plus, Landmark, Eye, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { EnrollmentDetailModal } from './EnrollmentDetailModal';
+import { StudentFormModal } from './StudentFormModal';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
@@ -47,6 +50,9 @@ export function EnrollmentsPage() {
   const [status, setStatus] = useState('');
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
   const [recording, setRecording] = useState<RecordPaymentTarget | null>(null);
+  const [viewing, setViewing] = useState<string | null>(null);
+  const [editingStudent, setEditingStudent] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<Enrollment | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,6 +81,16 @@ export function EnrollmentsPage() {
       const body = await res.json().catch(() => ({}));
       toast.error(typeof body?.error === 'string' ? body.error : 'Failed to update status');
     }
+    load();
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    const res = await authedFetch(`/api/admin/enrollments/${deleting.id}`, { method: 'DELETE' });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) toast.success('Enrollment deleted');
+    else toast.error(typeof body?.error === 'string' ? body.error : 'Could not delete the enrollment');
+    setDeleting(null);
     load();
   }
 
@@ -153,6 +169,10 @@ export function EnrollmentsPage() {
         );
         return (
           <div className="flex items-center gap-1.5">
+            <button onClick={() => setViewing(row.id)} title="Details and schedule" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Eye className="h-3.5 w-3.5" /></button>
+            {amountPaid === 0 && (
+              <button onClick={() => setDeleting(row)} title="Delete (only while no money is received)" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+            )}
             {remainingBalance > 0 && row.paymentStatus !== 'refunded' && (
               <button
                 onClick={() => setRecording({
@@ -247,6 +267,16 @@ export function EnrollmentsPage() {
       {enrollModalOpen && (
         <AdminEnrollModal onClose={() => setEnrollModalOpen(false)} onCreated={load} />
       )}
+      {viewing && <EnrollmentDetailModal enrollmentId={viewing} onClose={() => setViewing(null)} onEditStudent={(id) => { setViewing(null); setEditingStudent(id); }} />}
+      {editingStudent && <StudentFormModal studentId={editingStudent} onClose={() => setEditingStudent(null)} onSaved={load} />}
+      <ConfirmDialog
+        open={deleting !== null}
+        title={`Delete ${deleting?.fullName ?? 'this'}'s enrollment in ${deleting?.courseName ?? 'the course'}?`}
+        description="Its payment schedule goes with it. Only possible while no money has been received; this can't be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+      />
       {recording && <RecordPaymentDialog target={recording} onClose={() => setRecording(null)} onRecorded={load} />}
     </div>
   );

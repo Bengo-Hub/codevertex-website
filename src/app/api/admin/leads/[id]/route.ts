@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
+import { scoreLead } from '@/lib/lead-scoring';
 
 const patchSchema = z.object({
   status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost']).optional(),

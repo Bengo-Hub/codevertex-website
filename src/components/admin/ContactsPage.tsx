@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Trash2, MessageCircle, Mail } from 'lucide-react';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { authedFetch } from '@/lib/auth/authed-fetch';
@@ -25,6 +27,7 @@ export function ContactsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<Contact | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,6 +38,17 @@ export function ContactsPage() {
   }, [page, search]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    const res = await authedFetch(`/api/admin/contacts/${deleting.id}`, { method: 'DELETE' });
+    if (res.ok) toast.success('Submission deleted');
+    else toast.error('Could not delete the submission');
+    setDeleting(null);
+    load();
+  }
+
+  const waLink = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, '').replace(/^0/, '254')}`;
 
   const columns: Column<Contact>[] = [
     {
@@ -84,6 +98,19 @@ export function ContactsPage() {
       header: 'Date',
       render: (row) => <span className="text-xs text-muted-foreground">{new Date(row.createdAt).toLocaleDateString('en-GB')}</span>,
     },
+    {
+      key: 'actions',
+      header: '',
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <a href={`mailto:${row.email}?subject=${encodeURIComponent('Re: your enquiry to Codevertex')}`} title="Reply by email" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Mail className="h-3.5 w-3.5" /></a>
+          {row.phone && (
+            <a href={waLink(row.phone)} target="_blank" rel="noreferrer" title="WhatsApp" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><MessageCircle className="h-3.5 w-3.5" /></a>
+          )}
+          <button onClick={() => setDeleting(row)} title="Delete" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -109,6 +136,7 @@ export function ContactsPage() {
         loading={loading}
         emptyMessage="No contact submissions yet."
       />
+      <ConfirmDialog open={deleting !== null} title={`Delete the message from ${deleting?.name ?? 'this contact'}?`} description="This can't be undone." confirmLabel="Delete" onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
     </div>
   );
 }

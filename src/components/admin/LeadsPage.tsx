@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, MessageCircle, Mail } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LeadFormModal } from './LeadFormModal';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import { StatusBadge } from './StatusBadge';
@@ -32,6 +34,8 @@ export function LeadsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [editing, setEditing] = useState<Lead | 'new' | null>(null);
+  const [deleting, setDeleting] = useState<Lead | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,6 +57,17 @@ export function LeadsPage() {
     else toast.error('Failed to update status');
     load();
   }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    const res = await authedFetch(`/api/admin/leads/${deleting.id}`, { method: 'DELETE' });
+    if (res.ok) toast.success('Lead deleted');
+    else toast.error('Could not delete the lead');
+    setDeleting(null);
+    load();
+  }
+
+  const waLink = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, '').replace(/^0/, '254')}`;
 
   const columns: Column<Lead>[] = [
     {
@@ -95,22 +110,40 @@ export function LeadsPage() {
       key: 'actions',
       header: '',
       render: (row) => (
-        <select
-          value={row.status}
-          onChange={(e) => updateStatus(row.id, e.target.value)}
-          className="text-xs rounded border border-border bg-background px-2 py-1 text-foreground"
-        >
-          {['new', 'contacted', 'qualified', 'converted', 'lost'].map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1">
+          <select
+            value={row.status}
+            onChange={(e) => updateStatus(row.id, e.target.value)}
+            className="text-xs rounded border border-border bg-background px-2 py-1 text-foreground"
+          >
+            {['new', 'contacted', 'qualified', 'converted', 'lost'].map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          {row.phone && (
+            <a href={waLink(row.phone)} target="_blank" rel="noreferrer" title="WhatsApp" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><MessageCircle className="h-3.5 w-3.5" /></a>
+          )}
+          {row.email && (
+            <a href={`mailto:${row.email}`} title="Email" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Mail className="h-3.5 w-3.5" /></a>
+          )}
+          <button onClick={() => setEditing(row)} title="Edit and add notes" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setDeleting(row)} title="Delete" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
+        </div>
       ),
     },
   ];
 
   return (
     <div className="max-w-6xl mx-auto">
-      <AdminPageHeader title="Leads" description={`${data?.total ?? 0} leads captured`} />
+      <AdminPageHeader
+        title="Leads"
+        description={`${data?.total ?? 0} leads captured`}
+        actions={
+          <button onClick={() => setEditing('new')} className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90">
+            <Plus className="h-4 w-4" /> Add lead
+          </button>
+        }
+      />
       <div className="flex flex-wrap gap-3 mb-5">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -121,6 +154,8 @@ export function LeadsPage() {
         </select>
       </div>
       <DataTable columns={columns} data={data?.items ?? []} keyField="id" total={data?.total} page={data?.page} pages={data?.pages} onPageChange={setPage} loading={loading} emptyMessage="No leads yet." />
+      {editing && <LeadFormModal lead={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} onSaved={load} />}
+      <ConfirmDialog open={deleting !== null} title={`Delete ${deleting?.name ?? 'this lead'}?`} description="This can't be undone." confirmLabel="Delete" onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
     </div>
   );
 }

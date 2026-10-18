@@ -60,13 +60,15 @@ interface StudentOption {
 }
 
 interface Props {
+  /** Opens with this student already chosen (the Enroll action on the Students page). */
+  initialStudentId?: string;
   onClose: () => void;
   onCreated: () => void;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function AdminEnrollModal({ onClose, onCreated }: Props) {
+export function AdminEnrollModal({ initialStudentId, onClose, onCreated }: Props) {
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [cohorts, setCohorts] = useState<CohortOption[]>([]);
 
@@ -164,6 +166,16 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
       ),
     [selectedStudent],
   );
+
+  // A student chosen elsewhere is loaded with their enrollments and guardian, like a search pick.
+  useEffect(() => {
+    if (!initialStudentId) return;
+    authedFetch(`/api/admin/students/${encodeURIComponent(initialStudentId)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: StudentOption | null) => { if (s) chooseStudent(s); })
+      .catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialStudentId]);
 
   // Load course list once.
   useEffect(() => {

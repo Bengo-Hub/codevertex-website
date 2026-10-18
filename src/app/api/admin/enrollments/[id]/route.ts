@@ -98,3 +98,31 @@ export async function PATCH(
 
   return NextResponse.json({ ...updated, id: updated.id.toString() });
 }
+
+/**
+ * Deletes an enrollment made by mistake. Only while no money has been received on it: payment
+ * history is never erased, so an enrollment with payments is refunded in treasury instead.
+ * Its unpaid installment schedule goes with it (cascade).
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requirePermission(req, digitikaPerm('enrollments', 'manage'));
+  if ('response' in guard) return guard.response;
+
+  const { id } = await params;
+  if (!/^\d+$/.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { id: BigInt(id) },
+    include: { installments: { select: { installmentNo: true, amount: true, dueDate: true, status: true } } },
+  });
+  if (!enrollment) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const { amountPaid } = summarizeEnrollmentPayments(enrollment, enrollment.installments);
+  if (amountPaid > 0) {
+    return NextResponse.json(
+      { error: `${enrollment.currency} ${amountPaid.toLocaleString()} has been received on this enrollment. Refund it in treasury; it cannot be deleted.` },
+      { status: 409 },
+    );
+  }
+  await prisma.installmentSchedule.deleteMany({ where: { enrollmentId: enrollment.id } });
+  await prisma.enrollment.delete({ where: { id: enrollment.id } });
+  return NextResponse.json({ success: true });
+}

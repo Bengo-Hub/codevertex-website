@@ -2,7 +2,11 @@
 
 import { displayEmail } from '@/lib/learner-rules';
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, Plus, Pencil, GraduationCap, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { StudentFormModal } from './StudentFormModal';
+import { AdminEnrollModal } from './AdminEnrollModal';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import Link from 'next/link';
@@ -25,6 +29,9 @@ export function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [editing, setEditing] = useState<string | 'new' | null>(null);
+  const [enrolling, setEnrolling] = useState<Student | null>(null);
+  const [deleting, setDeleting] = useState<Student | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,6 +42,16 @@ export function StudentsPage() {
   }, [page, search]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    const res = await authedFetch(`/api/admin/students/${encodeURIComponent(deleting.id)}`, { method: 'DELETE' });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) toast.success(`${deleting.fullName} deleted`);
+    else toast.error(typeof body?.error === 'string' ? body.error : 'Could not delete the student');
+    setDeleting(null);
+    load();
+  }
 
   const columns: Column<Student>[] = [
     {
@@ -80,6 +97,23 @@ export function StudentsPage() {
         </span>
       ),
     },
+    {
+      key: 'actions',
+      header: '',
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <button onClick={() => setEditing(row.id)} title="View or edit" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => setEnrolling(row)} title="Enroll in a course" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+            <GraduationCap className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => setDeleting(row)} title="Delete" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -88,9 +122,17 @@ export function StudentsPage() {
         title="Students"
         description={`${data?.total ?? 0} registered students`}
         actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setEditing('new')}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" /> Add student
+            </button>
           <button onClick={load} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors" title="Refresh">
             <RefreshCw className="h-4 w-4" />
           </button>
+          </div>
         }
       />
 
@@ -115,6 +157,17 @@ export function StudentsPage() {
         onPageChange={setPage}
         loading={loading}
         emptyMessage="No students yet."
+      />
+
+      {editing && <StudentFormModal studentId={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} onSaved={load} />}
+      {enrolling && <AdminEnrollModal initialStudentId={enrolling.id} onClose={() => setEnrolling(null)} onCreated={load} />}
+      <ConfirmDialog
+        open={deleting !== null}
+        title={`Delete ${deleting?.fullName ?? 'student'}?`}
+        description="Only students with no enrollments can be deleted. This can't be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
       />
     </div>
   );
