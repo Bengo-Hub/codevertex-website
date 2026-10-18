@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
-import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
+import { upsertStudentUser, hasActiveEnrollment, findStudentByEmail } from '@/lib/enrollment-helpers';
+import { ageProblem, guardianProblem, isUnder18 } from '@/lib/learner-rules';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { getCategory } from '@/config/courses';
@@ -78,6 +79,14 @@ const createSchema = z.object({
   fullName: z.string().min(2).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(6).optional(),
+  // Date of birth (YYYY-MM-DD): needed for age-limited courses and to know who must have a guardian.
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  // Parent or guardian, required for a learner under 18. Replaces the one on record when given.
+  guardianName: z.string().trim().max(120).optional(),
+  guardianEmail: z.string().trim().email().optional().or(z.literal('')),
+  guardianPhone: z.string().trim().max(32).optional(),
+  experience: z.string().trim().max(80).optional(),
+  howHeard: z.string().trim().max(80).optional(),
   courseId: z.string(),
   cohortId: z.string().optional(),
   // Defaults to the course's list price if omitted.
@@ -123,20 +132,37 @@ export async function POST(req: NextRequest) {
     }
     const categoryName = getCategory(course.categoryId).name;
 
-    // Resolve the student: either look up the existing one by public ID, or upsert by email.
-    let studentUser;
-    if (data.studentId) {
-      studentUser = await prisma.studentUser.findUnique({ where: { id: data.studentId.trim().toUpperCase() } });
-      if (!studentUser) {
-        return NextResponse.json({ error: `No student found with ID ${data.studentId}` }, { status: 404 });
-      }
-    } else {
-      studentUser = await upsertStudentUser({
-        email: data.email!,
-        fullName: data.fullName!,
-        phone: data.phone!,
-      });
+    // Resolve the student: either look up the existing one by public ID, or find or create by email.
+    // The same age and guardian rules as public checkout are checked BEFORE anything is written.
+    const existingStudent = data.studentId
+      ? await prisma.studentUser.findUnique({ where: { id: data.studentId.trim().toUpperCase() } })
+      : await findStudentByEmail(data.email!);
+    if (data.studentId && !existingStudent) {
+      return NextResponse.json({ error: `No student found with ID ${data.studentId}` }, { status: 404 });
     }
+    const learnerEmail = existingStudent?.email ?? data.email!;
+    const dobIso = existingStudent?.dob?.toISOString().slice(0, 10) ?? data.dob;
+
+    const ageIssue = ageProblem(dobIso, course.audience);
+    if (ageIssue) return NextResponse.json({ error: ageIssue }, { status: 400 });
+
+    // A guardian typed now wins; otherwise the one already on the student's record counts.
+    const typedGuardianEmail = (data.guardianEmail ?? '').toLowerCase();
+    const guardian = typedGuardianEmail
+      ? { name: data.guardianName ?? '', email: typedGuardianEmail, phone: data.guardianPhone ?? '' }
+      : existingStudent?.guardianEmail
+        ? { name: existingStudent.guardianName ?? '', email: existingStudent.guardianEmail, phone: existingStudent.guardianPhone ?? '' }
+        : undefined;
+    const guardianIssue = guardianProblem(learnerEmail, isUnder18(dobIso), guardian);
+    if (guardianIssue) return NextResponse.json({ error: guardianIssue }, { status: 400 });
+
+    const studentUser = await upsertStudentUser({
+      email: learnerEmail,
+      fullName: existingStudent?.fullName ?? data.fullName!,
+      phone: existingStudent?.phone ?? data.phone!,
+      dob: dobIso,
+      guardian: typedGuardianEmail ? guardian : undefined,
+    });
 
     // Enrollment check — same rule as the public flow: no duplicate confirmed enrollments.
     const alreadyEnrolled = await hasActiveEnrollment(studentUser.email, data.courseId);
@@ -178,6 +204,9 @@ export async function POST(req: NextRequest) {
         fullName: studentUser.fullName,
         email: studentUser.email,
         phone: studentUser.phone,
+        dob: studentUser.dob,
+        experience: data.experience || null,
+        howHeard: data.howHeard || null,
         amount,
         totalAmount,
         currency: course.currency,

@@ -10,6 +10,8 @@ import { type CourseCategory, TREASURY_PAY_URL } from '@/config/courses';
 import { type DbCourse, type InstallmentPlan } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
+import { COUNTRY_CODES, isValidLocalPhone, toInternationalPhone } from '@/lib/phone-countries';
+import { ageOn, ageProblem, getAgeRange, guardianProblem, isUnder18 } from '@/lib/learner-rules';
 import { TreasuryPaymentModal } from '@bengo-hub/shared-ui-lib/payments';
 import {
   CUSTOM_PLAN_KEY,
@@ -21,35 +23,6 @@ import {
   type SchedulePayment,
 } from '@/lib/installments';
 
-// Country codes for phone validation
-const COUNTRY_CODES = [
-  { code: '+254', country: 'KE', label: '🇰🇪 +254', pattern: /^(?:0|)?[17]\d{8}$/ },
-  { code: '+255', country: 'TZ', label: '🇹🇿 +255', pattern: /^0?[67]\d{8}$/ },
-  { code: '+256', country: 'UG', label: '🇺🇬 +256', pattern: /^0?[37]\d{8}$/ },
-  { code: '+250', country: 'RW', label: '🇷🇼 +250', pattern: /^0?7\d{8}$/ },
-  { code: '+251', country: 'ET', label: '🇪🇹 +251', pattern: /^0?9\d{8}$/ },
-  { code: '+1',   country: 'US', label: '🇺🇸 +1',   pattern: /^\d{10}$/ },
-  { code: '+44',  country: 'GB', label: '🇬🇧 +44',  pattern: /^0?[789]\d{9}$/ },
-];
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function getAgeRange(audience?: string | null): { min: number; max: number } | null {
-  if (!audience) return null;
-  const m = audience.match(/Age\s+(\d+)[–-](\d+)/i) ?? audience.match(/(\d+)[–-](\d+)/);
-  if (m) return { min: parseInt(m[1], 10), max: parseInt(m[2], 10) };
-  if (/adult/i.test(audience)) return { min: 16, max: 99 };
-  return null;
-}
-
-/** Age in whole years today, or null without a valid date. */
-function ageOn(dob: string | undefined, today = new Date()): number | null {
-  if (!dob) return null;
-  const birth = new Date(dob);
-  if (Number.isNaN(birth.getTime())) return null;
-  return today.getFullYear() - birth.getFullYear() -
-    (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate()) ? 1 : 0);
-}
 
 const schema = z.object({
   fullName: z.string().min(2, 'Full name required'),
@@ -171,33 +144,20 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   const learnerAge = ageOn(watch('dob', ''));
   const isMinor = learnerAge !== null && learnerAge < 18;
 
-  const validatePhone = (phone: string): boolean => {
-    const digits = phone.replace(/[\s\-()]/g, '');
-    return selectedCC.pattern.test(digits);
-  };
+  const validatePhone = (phone: string): boolean => isValidLocalPhone(selectedCC, phone);
 
   const onSubmit = (data: FormData) => {
     // Validate age against course audience requirement
-    const age = ageOn(data.dob);
-    const ageRange = getAgeRange(course.audience);
-    if (age !== null && ageRange && (age < ageRange.min || age > ageRange.max)) {
-      setAgeError(`This course is for ages ${ageRange.min}–${ageRange.max}. Calculated age: ${age}.`);
-      return;
-    }
-    setAgeError('');
+    const ageIssue = ageProblem(data.dob, course.audience);
+    setAgeError(ageIssue);
+    if (ageIssue) return;
     // Under 18: a parent or guardian must be on record; they get their own parent account.
-    if (age !== null && age < 18) {
-      const gEmail = (data.guardianEmail ?? '').trim();
-      if (!(data.guardianName ?? '').trim() || !EMAIL_RE.test(gEmail)) {
-        setGuardianError("Add the parent or guardian's name and a valid email.");
-        return;
-      }
-      if (gEmail.toLowerCase() === data.email.trim().toLowerCase()) {
-        setGuardianError("Use the parent or guardian's own email, not the learner's.");
-        return;
-      }
-    }
-    setGuardianError('');
+    const guardianIssue = guardianProblem(data.email, isUnder18(data.dob), {
+      name: data.guardianName,
+      email: data.guardianEmail,
+    });
+    setGuardianError(guardianIssue);
+    if (guardianIssue) return;
     setStep(2);
   };
 
@@ -210,7 +170,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
   const handlePay = async () => {
     if (!canPay) return;
     const { guardianName, guardianEmail, guardianPhone, ...learner } = getValues();
-    const data = { ...learner, phone: `${selectedCC.code}${learner.phone.replace(/^0/, '').replace(/[\s\-()]/g, '')}` };
+    const data = { ...learner, phone: toInternationalPhone(selectedCC, learner.phone) };
     setSubmitting(true);
     setEnrollError('');
     try {

@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { prisma } from '@/lib/db';
+import { ACTIVE_ENROLLMENT_STATUSES } from '@/lib/learner-rules';
 
 function generateStudentId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -22,18 +23,8 @@ export async function findStudentByEmail(email: string) {
   );
 }
 
-/** True when a date of birth (YYYY-MM-DD) puts the learner under 18 today. */
-export function isUnder18(dob?: string | null, today = new Date()): boolean {
-  if (!dob) return false;
-  const birth = new Date(dob);
-  if (Number.isNaN(birth.getTime())) return false;
-  let age = today.getFullYear() - birth.getFullYear();
-  const beforeBirthday =
-    today.getMonth() < birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
-  if (beforeBirthday) age -= 1;
-  return age < 18;
-}
+// Age rules live in learner-rules (pure); re-exported for the routes that import from here.
+export { isUnder18 } from '@/lib/learner-rules';
 
 export interface GuardianInput {
   name: string;
@@ -63,12 +54,14 @@ export async function upsertStudentUser(input: {
   const email = input.email.trim().toLowerCase();
   const existing = await findStudentByEmail(email);
   if (existing) {
-    if (!input.guardian) return existing;
+    // A date of birth is only ever filled in, never overwritten by a later enrollment.
+    const dobData = !existing.dob && input.dob ? { dob: new Date(input.dob) } : {};
+    if (!input.guardian && !('dob' in dobData)) return existing;
     // A different guardian needs their own parent account, so the old link is dropped.
-    const guardianChanged = existing.guardianEmail !== guardianData.guardianEmail;
+    const guardianChanged = !!input.guardian && existing.guardianEmail !== guardianData.guardianEmail;
     return prisma.studentUser.update({
       where: { id: existing.id },
-      data: { ...guardianData, ...(guardianChanged ? { guardianSsoUserId: null } : {}) },
+      data: { ...dobData, ...guardianData, ...(guardianChanged ? { guardianSsoUserId: null } : {}) },
     });
   }
 
@@ -93,7 +86,6 @@ export async function upsertStudentUser(input: {
   });
 }
 
-const ACTIVE_ENROLLMENT_STATUSES = ['succeeded', 'paid'];
 /**
  * True if this email has ANY confirmed (paid/succeeded) enrollment in this course —
  * checked across every row, not just the most recent. A student who abandons

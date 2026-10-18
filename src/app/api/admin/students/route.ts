@@ -32,6 +32,12 @@ export async function GET(req: NextRequest) {
       take: limit,
       include: {
         _count: { select: { enrollments: true } },
+        // Which courses the student is already in, so the admin enrollment form can flag them.
+        enrollments: {
+          select: { courseId: true, courseName: true, paymentStatus: true },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
       },
     }),
   ]);

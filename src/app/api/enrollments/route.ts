@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
-import { upsertStudentUser, hasActiveEnrollment, isUnder18 } from '@/lib/enrollment-helpers';
+import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
+import { ageProblem, guardianProblem, isUnder18 } from '@/lib/learner-rules';
 import { coursePolicy, resolveSchedule, scheduleSummary } from '@/lib/installments';
 import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
 import type { InstallmentPlan } from '@/types/course';
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
         installmentsEnabled: true,
         installmentPlans: true,
         metadata: true,
+        audience: true,
       },
     });
     if (!course) {
@@ -231,12 +233,13 @@ export async function POST(req: NextRequest) {
 
     // 0e. Minors need a parent or guardian on record; the guardian gets a parent portal account.
     const guardianEmail = data.guardianEmail ? data.guardianEmail.toLowerCase() : '';
-    if (isUnder18(data.dob) && (!data.guardianName || !guardianEmail)) {
-      return NextResponse.json({ error: 'Learners under 18 need a parent or guardian name and email.' }, { status: 400 });
-    }
-    if (guardianEmail && guardianEmail === data.email.toLowerCase()) {
-      return NextResponse.json({ error: "Use the parent or guardian's own email, not the learner's." }, { status: 400 });
-    }
+    const ageIssue = ageProblem(data.dob, course.audience);
+    if (ageIssue) return NextResponse.json({ error: ageIssue }, { status: 400 });
+    const guardianIssue = guardianProblem(data.email, isUnder18(data.dob), {
+      name: data.guardianName,
+      email: guardianEmail,
+    });
+    if (guardianIssue) return NextResponse.json({ error: guardianIssue }, { status: 400 });
 
     // 1. Upsert student user, one record per unique email
     const studentUser = await upsertStudentUser({
