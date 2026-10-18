@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { prisma } from '@/lib/db';
-import { ACTIVE_ENROLLMENT_STATUSES } from '@/lib/learner-rules';
+import { ACTIVE_ENROLLMENT_STATUSES, placeholderEmail } from '@/lib/learner-rules';
 
 function generateStudentId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -37,9 +37,11 @@ export interface GuardianInput {
  * on a later enrollment replaces the one on record (the newest details win).
  */
 export async function upsertStudentUser(input: {
-  email: string;
+  // A learner under 18 may have no email or phone of their own; the record then gets a
+  // placeholder email (see learner-rules) and the guardian is the contact.
+  email?: string;
   fullName: string;
-  phone: string;
+  phone?: string;
   dob?: string | null;
   guardian?: GuardianInput;
 }) {
@@ -51,8 +53,8 @@ export async function upsertStudentUser(input: {
       }
     : {};
   // Stored lowercased so it matches the SSO account (auth-api lowercases emails).
-  const email = input.email.trim().toLowerCase();
-  const existing = await findStudentByEmail(email);
+  const email = (input.email ?? '').trim().toLowerCase();
+  const existing = email ? await findStudentByEmail(email) : null;
   if (existing) {
     // A date of birth is only ever filled in, never overwritten by a later enrollment.
     const dobData = !existing.dob && input.dob ? { dob: new Date(input.dob) } : {};
@@ -77,9 +79,9 @@ export async function upsertStudentUser(input: {
   return prisma.studentUser.create({
     data: {
       id: studentId,
-      email,
+      email: email || placeholderEmail(studentId),
       fullName: input.fullName,
-      phone: input.phone,
+      phone: (input.phone ?? '').trim(),
       dob: input.dob ? new Date(input.dob) : null,
       ...guardianData,
     },

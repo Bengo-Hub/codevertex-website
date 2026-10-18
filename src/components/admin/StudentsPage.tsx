@@ -1,5 +1,6 @@
 'use client';
 
+import { displayEmail } from '@/lib/learner-rules';
 import { useEffect, useState, useCallback } from 'react';
 import { Search, RefreshCw } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
@@ -49,7 +50,7 @@ export function StudentsPage() {
       render: (row) => (
         <div className="min-w-32">
           <p className="font-medium text-sm text-foreground">{row.fullName}</p>
-          <p className="text-xs text-muted-foreground">{row.email}</p>
+          <p className="text-xs text-muted-foreground">{displayEmail(row.email)}</p>
         </div>
       ),
     },

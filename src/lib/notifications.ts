@@ -3,6 +3,9 @@
 // Endpoint: POST /api/v1/notifications/messages
 // Tenant is resolved from the service key (codevertex tenant).
 
+import { prisma } from '@/lib/db';
+import { studentIdOfPlaceholder } from '@/lib/learner-rules';
+
 const NOTIFICATIONS_URL =
   process.env.NOTIFICATIONS_API_URL ?? 'https://notificationsapi.codevertexafrica.com';
 const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
@@ -77,6 +80,17 @@ async function postNotification(
   if (!SERVICE_KEY) {
     console.warn(`[notifications] INTERNAL_SERVICE_KEY not set — skipping ${channel}`);
     return;
+  }
+
+  // A child with no email of their own is written to through their parent or guardian.
+  const placeholderOf = studentIdOfPlaceholder(to);
+  if (placeholderOf) {
+    const student = await prisma.studentUser.findUnique({ where: { id: placeholderOf }, select: { guardianEmail: true } });
+    if (!student?.guardianEmail) {
+      console.warn(`[notifications] ${template}: ${placeholderOf} has no email and no guardian, skipping`);
+      return;
+    }
+    to = student.guardianEmail;
   }
 
   try {

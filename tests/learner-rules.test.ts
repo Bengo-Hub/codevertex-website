@@ -52,3 +52,24 @@ test('phones are validated per country and stored in international form', () => 
   assert.equal(isValidLocalPhone(ke, '12345'), false);
   assert.equal(toInternationalPhone(ke, '0712 345 678'), '+254712345678');
 });
+
+import { contactProblem, contactEmailOf, displayEmail, isPlaceholderEmail, placeholderEmail, studentIdOfPlaceholder } from '../src/lib/learner-rules';
+
+test('a child needs no email or phone, an adult needs both', () => {
+  assert.equal(contactProblem(true, '', ''), '');
+  assert.match(contactProblem(false, '', '0712345678'), /email is needed/);
+  assert.match(contactProblem(false, 'a@x.com', ''), /phone number is needed/);
+  assert.equal(contactProblem(false, 'a@x.com', '0712345678'), '');
+});
+
+test('a placeholder email stands for the student and mail goes to the guardian', () => {
+  const e = placeholderEmail('DGT-ABCD2345');
+  assert.equal(isPlaceholderEmail(e), true);
+  assert.equal(studentIdOfPlaceholder(e), 'DGT-ABCD2345');
+  assert.equal(isPlaceholderEmail('kid@x.com'), false);
+  assert.equal(studentIdOfPlaceholder('kid@x.com'), null);
+  assert.equal(contactEmailOf(e, 'mum@x.com'), 'mum@x.com');
+  assert.equal(contactEmailOf(e, null), e);
+  assert.equal(contactEmailOf('kid@x.com', 'mum@x.com'), 'kid@x.com');
+  assert.match(displayEmail(e), /parent is the contact/);
+});

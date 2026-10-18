@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 import { upsertStudentUser, hasActiveEnrollment, findStudentByEmail } from '@/lib/enrollment-helpers';
-import { ageProblem, guardianProblem, isUnder18 } from '@/lib/learner-rules';
+import { ageProblem, contactEmailOf, contactProblem, guardianProblem, isUnder18 } from '@/lib/learner-rules';
 import { sendEnrollmentConfirmation } from '@/lib/notifications';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { getCategory } from '@/config/courses';
@@ -97,6 +97,8 @@ const createSchema = z.object({
   // Admin already collected payment out-of-band (cash, bank transfer, etc.): record it now.
   // It is booked in treasury like any payment, so how it was paid and the reference are required.
   markAsPaid: z.boolean().default(false),
+  // What was actually collected; defaults to the first installment (or the total on an upfront plan).
+  paidAmount: z.number().int().min(1).optional(),
   paymentMethod: z.enum(MANUAL_PAYMENT_METHODS).optional(),
   paymentReference: z.string().trim().min(3).max(80).optional(),
   notes: z.string().optional(),
@@ -119,9 +121,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = createSchema.parse(body);
 
-    if (!data.studentId && (!data.fullName || !data.email || !data.phone)) {
+    if (!data.studentId && !data.fullName) {
       return NextResponse.json(
-        { error: 'Provide an existing studentId, or fullName + email + phone to create a new student.' },
+        { error: 'Provide an existing studentId, or the name of a new student (email and phone are optional for learners under 18).' },
         { status: 400 }
       );
     }
@@ -136,12 +138,19 @@ export async function POST(req: NextRequest) {
     // The same age and guardian rules as public checkout are checked BEFORE anything is written.
     const existingStudent = data.studentId
       ? await prisma.studentUser.findUnique({ where: { id: data.studentId.trim().toUpperCase() } })
-      : await findStudentByEmail(data.email!);
+      : data.email
+        ? await findStudentByEmail(data.email)
+        : null;
     if (data.studentId && !existingStudent) {
       return NextResponse.json({ error: `No student found with ID ${data.studentId}` }, { status: 404 });
     }
-    const learnerEmail = existingStudent?.email ?? data.email!;
+    const learnerEmail = existingStudent?.email ?? data.email ?? '';
     const dobIso = existingStudent?.dob?.toISOString().slice(0, 10) ?? data.dob;
+    // A new learner under 18 needs no email or phone of their own: the guardian is the contact.
+    if (!existingStudent) {
+      const contactIssue = contactProblem(isUnder18(dobIso), data.email, data.phone);
+      if (contactIssue) return NextResponse.json({ error: contactIssue }, { status: 400 });
+    }
 
     const ageIssue = ageProblem(dobIso, course.audience);
     if (ageIssue) return NextResponse.json({ error: ageIssue }, { status: 400 });
@@ -159,7 +168,7 @@ export async function POST(req: NextRequest) {
     const studentUser = await upsertStudentUser({
       email: learnerEmail,
       fullName: existingStudent?.fullName ?? data.fullName!,
-      phone: existingStudent?.phone ?? data.phone!,
+      phone: existingStudent?.phone ?? data.phone,
       dob: dobIso,
       guardian: typedGuardianEmail ? guardian : undefined,
     });
@@ -194,7 +203,7 @@ export async function POST(req: NextRequest) {
     // A manually-paid or free enrollment has nothing outstanding, so "first payment"
     // is recorded as the full amount; a pending enrollment still records the full
     // total owed (admin can add an installment schedule via PATCH later if needed).
-    const amount = totalAmount;
+    let amount = totalAmount;
 
     const enrollment = await prisma.enrollment.create({
       data: {
@@ -223,7 +232,9 @@ export async function POST(req: NextRequest) {
  
     // Installment rows for a pending plan, built from the course's own plans and custom-plan
     // rules by the same builder as public checkout (src/lib/installments.ts).
-    if (!isFree && !data.markAsPaid && data.paymentPlan !== 'upfront') {
+    // Built whether or not a payment was already collected: the collected money is applied to
+    // the first installment, never to the whole total.
+    if (!isFree && data.paymentPlan !== 'upfront') {
       const schedule = resolveSchedule({
         plans: (Array.isArray(course.installmentPlans) ? course.installmentPlans : []) as unknown as InstallmentPlan[],
         installmentsEnabled: course.installmentsEnabled,
@@ -248,10 +259,8 @@ export async function POST(req: NextRequest) {
           status: 'pending',
         })),
       });
-      await prisma.enrollment.update({
-        where: { id: enrollment.id },
-        data: { amount: schedule.payments[0]?.amount ?? totalAmount },
-      });
+      amount = schedule.payments[0]?.amount ?? totalAmount;
+      await prisma.enrollment.update({ where: { id: enrollment.id }, data: { amount } });
     }
 
     if (isFree) {
@@ -260,14 +269,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // "Mark as paid": book the full amount in treasury, then apply it (which confirms the
-    // enrollment and creates the portal accounts). If treasury refuses, undo the enrollment so
-    // nothing is left half-recorded.
+    // "Mark as paid": book what was collected in treasury (the first installment unless the
+    // admin entered another amount), then apply it (which confirms the enrollment and creates
+    // the portal accounts). If treasury refuses, undo the enrollment so nothing is left
+    // half-recorded.
     if (data.markAsPaid && !isFree) {
+      const collected = data.paidAmount ?? amount;
+      if (collected > totalAmount) {
+        await prisma.installmentSchedule.deleteMany({ where: { enrollmentId: enrollment.id } });
+        await prisma.enrollment.delete({ where: { id: enrollment.id } });
+        return NextResponse.json({ error: 'The amount collected is more than the total.' }, { status: 400 });
+      }
       try {
         await recordManualPayment({
           enrollmentId: enrollment.id,
-          amount: totalAmount,
+          amount: collected,
           method: data.paymentMethod!,
           reference: data.paymentReference!,
           requestId: crypto.randomUUID(),
@@ -290,7 +306,7 @@ export async function POST(req: NextRequest) {
       enrollmentId,
       studentId: studentUser.id,
       studentName: studentUser.fullName,
-      studentEmail: studentUser.email,
+      studentEmail: contactEmailOf(studentUser.email, studentUser.guardianEmail),
       courseName: course.name,
       courseCategory: categoryName,
       paymentPlan: data.paymentPlan,
@@ -307,7 +323,7 @@ export async function POST(req: NextRequest) {
       sendEnrollmentConfirmation(
         {
           studentName: studentUser.fullName,
-          studentEmail: studentUser.email,
+          studentEmail: contactEmailOf(studentUser.email, studentUser.guardianEmail),
           courseName: course.name,
           courseCategory: categoryName,
           paymentPlan: data.paymentPlan,

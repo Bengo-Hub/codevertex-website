@@ -14,6 +14,7 @@
 import { prisma } from '@/lib/db';
 import { AUTH_API_URL, resolvePlatformTenantId } from '@/lib/auth/rbac';
 import { sendPortalAccount } from '@/lib/notifications';
+import { isPlaceholderEmail } from '@/lib/learner-rules';
 
 const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://codevertexafrica.com';
@@ -86,7 +87,9 @@ export async function provisionEnrollmentAccounts(enrollmentId: bigint, requestI
   const student = enrollment?.studentUser;
   if (!enrollment || !student || !CONFIRMED.has(enrollment.paymentStatus)) return;
 
-  const needsStudent = !student.ssoUserId;
+  // A child with no email of their own gets no sign-in account; their parent follows them in
+  // the parent portal.
+  const needsStudent = !student.ssoUserId && !isPlaceholderEmail(student.email);
   const needsParent = !!student.guardianEmail && !student.guardianSsoUserId;
   if (!needsStudent && !needsParent) return;
   if (inFlight.has(student.id)) return;

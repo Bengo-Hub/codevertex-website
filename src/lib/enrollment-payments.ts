@@ -20,6 +20,7 @@ import { prisma } from '@/lib/db';
 import { splitEvenly } from '@/lib/installments';
 import { summarizeEnrollmentPayments } from '@/lib/enrollment-helpers';
 import { publishInstallmentPaid } from '@/lib/events';
+import { contactEmailOf } from '@/lib/learner-rules';
 import { buildPortalLink } from '@/lib/notifications';
 import { TREASURY } from '@/lib/constants';
 
@@ -147,7 +148,7 @@ export async function publishPaymentReceipt(applied: AppliedPayment, paymentRef?
   const nextUnpaid = enrollment.installments.find((i) => i.status !== 'paid');
   await publishInstallmentPaid({
     studentName: enrollment.fullName,
-    studentEmail: enrollment.email,
+    studentEmail: contactEmailOf(enrollment.email, enrollment.studentUser.guardianEmail),
     courseName: enrollment.courseName,
     installmentNo: applied.installmentNo,
     totalInstallments: enrollment.installments.length,

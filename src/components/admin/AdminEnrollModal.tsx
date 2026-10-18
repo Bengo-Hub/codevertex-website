@@ -5,11 +5,12 @@ import { X, Search, Loader2, UserPlus, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { authedFetch } from '@/lib/auth/authed-fetch';
-import { CUSTOM_PLAN_KEY, coursePolicy, customLimits, planKey } from '@/lib/installments';
+import { CUSTOM_PLAN_KEY, coursePolicy, customLimits, planKey, resolveSchedule } from '@/lib/installments';
 import {
   ACTIVE_ENROLLMENT_STATUSES,
   ageOn,
   ageProblem,
+  contactProblem,
   getAgeRange,
   guardianProblem,
 } from '@/lib/learner-rules';
@@ -100,6 +101,8 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
   const [markAsPaid, setMarkAsPaid] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<(typeof PAID_METHODS)[number]['value']>('bank_transfer');
   const [paymentReference, setPaymentReference] = useState('');
+  // What was actually collected; empty means the first installment (or the total on an upfront plan).
+  const [paidAmount, setPaidAmount] = useState<number | ''>('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -114,6 +117,27 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
     ...coursePlans.map((p) => ({ key: planKey(p.label), label: p.label })),
     ...(limits && limits.counts.length > 0 ? [{ key: CUSTOM_PLAN_KEY, label: 'Custom deposit and split' }] : []),
   ];
+
+  // The same builder the server uses, so the schedule shown is the one created: a 2 installment
+  // plan on KES 8,000 is two payments of 4,000, and a custom plan follows the course's own rules.
+  const scheduleResult = useMemo(() => {
+    if (!selectedCourse || typeof totalAmount !== 'number' || totalAmount <= 0) return null;
+    return resolveSchedule({
+      plans: coursePlans,
+      installmentsEnabled: selectedCourse.installmentsEnabled,
+      policy,
+      total: totalAmount,
+      currency: selectedCourse.currency,
+      paymentPlan,
+      custom: paymentPlan === CUSTOM_PLAN_KEY ? { deposit: Number(customDeposit) || 0, count: customCount } : undefined,
+    });
+    // coursePlans and policy derive from selectedCourse
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCourse, totalAmount, paymentPlan, customDeposit, customCount]);
+  const schedule = scheduleResult?.ok ? scheduleResult.payments : [];
+  const scheduleError = scheduleResult && !scheduleResult.ok ? scheduleResult.error : '';
+  const firstPayment = schedule[0]?.amount ?? (typeof totalAmount === 'number' ? totalAmount : 0);
+  const collected = paidAmount === '' ? firstPayment : paidAmount;
 
   // The learner's details come from the chosen student, or from what is typed for a new one.
   const learnerDob = selectedStudent ? (selectedStudent.dob?.slice(0, 10) ?? dob) : dob;
@@ -153,6 +177,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
   useEffect(() => {
     if (selectedCourse) setTotalAmount(selectedCourse.price);
     setPaymentPlan('upfront');
+    setPaidAmount('');
     setCohortId('');
     setCohorts([]);
   }, [selectedCourse]);
@@ -229,9 +254,12 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
 
   const courseTaken = !!courseId && enrolledCourseIds.has(courseId);
   const needsReference = markAsPaid && totalAmount !== 0;
+  // A learner under 18 needs no email or phone of their own: the parent or guardian is the contact.
+  const contactIssue = mode === 'new' && !selectedStudent ? contactProblem(isMinor, email, phone) : '';
+  const planReady = !scheduleError && (!markAsPaid || totalAmount === 0 || (collected >= 1 && typeof totalAmount === 'number' && collected <= totalAmount));
   const learnerReady = selectedStudent
     ? true
-    : mode === 'new' && !!fullName.trim() && !!email.trim() && !!phone.trim() && !phoneBad;
+    : mode === 'new' && !!fullName.trim() && !contactIssue && !phoneBad;
   // Like public checkout, a new student needs a date of birth; a known student only when the
   // course has an age limit and none is on record.
   const dobReady = selectedStudent ? !needsDob || !!dob || !ageRange : !!dob;
@@ -241,6 +269,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
     totalAmount !== '' &&
     learnerReady &&
     dobReady &&
+    planReady &&
     !ageIssue &&
     !guardianIssue &&
     (!needsReference || paymentReference.trim().length >= 3);
@@ -265,8 +294,8 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
             ? { studentId: selectedStudent.id, ...(needsDob && dob ? { dob } : {}) }
             : {
                 fullName: fullName.trim(),
-                email: email.trim(),
-                phone: toInternationalPhone(countryCode, phone),
+                ...(email.trim() ? { email: email.trim() } : {}),
+                ...(phone.trim() ? { phone: toInternationalPhone(countryCode, phone) } : {}),
                 ...(dob ? { dob } : {}),
               }),
           ...guardianBody,
@@ -278,7 +307,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
           paymentPlan,
           customPlan: paymentPlan === CUSTOM_PLAN_KEY ? { deposit: Number(customDeposit) || 0, count: customCount } : undefined,
           markAsPaid,
-          ...(needsReference ? { paymentMethod, paymentReference: paymentReference.trim() } : {}),
+          ...(needsReference ? { paymentMethod, paymentReference: paymentReference.trim(), paidAmount: collected } : {}),
         }),
       });
       const result = await res.json().catch(() => ({}));
@@ -403,7 +432,7 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
             ) : (
               <div className="space-y-3">
                 <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className={inputCls} />
-                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" className={inputCls} />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={isMinor ? 'Email (optional for under 18)' : 'Email'} type="email" className={inputCls} />
                 {emailMatch && (
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs">
                     <span className="text-foreground">
@@ -426,11 +455,12 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder={countryCode.code === '+254' ? '0712 345 678' : 'Phone number'}
+                    placeholder={isMinor ? 'Phone (optional for under 18)' : countryCode.code === '+254' ? '0712 345 678' : 'Phone number'}
                     className={inputCls}
                   />
                 </div>
                 {phoneBad && <p className="text-xs text-destructive">Invalid phone number for {countryCode.country}.</p>}
+                {contactIssue && (email || phone || fullName) && <p className="text-xs text-muted-foreground">{contactIssue} Enter the date of birth first: learners under 18 need only a parent or guardian.</p>}
               </div>
             )}
 
@@ -532,7 +562,20 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
                 </div>
                 <div>
                   <label className={labelCls}>Payment plan</label>
-                  <select value={paymentPlan} onChange={(e) => setPaymentPlan(e.target.value)} className={inputCls}>
+                  <select
+                    value={paymentPlan}
+                    onChange={(e) => {
+                      const key = e.target.value;
+                      setPaymentPlan(key);
+                      setPaidAmount('');
+                      // A custom plan starts at the smallest deposit the course allows and its longest split.
+                      if (key === CUSTOM_PLAN_KEY && limits) {
+                        if (customDeposit === '') setCustomDeposit(limits.minDeposit);
+                        if (!limits.counts.includes(customCount)) setCustomCount(limits.counts[limits.counts.length - 1]);
+                      }
+                    }}
+                    className={inputCls}
+                  >
                     {planOptions.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                   </select>
                 </div>
@@ -561,6 +604,19 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
                 </div>
               )}
 
+              {scheduleError && <p className="text-xs text-destructive">{scheduleError}</p>}
+              {schedule.length > 1 && (
+                <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment schedule</p>
+                  {schedule.map((pay) => (
+                    <div key={pay.installmentNo} className="flex justify-between text-xs text-muted-foreground">
+                      <span>{pay.label} <span className="text-[11px]">({pay.installmentNo === 1 ? 'now' : pay.dueDate.toISOString().slice(0, 10)})</span></span>
+                      <span className="font-medium text-foreground">{formatCurrency(pay.amount, selectedCourse?.currency ?? 'KES')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {totalAmount !== 0 && (
                 <label className="flex items-start gap-2.5 rounded-lg border border-border px-3 py-2.5 text-sm">
                   <input type="checkbox" checked={markAsPaid} onChange={(e) => setMarkAsPaid(e.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
@@ -574,6 +630,20 @@ export function AdminEnrollModal({ onClose, onCreated }: Props) {
               )}
               {needsReference && (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <label className="block sm:col-span-2">
+                    <span className={labelCls}>Amount collected ({selectedCourse?.currency ?? 'KES'})</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={typeof totalAmount === 'number' ? totalAmount : undefined}
+                      value={paidAmount === '' ? firstPayment : paidAmount}
+                      onChange={(e) => setPaidAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                      className={inputCls}
+                    />
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {schedule.length > 1 ? 'Applied to the first installment; the rest stays on the schedule.' : 'Applied to the total.'}
+                    </span>
+                  </label>
                   <label className="block">
                     <span className={labelCls}>Paid by</span>
                     <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)} className={inputCls}>

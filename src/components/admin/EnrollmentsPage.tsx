@@ -1,5 +1,6 @@
 'use client';
 
+import { displayEmail } from '@/lib/learner-rules';
 import { useEffect, useState, useCallback } from 'react';
 import { Search, RefreshCw, Plus, Landmark } from 'lucide-react';
 import { AdminPageHeader } from './AdminPageHeader';
@@ -91,7 +92,7 @@ export function EnrollmentsPage() {
       render: (row) => (
         <div>
           <p className="font-medium text-foreground text-xs">{row.fullName}</p>
-          <p className="text-[11px] text-muted-foreground">{row.email}</p>
+          <p className="text-[11px] text-muted-foreground">{displayEmail(row.email)}</p>
         </div>
       ),
     },
