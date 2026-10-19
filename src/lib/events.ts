@@ -2,12 +2,17 @@
 // Events are published in the platform-standard shared-events format:
 //   { id, event_type, aggregate_type, aggregate_id, tenant_id, tenant_slug, payload, metadata, timestamp, version }
 // Subject pattern: {aggregate_type}.{event_type}  (e.g. digitika.enrollment.confirmed)
-// The notifications-api worker's digitika_consumer subscribes to digitika.> for email dispatch.
-// HTTP notification calls in routes are skipped when EVENTS_NATS_URL is set (consumer handles emails).
+//
+// notifications-api's digitika consumer is the ONLY sender of Digitika emails and WhatsApp
+// messages: this site publishes what happened (with the learner's and guardian's contacts) and
+// the consumer decides who is told, on which channel, with which template. There is no HTTP
+// fallback: a second delivery path would send things twice or word them differently.
 
 import { connect, StringCodec, NatsConnection, JetStreamClient } from 'nats';
+import type { NoticePeople } from '@/lib/notice-contacts';
 
 const NATS_URL = process.env.EVENTS_NATS_URL ?? '';
+const TENANT = 'codevertex';
 const sc = StringCodec();
 
 // Lazy singleton connection + JetStream client
@@ -27,11 +32,45 @@ async function getJS(): Promise<JetStreamClient | null> {
   }
 }
 
-export interface DigitikaEnrollmentEvent {
+/**
+ * Emits a platform-standard event. Returns whether it was published, so a caller that must not
+ * lose the notice (a reminder) can leave its record unmarked and try again on the next run.
+ */
+async function publish(
+  eventType: string,
+  aggregateId: string,
+  payload: Record<string, unknown>,
+): Promise<boolean> {
+  const js = await getJS();
+  if (!js) {
+    console.warn(`[events] NATS not configured: digitika.${eventType} not published`);
+    return false;
+  }
+  const subject = `digitika.${eventType}`;
+  try {
+    const envelope = {
+      id: crypto.randomUUID(),
+      event_type: eventType,
+      aggregate_type: 'digitika',
+      aggregate_id: aggregateId,
+      tenant_id: TENANT,
+      tenant_slug: TENANT,
+      payload,
+      metadata: {},
+      timestamp: new Date().toISOString(),
+      version: '1.0',
+    };
+    await js.publish(subject, sc.encode(JSON.stringify(envelope)));
+    console.log(`[events] published: ${subject}`);
+    return true;
+  } catch (err) {
+    console.warn(`[events] publish failed for ${subject} (non-fatal):`, err);
+    return false;
+  }
+}
+
+export interface DigitikaEnrollmentEvent extends NoticePeople {
   enrollmentId: string;
-  studentId: string;
-  studentName: string;
-  studentEmail: string;
   courseName: string;
   courseCategory: string;
   paymentPlan: string;
@@ -41,14 +80,10 @@ export interface DigitikaEnrollmentEvent {
   cohortName?: string;
   portalLink: string;
   installmentsSummary?: string;
-  tenantId: string;
 }
 
-export interface DigitikaPaymentEvent {
+export interface DigitikaPaymentEvent extends NoticePeople {
   enrollmentId: string;
-  studentId: string;
-  studentName: string;
-  studentEmail: string;
   courseName: string;
   installmentNo: number;
   totalInstallments: number;
@@ -59,58 +94,82 @@ export interface DigitikaPaymentEvent {
   nextInstallmentDate?: string;
   nextInstallmentAmount?: number;
   portalLink: string;
-  tenantId: string;
 }
 
-// publish emits a platform-standard event to NATS JetStream.
-// Subject: {aggregateType}.{eventType}  (e.g. digitika.enrollment.confirmed)
-async function publish(
-  eventType: string,
-  aggregateType: string,
-  aggregateId: string,
-  tenantSlug: string,
-  payload: Record<string, unknown>,
-): Promise<void> {
-  const js = await getJS();
-  if (!js) return; // NATS not configured — HTTP API fallback handles notifications
-
-  const subject = `${aggregateType}.${eventType}`;
-  try {
-    const envelope = {
-      id: crypto.randomUUID(),
-      event_type: eventType,
-      aggregate_type: aggregateType,
-      aggregate_id: aggregateId,
-      tenant_id: tenantSlug,
-      tenant_slug: tenantSlug,
-      payload,
-      metadata: {},
-      timestamp: new Date().toISOString(),
-      version: '1.0',
-    };
-    await js.publish(subject, sc.encode(JSON.stringify(envelope)));
-    console.log(`[events] published: ${subject}`);
-  } catch (err) {
-    console.warn(`[events] publish failed for ${subject} (non-fatal):`, err);
-  }
+export interface DigitikaReminderEvent extends NoticePeople {
+  enrollmentId: string;
+  courseName: string;
+  installmentNo: number;
+  totalInstallments: number;
+  amount: number;
+  currency: string;
+  /** YYYY-MM-DD */
+  dueDate: string;
+  /** Negative once overdue. */
+  daysUntilDue: number;
+  portalLink: string;
 }
 
-export async function publishEnrollmentConfirmed(event: DigitikaEnrollmentEvent): Promise<void> {
-  await publish(
-    'enrollment.confirmed',
-    'digitika',
-    event.enrollmentId,
-    event.tenantId,
-    event as unknown as Record<string, unknown>,
-  );
+export interface DigitikaAccountEvent {
+  accountRole: 'student' | 'parent';
+  name: string;
+  email: string;
+  phone?: string;
+  courseName: string;
+  /** The learner, for a parent's account. */
+  studentName: string;
+  /** Only for a brand-new account; shown by email only, never on WhatsApp. */
+  tempPassword?: string;
+  loginUrl: string;
 }
 
-export async function publishInstallmentPaid(event: DigitikaPaymentEvent): Promise<void> {
-  await publish(
-    'payment.succeeded',
-    'digitika',
-    event.enrollmentId,
-    event.tenantId,
-    event as unknown as Record<string, unknown>,
-  );
+export interface DigitikaAccessCodeEvent {
+  name: string;
+  email?: string;
+  phone?: string;
+  code: string;
+  ttlMinutes: number;
+}
+
+export interface DigitikaContactEvent {
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  service?: string;
+}
+
+export interface DigitikaCertificateEvent extends NoticePeople {
+  courseName: string;
+  certificateNumber: string;
+  certificateLink: string;
+}
+
+const asPayload = (e: object) => e as unknown as Record<string, unknown>;
+
+export const publishEnrollmentConfirmed = (e: DigitikaEnrollmentEvent) =>
+  publish('enrollment.confirmed', e.enrollmentId, asPayload(e));
+
+export const publishInstallmentPaid = (e: DigitikaPaymentEvent) =>
+  publish('payment.succeeded', e.enrollmentId, asPayload(e));
+
+export const publishInstallmentReminder = (e: DigitikaReminderEvent) =>
+  publish('installment.reminder', e.enrollmentId, asPayload(e));
+
+export const publishAccountCreated = (e: DigitikaAccountEvent) =>
+  publish('account.created', e.email || e.phone || e.name, asPayload(e));
+
+export const publishAccessCode = (e: DigitikaAccessCodeEvent) =>
+  publish('access_code.requested', e.email || e.phone || e.name, asPayload(e));
+
+export const publishContactReceived = (e: DigitikaContactEvent) =>
+  publish('contact.received', e.email, asPayload(e));
+
+export const publishCertificateIssued = (e: DigitikaCertificateEvent) =>
+  publish('certificate.issued', e.certificateNumber, asPayload(e));
+
+/** The link that opens an enrollment (receipt, schedule, pay). */
+export function buildPortalLink(enrollmentId: string | bigint, studentId: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://codevertexafrica.com';
+  return `${base}/digitika/success?reference=DGT-${enrollmentId}-DGT-${studentId}`;
 }

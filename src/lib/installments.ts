@@ -228,6 +228,11 @@ export function scheduleSummary(payments: SchedulePayment[], currency: string): 
     .join(' • ');
 }
 
+/** Whole days from now until a due date; 0 on the day (never -0 in a payload) and negative once overdue. */
+export function daysUntil(due: Date, now: Date): number {
+  return Math.ceil((due.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)) || 0;
+}
+
 const PAID_STATUSES = ['succeeded', 'paid'];
 
 export interface InstallmentLike {

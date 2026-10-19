@@ -4,11 +4,11 @@ import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 import { upsertStudentUser, hasActiveEnrollment, findStudentByEmail } from '@/lib/enrollment-helpers';
-import { ageProblem, contactEmailOf, contactProblem, guardianProblem, isUnder18 } from '@/lib/learner-rules';
-import { sendEnrollmentConfirmation } from '@/lib/notifications';
+import { ageProblem, contactProblem, guardianProblem, isUnder18 } from '@/lib/learner-rules';
+import { noticePeople } from '@/lib/notice-contacts';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { getCategory } from '@/config/courses';
-import { coursePolicy, resolveSchedule } from '@/lib/installments';
+import { coursePolicy, resolveSchedule, scheduleSummary } from '@/lib/installments';
 import { provisionEnrollmentAccounts } from '@/lib/portal-accounts';
 import { MANUAL_PAYMENT_METHODS, ManualPaymentError, recordManualPayment } from '@/lib/enrollment-payments';
 import type { InstallmentPlan } from '@/types/course';
@@ -204,6 +204,7 @@ export async function POST(req: NextRequest) {
     // is recorded as the full amount; a pending enrollment still records the full
     // total owed (admin can add an installment schedule via PATCH later if needed).
     let amount = totalAmount;
+    let installmentsSummary = '';
 
     const enrollment = await prisma.enrollment.create({
       data: {
@@ -260,6 +261,7 @@ export async function POST(req: NextRequest) {
         })),
       });
       amount = schedule.payments[0]?.amount ?? totalAmount;
+      installmentsSummary = scheduleSummary(schedule.payments, course.currency);
       await prisma.enrollment.update({ where: { id: enrollment.id }, data: { amount } });
     }
 
@@ -300,13 +302,11 @@ export async function POST(req: NextRequest) {
     const invoiceRef = `DGT-${enrollmentId}-DGT-${studentUser.id}`;
     const portalLink = `${SITE_URL}/digitika/success?reference=${invoiceRef}`;
 
-    // Same notification path as self-serve enrollment, so the student gets a consistent email
-    // either way (portal link, student ID, etc.) regardless of who created the enrollment.
-    const enrollmentEventData = {
+    // The same event as self-serve enrollment, so the learner and their guardian are told in
+    // one way (notifications-api digitika consumer) whoever created the enrollment.
+    publishEnrollmentConfirmed({
+      ...noticePeople(studentUser),
       enrollmentId,
-      studentId: studentUser.id,
-      studentName: studentUser.fullName,
-      studentEmail: contactEmailOf(studentUser.email, studentUser.guardianEmail),
       courseName: course.name,
       courseCategory: categoryName,
       paymentPlan: data.paymentPlan,
@@ -314,31 +314,8 @@ export async function POST(req: NextRequest) {
       firstPaymentAmount: amount,
       currency: course.currency,
       portalLink,
-      installmentsSummary: '',
-      tenantId: 'codevertex',
-    };
-    publishEnrollmentConfirmed(enrollmentEventData).catch(() => {});
-
-    if (!process.env.EVENTS_NATS_URL) {
-      sendEnrollmentConfirmation(
-        {
-          studentName: studentUser.fullName,
-          studentEmail: contactEmailOf(studentUser.email, studentUser.guardianEmail),
-          courseName: course.name,
-          courseCategory: categoryName,
-          paymentPlan: data.paymentPlan,
-          firstPaymentAmount: amount,
-          totalAmount,
-          currency: course.currency,
-          studentId: studentUser.id,
-          enrollmentId,
-          remainingBalance: totalAmount - amount,
-          portalLink,
-          installmentsSummary: '',
-        },
-        crypto.randomUUID()
-      ).catch((err) => console.error('[admin-enrollment] notification error:', err));
-    }
+      installmentsSummary,
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { sendEnrollmentConfirmation } from '@/lib/notifications';
+import { noticePeople } from '@/lib/notice-contacts';
 import { publishEnrollmentConfirmed } from '@/lib/events';
 import { checkSpam } from '@/lib/spam-guard';
 import { upsertStudentUser, hasActiveEnrollment } from '@/lib/enrollment-helpers';
@@ -333,13 +333,11 @@ export async function POST(req: NextRequest) {
     const portalLink = `${SITE_URL}/digitika/success?reference=${invoiceRef}`;
     const installmentsSummary = scheduleSummary(payments, course.currency);
 
-    // 6. Domain event on NATS (notifications-api digitika_consumer sends the email); HTTP is
-    //    the fallback when NATS is not configured.
-    const enrollmentEventData = {
+    // 6. Domain event on NATS: notifications-api's digitika consumer tells the learner and any
+    //    guardian, on email and WhatsApp.
+    publishEnrollmentConfirmed({
+      ...noticePeople(studentUser),
       enrollmentId,
-      studentId: studentUser.id,
-      studentName: data.fullName,
-      studentEmail: data.email,
       courseName: course.name,
       courseCategory: data.category,
       paymentPlan: data.paymentPlan,
@@ -348,27 +346,7 @@ export async function POST(req: NextRequest) {
       currency: course.currency,
       portalLink,
       installmentsSummary,
-      tenantId: 'codevertex',
-    };
-    publishEnrollmentConfirmed(enrollmentEventData).catch(() => {});
-
-    if (!process.env.EVENTS_NATS_URL) {
-      sendEnrollmentConfirmation({
-        studentName: data.fullName,
-        studentEmail: data.email,
-        courseName: course.name,
-        courseCategory: data.category,
-        paymentPlan: data.paymentPlan,
-        firstPaymentAmount,
-        totalAmount: canonicalTotal,
-        currency: course.currency,
-        studentId: studentUser.id,
-        enrollmentId,
-        remainingBalance,
-        portalLink,
-        installmentsSummary,
-      }, requestId).catch((err) => console.error('[enrollment] notification error:', err));
-    }
+    }).catch(() => {});
 
     return NextResponse.json(
       {

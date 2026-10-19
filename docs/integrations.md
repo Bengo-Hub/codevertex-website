@@ -186,9 +186,18 @@ Provisioning calls auth-api `POST /api/v1/s2s/tenants/{platform tenant id}/membe
 `roles`, `merge_roles: true` (a learner who is also staff keeps their staff roles) and
 `skip_welcome: true`. auth-api returns the real auth user id, stored on
 `StudentUser.ssoUserId` (or `guardianSsoUserId` for the parent), and a temporary password only
-when the account is new. The website sends notifications-api template `digitika/portal_account`
-with the login link and that password. auth-ui makes the person choose their own password on
+when the account is new. The website publishes `digitika.account.created`; notifications-api sends `digitika/portal_account`
+with the login link and that password by email, and a WhatsApp notice (no password) when the
+account owner has a phone. auth-ui makes the person choose their own password on
 first sign-in, even when they arrive through the website's redirect.
+
+Resend access: the Students admin page has a key button on any student with a portal account.
+It calls `POST /api/admin/students/{id}/resend-access` with `{who: "student" | "parent"}`, which
+asks auth-api `POST /api/v1/s2s/tenants/{tenant}/members/{user}/portal-password` for a new
+temporary password and republishes `digitika.account.created`, so the person gets the credentials
+by email and the account notice on WhatsApp again. auth-api only allows it while the person is
+still on the temporary password and holds only student or parent roles; a person who already
+chose their own password gets a clear message and should use the password reset email.
 
 Claims on `ssoUserId` and `guardianSsoUserId` are conditional updates, so repeated payment
 events never send credentials twice. A new guardian email on a later enrollment clears
@@ -268,17 +277,27 @@ Registry: `https://npm.pkg.github.com` (requires `NPM_TOKEN` / `GH_PAT`)
 
 ---
 
-## 6. Email Notifications
+## 6. Notifications (email and WhatsApp)
 
-Implemented via `src/lib/events.ts` (`publishInstallmentPaid` / `publishEnrollmentConfirmed`),
-which publishes platform-standard envelope events to NATS subject `digitika.{event_type}`,
-consumed by notifications-api's `digitika_consumer` for email dispatch. When `EVENTS_NATS_URL`
-is unset, routes fall back to a direct S2S call via `src/lib/notifications.ts` to
-`POST {NOTIFICATIONS_API_URL}/api/v1/notifications/messages` with `X-API-Key: INTERNAL_SERVICE_KEY`.
+`src/lib/events.ts` publishes platform-standard envelope events to NATS subject `digitika.{event_type}`.
+notifications-api's `digitika_consumer` is the only sender (no HTTP fallback, so nothing is sent twice
+or worded differently). Events: `enrollment.confirmed`, `payment.succeeded`, `installment.reminder`,
+`account.created`, `access_code.requested`, `contact.received`, `certificate.issued`. Learner events
+carry the learner's and the guardian's contacts (`src/lib/notice-contacts.ts`; a child's placeholder
+email is never sent), and the consumer tells each person on the email and WhatsApp contacts they have,
+so for a minor both the child and the parent are reached. SMS is not used.
 
-Trigger for the payment-receipt email: `treasury.payment.succeeded` (NATS) →
-`treasury-subscriber.ts` → `publishInstallmentPaid`.
+Reminders (`src/lib/installment-reminders.ts`, run daily at 08:00 by the `digitika-installment-reminder`
+CronJob and by the admin's manual Send reminder): an installment is reminded when it is unpaid and due
+within 3 days or overdue, at most once a day before the due date and every 3 days once overdue. The
+installment row decides whether it is owed: the enrollment's own status is already `succeeded` after the
+first payment, so it never does (the old check skipped every part-paid enrollment, so no installment
+reminder was ever sent). A row is marked reminded only after the event was published, so a NATS outage
+retries on the next run. Batches of 100 by id, at most 2,000 per run, served by the `(status, due_date)`
+index.
 
+Trigger for the payment receipt: `treasury.payment.succeeded` (NATS) -> `treasury-subscriber.ts` ->
+`publishInstallmentPaid`.
 
 ---
 
@@ -298,7 +317,7 @@ Route: `/digitika/parent`. Parents track progress and pay fee arrears either wit
 
 | Step | Endpoint | Notes |
 |------|----------|-------|
-| Request code | `POST /api/parent/request-code` `{ studentId }` | 6-digit code sent to the email and phone on file via notifications-api (`auth/otp_verification` email, `auth/otp` SMS templates). Returns masked destinations only. |
+| Request code | `POST /api/parent/request-code` `{ studentId }` | 6-digit code sent to the parent or guardian on file (the learner when there is none), by email and WhatsApp (`auth_otp`, platform number) through the `digitika.access_code.requested` event. Returns masked destinations only. |
 | Verify | `POST /api/parent/verify` `{ studentId, code }` | Sets `cv_parent` cookie (httpOnly, SameSite=Strict, 30 min, purpose-scoped HMAC). |
 | Overview | `GET /api/parent/overview` | Per-course progress (one grouped SQL query, `src/lib/student-progress.ts`), quiz results, certificates, announcements, balances and arrears. No email, phone or DOB returned. |
 | Pay | `POST /api/parent/pay` `{ enrollmentId, installmentNo? }` | Server builds the treasury pay link; amount comes from the DB; only the session student's enrollments. |

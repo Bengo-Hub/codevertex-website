@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
-import { sendInstallmentReminder, buildPortalLink } from '@/lib/notifications';
+import { loadReminderRow, remindInstallment } from '@/lib/installment-reminders';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
 
@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
   const guard = await requirePermission(req, digitikaPerm('installments', 'manage'));
   if ('response' in guard) return guard.response;
 
-  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
   // Manually send a payment reminder for a specific installment
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
@@ -75,55 +74,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   }
 
-  const body = await req.json();
-  const { installmentId } = z.object({ installmentId: z.string() }).parse(body);
-
-  const installment = await prisma.installmentSchedule.findUnique({
-    where: { id: BigInt(installmentId) },
-    include: {
-      enrollment: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          courseName: true,
-          paymentPlan: true,
-          studentUserId: true,
-          installments: { select: { installmentNo: true } },
-        },
-      },
-    },
-  });
-
+  const { installmentId } = z.object({ installmentId: z.string().regex(/^\d+$/) }).parse(await req.json());
+  const installment = await loadReminderRow(BigInt(installmentId));
   if (!installment) {
     return NextResponse.json({ error: 'Installment not found' }, { status: 404 });
   }
-
-  const { enrollment } = installment;
-  const totalInstallments = enrollment.installments.length;
-  const daysUntilDue = Math.ceil(
-    (installment.dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-  );
-
-  await sendInstallmentReminder({
-    studentName: enrollment.fullName,
-    studentEmail: enrollment.email,
-    courseName: enrollment.courseName,
-    installmentNo: installment.installmentNo,
-    totalInstallments,
-    amount: installment.amount,
-    currency: installment.currency,
-    dueDate: installment.dueDate.toISOString().split('T')[0],
-    enrollmentId: enrollment.id.toString(),
-    studentId: enrollment.studentUserId ?? '',
-    daysUntilDue,
-    portalLink: buildPortalLink(enrollment.id, enrollment.studentUserId ?? ''),
-  }, requestId);
-
-  await prisma.installmentSchedule.update({
-    where: { id: installment.id },
-    data: { reminderSentAt: new Date(), status: 'reminded' },
-  });
-
+  if (!(await remindInstallment(installment))) {
+    return NextResponse.json({ error: 'The reminder could not be sent right now. Try again shortly.' }, { status: 502 });
+  }
   return NextResponse.json({ success: true });
 }

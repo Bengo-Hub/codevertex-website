@@ -19,9 +19,8 @@ import { addDays } from 'date-fns';
 import { prisma } from '@/lib/db';
 import { splitEvenly } from '@/lib/installments';
 import { summarizeEnrollmentPayments } from '@/lib/enrollment-helpers';
-import { publishInstallmentPaid } from '@/lib/events';
-import { contactEmailOf } from '@/lib/learner-rules';
-import { buildPortalLink } from '@/lib/notifications';
+import { buildPortalLink, publishInstallmentPaid } from '@/lib/events';
+import { noticePeople } from '@/lib/notice-contacts';
 import { TREASURY } from '@/lib/constants';
 
 /** Days until the balance is due when an upfront enrollment is only partly paid. */
@@ -147,21 +146,18 @@ export async function publishPaymentReceipt(applied: AppliedPayment, paymentRef?
   if (!enrollment?.studentUser) return;
   const nextUnpaid = enrollment.installments.find((i) => i.status !== 'paid');
   await publishInstallmentPaid({
-    studentName: enrollment.fullName,
-    studentEmail: contactEmailOf(enrollment.email, enrollment.studentUser.guardianEmail),
+    ...noticePeople(enrollment.studentUser),
     courseName: enrollment.courseName,
     installmentNo: applied.installmentNo,
     totalInstallments: enrollment.installments.length,
     amountPaid: applied.amount,
     currency: enrollment.currency,
     paymentRef: paymentRef ?? undefined,
-    studentId: enrollment.studentUser.id,
     enrollmentId: enrollment.id.toString(),
     remainingBalance: applied.remainingBalance,
     nextInstallmentDate: nextUnpaid ? nextUnpaid.dueDate.toISOString().split('T')[0] : undefined,
     nextInstallmentAmount: nextUnpaid ? nextUnpaid.amount : undefined,
     portalLink: buildPortalLink(enrollment.id, enrollment.studentUser.id),
-    tenantId: 'codevertex',
   });
 }
 

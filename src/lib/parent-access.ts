@@ -2,13 +2,14 @@ import { randomInt, timingSafeEqual } from 'node:crypto';
 import type { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { keyedHash, signScopedToken, verifyScopedToken } from '@/lib/auth/session-crypto';
-import { sendParentAccessCode } from '@/lib/notifications';
+import { publishAccessCode } from '@/lib/events';
+import { accessCodeContacts } from '@/lib/notice-contacts';
 
 /**
  * Parent / guardian portal access (no account needed).
  *
  * Flow: Student ID -> one-time 6-digit code sent to the contact details already on file
- * (email + SMS) -> short-lived signed session cookie scoped to that one student.
+ * (email + WhatsApp) -> short-lived signed session cookie scoped to that one student.
  *
  * Security and data-protection controls (Kenya Data Protection Act 2019 principles:
  * data minimisation, purpose limitation, security safeguards):
@@ -67,7 +68,7 @@ const hourAgo = () => new Date(Date.now() - 60 * 60 * 1000);
 
 export type RequestCodeResult =
   | { ok: true; channels: string[] }
-  | { ok: false; status: 404 | 429 | 422; error: string };
+  | { ok: false; status: 404 | 429 | 422 | 503; error: string };
 
 export async function requestParentCode(studentId: string, ip: string): Promise<RequestCodeResult> {
   const ipHash = await keyedHash('parent-ip', ip);
@@ -84,7 +85,7 @@ export async function requestParentCode(studentId: string, ip: string): Promise<
 
   const student = await prisma.studentUser.findUnique({
     where: { id: studentId },
-    select: { id: true, fullName: true, email: true, phone: true },
+    select: { id: true, fullName: true, email: true, phone: true, guardianName: true, guardianEmail: true, guardianPhone: true },
   });
 
   if (!student) {
@@ -102,7 +103,10 @@ export async function requestParentCode(studentId: string, ip: string): Promise<
     return { ok: false, status: 429, error: 'A code was already sent several times. Please use the latest code or try again in an hour.' };
   }
 
-  const channels = [student.email && 'email', student.phone && 'sms'].filter(Boolean) as string[];
+  // The code goes to the parent or guardian when one is on record (the portal is theirs),
+  // else to the learner; by email and WhatsApp, the active channels.
+  const to = accessCodeContacts(student);
+  const channels = [to.email && 'email', to.phone && 'whatsapp'].filter(Boolean) as string[];
   if (channels.length === 0) {
     return { ok: false, status: 422, error: 'No contact details are on file for this student. Please contact us.' };
   }
@@ -118,17 +122,20 @@ export async function requestParentCode(studentId: string, ip: string): Promise<
     },
   });
 
-  await sendParentAccessCode({
-    email: student.email || undefined,
-    phone: student.phone || undefined,
-    name: `Parent/guardian of ${student.fullName.split(' ')[0]}`,
+  const sent = await publishAccessCode({
+    email: to.email || undefined,
+    phone: to.phone || undefined,
+    name: `Parent or guardian of ${student.fullName.split(' ')[0]}`,
     code,
     ttlMinutes: CODE_TTL_MINUTES,
   });
+  if (!sent) {
+    return { ok: false, status: 503, error: 'We could not send the code right now. Please try again in a minute.' };
+  }
 
   return {
     ok: true,
-    channels: [student.email && maskEmail(student.email), student.phone && maskPhone(student.phone)].filter(Boolean) as string[],
+    channels: [to.email && maskEmail(to.email), to.phone && maskPhone(to.phone)].filter(Boolean) as string[],
   };
 }
 

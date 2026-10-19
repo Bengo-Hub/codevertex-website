@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { checkSpam } from '@/lib/spam-guard';
-import { sendContactFormReply } from '@/lib/notifications';
+import { publishContactReceived } from '@/lib/events';
 
 const schema = z.object({
   name: z.string().min(2),
@@ -13,8 +13,6 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
-
   try {
     const body = await req.json();
     const data = schema.parse(body);
@@ -34,13 +32,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Fire-and-forget auto-reply to the visitor
-    sendContactFormReply({
+    // Acknowledge the visitor on email, and on WhatsApp when they gave a phone (notifications-api).
+    publishContactReceived({
       name: data.name,
       email: data.email,
+      phone: data.phone,
       message: data.message,
       service: data.service,
-    }, requestId).catch((err) => console.error('[contact] notification error:', err));
+    }).catch((err: unknown) => console.error('[contact] notification error:', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

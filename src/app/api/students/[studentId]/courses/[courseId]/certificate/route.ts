@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { resolvePaidAccess } from '@/lib/digitika-access';
+import { publishCertificateIssued } from '@/lib/events';
+import { noticePeople } from '@/lib/notice-contacts';
 
 async function nextCertificateNumber(): Promise<string> {
   const year = new Date().getFullYear();
@@ -87,6 +89,14 @@ export async function POST(
     studentName: student.fullName,
     courseName: course.name,
   });
+
+  // Tell the learner, and their guardian when they have one (notifications-api).
+  publishCertificateIssued({
+    ...noticePeople(student),
+    courseName: course.name,
+    certificateNumber: certificate.certificateNumber,
+    certificateLink: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://codevertexafrica.com'}/certificates/${certificate.verifyToken}`,
+  }).catch(() => {});
 
   return NextResponse.json(certificate, { status: 201 });
 }

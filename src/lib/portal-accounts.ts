@@ -13,7 +13,7 @@
 
 import { prisma } from '@/lib/db';
 import { AUTH_API_URL, resolvePlatformTenantId } from '@/lib/auth/rbac';
-import { sendPortalAccount } from '@/lib/notifications';
+import { publishAccountCreated } from '@/lib/events';
 import { isPlaceholderEmail } from '@/lib/learner-rules';
 
 const SERVICE_KEY = process.env.INTERNAL_SERVICE_KEY ?? '';
@@ -110,15 +110,16 @@ export async function provisionEnrollmentAccounts(enrollmentId: bigint, requestI
           data: { ssoUserId: member.userId },
         });
         if (claimed.count === 1) {
-          await sendPortalAccount({
-            to: student.email,
+          await publishAccountCreated({
+            accountRole: 'student',
             name: student.fullName,
-            role: 'student',
+            email: student.email,
+            phone: student.phone || undefined,
             courseName: enrollment.courseName,
             studentName: student.fullName,
             tempPassword: member.tempPassword,
             loginUrl: STUDENT_LOGIN_URL,
-          }, requestId);
+          });
         }
       }
     }
@@ -132,19 +133,73 @@ export async function provisionEnrollmentAccounts(enrollmentId: bigint, requestI
           data: { guardianSsoUserId: member.userId },
         });
         if (claimed.count === 1) {
-          await sendPortalAccount({
-            to: student.guardianEmail,
+          await publishAccountCreated({
+            accountRole: 'parent',
             name: guardianName,
-            role: 'parent',
+            email: student.guardianEmail,
+            phone: student.guardianPhone || undefined,
             courseName: enrollment.courseName,
             studentName: student.fullName,
             tempPassword: member.tempPassword,
             loginUrl: PARENT_LOGIN_URL,
-          }, requestId);
+          });
         }
       }
     }
   } finally {
     inFlight.delete(student.id);
   }
+}
+
+export type ResendResult =
+  | { ok: true }
+  | { ok: false; reason: 'no_account' | 'claimed' | 'unavailable' | 'not_published' };
+
+/**
+ * Sends a learner's or parent's portal credentials again. It asks auth-api for a fresh
+ * temporary password (allowed only while the person has not yet replaced the first one) and
+ * republishes the account notice, so the learner or guardian hears on email and WhatsApp the
+ * same way as at enrollment. A person who already took the account over gets `claimed` and
+ * should use the password reset email instead.
+ */
+export async function resendPortalAccess(studentId: string, who: 'student' | 'parent'): Promise<ResendResult> {
+  if (!SERVICE_KEY) return { ok: false, reason: 'unavailable' };
+  const student = await prisma.studentUser.findUnique({
+    where: { id: studentId },
+    include: { enrollments: { orderBy: { createdAt: 'desc' }, take: 1, select: { courseName: true } } },
+  });
+  if (!student) return { ok: false, reason: 'no_account' };
+
+  const parent = who === 'parent';
+  const userId = parent ? student.guardianSsoUserId : student.ssoUserId;
+  const email = parent ? student.guardianEmail : student.email;
+  if (!userId || !email || isPlaceholderEmail(email)) return { ok: false, reason: 'no_account' };
+
+  const tenantId = await resolvePlatformTenantId();
+  if (!tenantId) return { ok: false, reason: 'unavailable' };
+
+  const res = await fetch(
+    `${AUTH_API_URL}/api/v1/s2s/tenants/${tenantId}/members/${encodeURIComponent(userId)}/portal-password`,
+    { method: 'POST', headers: { 'X-API-Key': SERVICE_KEY, 'X-Request-ID': crypto.randomUUID() } },
+  );
+  if (res.status === 409) return { ok: false, reason: 'claimed' };
+  if (res.status === 404 || res.status === 403) return { ok: false, reason: 'no_account' };
+  if (!res.ok) {
+    console.error(`[portal-accounts] resend ${who} failed (${res.status}): ${await res.text().catch(() => '')}`);
+    return { ok: false, reason: 'unavailable' };
+  }
+  const body = (await res.json().catch(() => ({}))) as { temp_password?: string };
+  if (!body.temp_password) return { ok: false, reason: 'unavailable' };
+
+  const published = await publishAccountCreated({
+    accountRole: who,
+    name: parent ? student.guardianName || email : student.fullName,
+    email,
+    phone: (parent ? student.guardianPhone : student.phone) || undefined,
+    courseName: student.enrollments[0]?.courseName ?? 'your course',
+    studentName: student.fullName,
+    tempPassword: body.temp_password,
+    loginUrl: parent ? PARENT_LOGIN_URL : STUDENT_LOGIN_URL,
+  });
+  return published ? { ok: true } : { ok: false, reason: 'not_published' };
 }

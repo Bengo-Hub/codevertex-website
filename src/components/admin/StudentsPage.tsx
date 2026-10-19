@@ -2,11 +2,12 @@
 
 import { displayEmail } from '@/lib/learner-rules';
 import { useEffect, useState, useCallback } from 'react';
-import { Search, RefreshCw, Plus, Pencil, GraduationCap, Trash2 } from 'lucide-react';
+import { Search, RefreshCw, Plus, Pencil, GraduationCap, Trash2, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { StudentFormModal } from './StudentFormModal';
 import { AdminEnrollModal } from './AdminEnrollModal';
+import { ResendAccessDialog } from './ResendAccessDialog';
 import { AdminPageHeader } from './AdminPageHeader';
 import { DataTable, type Column } from './DataTable';
 import Link from 'next/link';
@@ -19,6 +20,10 @@ interface Student {
   phone: string;
   dob: string | null;
   createdAt: string;
+  ssoUserId?: string | null;
+  guardianName?: string | null;
+  guardianEmail?: string | null;
+  guardianSsoUserId?: string | null;
   _count: { enrollments: number };
 }
 
@@ -32,6 +37,7 @@ export function StudentsPage() {
   const [editing, setEditing] = useState<string | 'new' | null>(null);
   const [enrolling, setEnrolling] = useState<Student | null>(null);
   const [deleting, setDeleting] = useState<Student | null>(null);
+  const [resending, setResending] = useState<Student | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -108,6 +114,11 @@ export function StudentsPage() {
           <button onClick={() => setEnrolling(row)} title="Enroll in a course" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
             <GraduationCap className="h-3.5 w-3.5" />
           </button>
+          {(row.ssoUserId || row.guardianSsoUserId) && (
+            <button onClick={() => setResending(row)} title="Resend portal access" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
+              <KeyRound className="h-3.5 w-3.5" />
+            </button>
+          )}
           <button onClick={() => setDeleting(row)} title="Delete" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -161,6 +172,7 @@ export function StudentsPage() {
 
       {editing && <StudentFormModal studentId={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} onSaved={load} />}
       {enrolling && <AdminEnrollModal initialStudentId={enrolling.id} onClose={() => setEnrolling(null)} onCreated={load} />}
+      {resending && <ResendAccessDialog student={resending} onClose={() => setResending(null)} />}
       <ConfirmDialog
         open={deleting !== null}
         title={`Delete ${deleting?.fullName ?? 'student'}?`}
