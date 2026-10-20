@@ -56,7 +56,7 @@ export function ResendAccessDialog({ student, onClose }: { student: AccessHolder
           <div className="min-w-0 flex-1 pt-1">
             <h2 className="text-sm font-bold text-foreground">Resend portal access</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Issues a new temporary password and sends it again. It only works while the person has not yet chosen their own password.
+              Issues a new temporary password and sends it again. The password in any earlier email stops working, so ask the person to use the newest email only. It only works while the person has not yet chosen their own password.
             </p>
           </div>
           <button onClick={onClose} className="shrink-0 p-1 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
