@@ -25,8 +25,10 @@ EXIF, including GPS. Crops remove number plates, burned-in timestamps and the ol
 
 Two kinds of screen go onto the devices:
 
-- Real screens captured from the codevertex-demo tenant: POS, Inventory, Logistics, Treasury, the
-  ERP reports page and Notifications monitoring.
+- Real screens captured from the codevertex-demo tenant at 2x (2880 x 1800): Inventory, Logistics,
+  Treasury and the TruLoad sign-in, plus the ERP reports page and Notifications monitoring
+  captured by the team. The POS terminal shows the team's capture of the POS sell screen
+  (`public/images/photos/pos-terminal.png`, the scene's input, not used on any page).
 - Branded mockups built in HTML with sample data, for screens the demo tenant cannot show yet: the
   MarketFlow sequence map, the Vera chat, the ERP self-service phone, the Notifications delivery
   flows, the marketplace storefront and checkout, the Treasury approval phone, the security audit

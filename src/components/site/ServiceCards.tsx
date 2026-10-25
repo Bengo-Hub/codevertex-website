@@ -24,7 +24,7 @@ export function ServiceCards({ services = CLIENT_SERVICES, detailed = false }: {
           >
             <div className="relative aspect-[16/10] overflow-hidden bg-mist">
               {s.photo && (
-                <Image src={s.photo.src} alt={s.photo.alt} fill sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <Image src={s.photo.src} alt={s.photo.alt} fill quality={90} sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
               )}
               <span className="glass absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl">
                 <s.icon className="h-5 w-5 text-primary" aria-hidden />

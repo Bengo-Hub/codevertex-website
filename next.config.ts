@@ -37,6 +37,8 @@ const nextConfig: NextConfig = {
   experimental: {},
 
   images: {
+    // 90 is used for product scenes, where small on-screen text must stay legible.
+    qualities: [75, 90],
     remotePatterns: [
       { protocol: 'https', hostname: '**.codevertexafrica.com' },
     ],

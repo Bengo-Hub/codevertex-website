@@ -125,7 +125,7 @@ function PhotoGrid({ photos }: { photos: Shot[] }) {
       <div className={`grid gap-3 ${photos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
         {photos.map((p, i) => (
           <figure key={p.src} className={`group relative overflow-hidden rounded-3xl bg-muted shadow-soft ${wide(i) ? 'col-span-2 aspect-video' : 'aspect-4/3'}`}>
-            <Image src={p.src} alt={p.alt} fill sizes={wide(i) ? '(min-width: 1024px) 45vw, 100vw' : '(min-width: 1024px) 25vw, 50vw'} className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+            <Image src={p.src} alt={p.alt} fill quality={90} sizes={wide(i) ? '(min-width: 1024px) 45vw, 100vw' : '(min-width: 1024px) 25vw, 50vw'} className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
             <figcaption className="glass absolute left-2 bottom-2 right-2 sm:right-auto rounded-full px-3 py-1 text-xs font-medium text-foreground">{p.caption}</figcaption>
             {p.credit && <PhotoCredit credit={p.credit} className="inset-x-2 top-2" />}
           </figure>

@@ -105,7 +105,7 @@ export function HeroSection({ liveBusinesses, tenants }: { liveBusinesses: numbe
           {/* Cards sit over the trees and below the faces, never on them. */}
           <div className="glass absolute -left-4 sm:-left-8 -bottom-16 w-[58%] rounded-2xl p-2 hidden sm:block animate-fade-in">
             <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
-              <Image src="/images/products/marketplace-scene.webp" alt="The Codevertex marketplace on a laptop, with M-Pesa checkout on a phone" fill sizes="30vw" className="object-cover" />
+              <Image src="/images/products/marketplace-scene.webp" quality={90} alt="The Codevertex marketplace on a laptop, with M-Pesa checkout on a phone" fill sizes="30vw" className="object-cover" />
             </div>
           </div>
 

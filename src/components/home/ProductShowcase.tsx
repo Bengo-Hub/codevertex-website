@@ -54,7 +54,7 @@ export function ProductShowcase({ products }: { products: ShowcaseProduct[] }) {
       <div id="showcase-panel" role="tabpanel" aria-labelledby={`tab-${p.id}`} className="lg:col-span-8">
         <div className="glass rounded-4xl p-2 shadow-lift">
           <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-night">
-            <Image key={p.id} src={p.screenshot.src} alt={p.screenshot.alt} fill sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover animate-fade-in" />
+            <Image key={p.id} src={p.screenshot.src} alt={p.screenshot.alt} fill quality={90} sizes="(min-width: 1024px) 60vw, 100vw" className="object-cover animate-fade-in" />
             <a href={p.url} target="_blank" rel="noreferrer" className="glass absolute left-3 bottom-3 rounded-full px-3 py-1 text-xs font-medium text-foreground hover:bg-white">
               {p.url.replace('https://', '')}
             </a>

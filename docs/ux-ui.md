@@ -57,9 +57,17 @@ Dark mode redefines the same tokens under `.dark`.
 
 ## Images
 
-- Real photos only. No illustrations, fake dashboards or AI-generated people. Product images are
-  real screens from the demo tenant placed on devices over real Kenyan backdrops (see
-  `docs/image-credits.md`); where people appear they are African.
+- Real photos only. No illustrations or AI-generated people. Product images are real screens from
+  the demo tenant, or branded mockups that copy the real app chrome where the demo cannot show a
+  screen yet, placed on devices over real Kenyan backdrops (see `docs/image-credits.md`); where
+  people appear they are African.
+- Scenes must stay legible: capture screens at 2x, export scenes at 2000 x 1250 WebP (quality
+  about 88, photo-heavy scenes about 78), and render them with `quality={90}` on `next/image`.
+  Keep devices large in the frame and faces clear of floating cards.
+- When an image's content changes, give it a new file name instead of overwriting it, so browser,
+  CDN and `next/image` caches cannot keep serving the old picture.
+- Licence credits sit behind the info button (`components/site/PhotoCredit.tsx`), never on top of
+  the photo.
 - Wording is inclusive of the whole region: "a Kenyan company working across East Africa", not
   "a Kisumu company". Kisumu appears only where it is a fact (the office address).
 - Documentation links go to the public guides on docs.codevertexafrica.com (`docsUrl()` in

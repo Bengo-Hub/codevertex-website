@@ -41,7 +41,7 @@ function CoreProduct({ product, pricing, flip }: { product: PowerSuiteProduct; p
           <div className={`lg:col-span-7 ${flip ? 'lg:order-2' : ''}`}>
             <div className="glass rounded-4xl p-2 shadow-lift">
               <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-night">
-                <Image src={product.screenshot.src} alt={product.screenshot.alt} fill sizes="(min-width: 1024px) 55vw, 100vw" className="object-cover" />
+                <Image src={product.screenshot.src} alt={product.screenshot.alt} fill quality={90} sizes="(min-width: 1024px) 55vw, 100vw" className="object-cover" />
                 {product.screenshot.credit && <PhotoCredit credit={product.screenshot.credit} />}
               </div>
             </div>
@@ -90,7 +90,7 @@ export default async function ServicesPage() {
         aside={
           <div className="glass rounded-4xl p-2 shadow-lift">
             <div className="relative aspect-[16/10] overflow-hidden rounded-3xl">
-              <Image src="/images/products/marketplace-scene.webp" alt="A Codevertex marketplace of retail and hospitality stores on a laptop, with M-Pesa checkout on a phone" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+              <Image src="/images/products/marketplace-scene.webp" quality={90} alt="A Codevertex marketplace of retail and hospitality stores on a laptop, with M-Pesa checkout on a phone" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
             </div>
           </div>
         }

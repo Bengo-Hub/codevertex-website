@@ -21,18 +21,20 @@
 
 ## Sprint Summary
 
+Each row matches a file in `docs/sprints/`.
+
 | Sprint | Theme | Status |
 |--------|-------|--------|
-| Sprint 1 | Foundation — Next.js 16, layout, brand system | ✅ Done |
-| Sprint 2 | Digitika Academy — Course catalog & enrollment | ✅ Done |
-| Sprint 3 | Content pages — Services, About, Blog, Careers | ✅ Done |
-| Sprint 4 | AI Chatbot (Vera) & Lead capture | ✅ Done |
-| Sprint 5 | Homepage redesign — Modern, professional feel | 🔄 In Progress |
-| Sprint 6 | Digitika enrichment — Graduates, testimonials, Code-Starter | 🔄 In Progress |
-| Sprint 7 | DevOps — Dockerfile, K8s, CI/CD | 🔄 In Progress |
-| Sprint 8 | SEO, Performance & PWA | Planned |
-| Sprint 9 | Blog CMS integration | Planned |
-| Sprint 10 | Corporate portal & SSO integration | Planned |
+| Sprint 1 | Foundation: Next.js 16, layout, brand system | Done |
+| Sprint 2 | Digitika Academy: course catalog and enrollment | Done |
+| Sprint 3 | Content pages and home sections | Done |
+| Sprint 4 | Vera AI chatbot and lead capture | Done |
+| Sprint 5 | Homepage redesign and Code-Starter integration | Superseded by sprint 9 |
+| Sprint 6 | DevOps, K8s deployment and CI/CD | In progress |
+| Sprint 7 | Kids and Teens relaunch, admin and website sync, parent portal | Done |
+| Sprint 8 | Custom payment plans, student and parent accounts, manual deposits | Done |
+| Sprint 9 | Website redesign, real imagery and the enquiry notices | Done, open items listed |
+| Next | SEO, performance and PWA; blog CMS; corporate portal | Planned |
 
 ---
 
