@@ -26,7 +26,7 @@ export function CTASection({
               <Link href="/contact">Book a demo</Link>
             </Button>
             <Button size="lg" variant="outline-light" className="rounded-full px-7 glass-dark" asChild>
-              <a href={`tel:${SITE.phone2.replace(/\s/g, '')}`}>Call {SITE.phone2}</a>
+              <a href={`tel:${SITE.phone1.replace(/\s/g, '')}`}>Call {SITE.phone1}</a>
             </Button>
           </div>
         </div>

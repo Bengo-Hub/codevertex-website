@@ -45,7 +45,10 @@ export function Footer() {
             <p className="mt-5 text-sm text-gold font-semibold">{SITE.tagline}</p>
             <address className="mt-5 not-italic text-sm text-night-foreground/70 space-y-1.5">
               <p>{SITE.address}</p>
-              <p><a href={`tel:${SITE.phone2.replace(/\s/g, '')}`} className="hover:text-night-foreground">{SITE.phone2}</a> · <a href={`tel:${SITE.phone1.replace(/\s/g, '')}`} className="hover:text-night-foreground">{SITE.phone1}</a></p>
+              <p>
+                <a href={`tel:${SITE.phone1.replace(/\s/g, '')}`} className="hover:text-night-foreground">{SITE.phone1}</a> (calls and{' '}
+                <a href={SITE.whatsapp} target="_blank" rel="noreferrer" className="hover:text-night-foreground">WhatsApp</a>)
+              </p>
               <p><a href={`mailto:${SITE.email}`} className="hover:text-night-foreground">{SITE.email}</a></p>
             </address>
             <div className="mt-6 max-w-sm">

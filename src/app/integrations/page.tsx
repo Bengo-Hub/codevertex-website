@@ -64,7 +64,7 @@ const INTEGRATIONS: Integration[] = [
         caption: 'Paid at the counter',
         credit: 'Counter photo: Mauryndinar, CC BY-SA 4.0, via Wikimedia Commons, with the POS terminal added. Shared under CC BY-SA 4.0.',
       },
-      { src: '/images/products/ordering-scene.webp', alt: 'Alpha China Market on a laptop and a phone', caption: 'Paid online' },
+      { src: '/images/products/ordering-scene.webp', alt: 'A marketplace checkout paid with M-Pesa on a phone, beside the storefront on a laptop', caption: 'Paid online' },
     ],
     docs: [
       { label: 'How payments work', path: 'integrations/payment-workflow/' },

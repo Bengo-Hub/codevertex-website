@@ -15,7 +15,8 @@ const tel = (n: string) => `tel:${n.replace(/\s/g, '')}`;
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ service?: string }> }) {
   const { service } = await searchParams;
-  const phones = [SITE.phone1, SITE.phone2, SITE.phone3];
+  // One number for calls and WhatsApp everywhere on the site.
+  const phones = [SITE.phone1];
 
   return (
     <>

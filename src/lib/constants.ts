@@ -3,6 +3,7 @@ export const SITE = {
   tagline: "Architecting Africa's Digital Excellence",
   url: 'https://codevertexafrica.com',
   email: 'info@codevertexafrica.com',
+  /** The number for calls and WhatsApp everywhere on the site. */
   phone1: '+254 743 793 901',
   phone2: '+254 742 201 368',
   phone3: '+254 792 548 766',

@@ -77,7 +77,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     highlights: ['Payroll with statutory deductions', 'Procurement and approvals', 'Staff records and leave'],
     serviceTag: 'erp',
     core: true,
-    screenshot: screen('erp', 'The ERP Suite HR dashboard on a laptop in a city office'),
+    screenshot: screen('erp', 'The ERP Suite reports screen on a laptop, with the employee self-service app showing a payslip breakdown on a phone'),
   },
   {
     id: 'books',
@@ -92,8 +92,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     core: true,
     docs: 'user-guide/treasury/',
     screenshot: {
-      ...screen('books', 'A finance officer working in Books and Treasury on her laptop'),
-      credit: 'Photo: Jaokov, CC BY-SA 4.0, via Wikimedia Commons, with the Books screen added. This image is shared under CC BY-SA 4.0.',
+      ...screen('books', 'A finance officer reviewing the Treasury dashboard on her laptop, with a payment voucher awaiting approval on her phone'),
+      credit: 'Photo: Jaokov, CC BY-SA 4.0, via Wikimedia Commons, edited with the Treasury screens added. This image is shared under CC BY-SA 4.0.',
     },
   },
   {
@@ -125,7 +125,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Branded online menu and shop', 'Pay online or on delivery', 'Live order and rider tracking'],
     core: true,
-    screenshot: screen('ordering', 'Alpha China Market, a real store on the Ordering platform, on a laptop and a phone'),
+    screenshot: screen('ordering', 'A Codevertex marketplace of retail and hospitality stores with flash deals on a laptop, and checkout with M-Pesa on a phone'),
   },
   {
     id: 'projects',
@@ -220,7 +220,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     serviceTag: 'marketflow',
     isNew: true,
     core: true,
-    screenshot: screen('marketflow', 'The MarketFlow dashboard on a laptop, with a customer ordering on a phone'),
+    screenshot: screen('marketflow', 'A MarketFlow lead-to-customer sequence on a tablet, with Vera answering a customer on WhatsApp on a phone'),
   },
   {
     id: 'ticketing',
@@ -259,7 +259,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     highlights: ['Email and WhatsApp templates', 'Delivery history per message', 'Per-tenant sender settings'],
     core: true,
     docs: 'user-guide/notifications/',
-    screenshot: screen('notifications', 'The Notifications dashboard with delivery rate and recent messages, on a laptop'),
+    screenshot: screen('notifications', 'Notifications monitoring on a laptop, with the delivery flows from events to WhatsApp, email, push and SMS on a tablet'),
   },
 ];
 
@@ -285,7 +285,11 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Portals, Android and iOS apps, and APIs',
     description: 'We build the software your business needs when an off-the-shelf product does not fit: customer portals, internal tools, mobile apps and the APIs that connect them.',
     icon: Code2,
-    photo: { src: '/images/photos/hackathon-pairing.webp', alt: 'Developers working through code together at the MUCISA Hackathon 2025' },
+    photo: {
+      src: '/images/products/mobile-apps-scene.webp',
+      alt: 'A developer building a mobile checkout, with the app running in an emulator beside the code and terminal',
+      credit: 'Photo: JMcRae-WMF, CC BY-SA 4.0, via Wikimedia Commons, edited with the Codevertex screen added. This image is shared under CC BY-SA 4.0.',
+    },
     features: ['Customer and staff portals', 'Android and iOS apps', 'APIs and system integrations', 'Workflow automation'],
     cta: { label: 'Start a project', href: '/contact?service=software' },
   },
@@ -295,7 +299,11 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Chatbots, workflows and BI dashboards',
     description: 'Chat assistants that answer from your own documents, reports that build themselves, and dashboards your managers read every morning.',
     icon: Workflow,
-    photo: { src: '/images/products/marketflow-scene.webp', alt: 'MarketFlow and the Vera assistant on a laptop, with a customer ordering on a phone' },
+    photo: {
+      src: '/images/products/ai-scene.webp',
+      alt: 'A MarketFlow automation map from WhatsApp, website and Meta ad triggers to Vera AI and follow-ups, with a Vera chat on a phone',
+      credit: "Backdrop: Will Ochieng', CC BY 4.0, via Wikimedia Commons",
+    },
     features: ['Chat assistants on your own data', 'Scheduled reports and alerts', 'BI dashboards', 'Document and data extraction'],
     cta: { label: 'Discuss an AI project', href: '/contact?service=ai' },
   },
@@ -305,7 +313,11 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Marketplaces and multi-currency stores',
     description: 'Online shops and marketplaces that take M-Pesa and card payments, connected to your stock and your delivery riders.',
     icon: ShoppingBag,
-    photo: { src: '/images/products/ordering-scene.webp', alt: 'An online marketplace of real stores on a laptop and a phone' },
+    photo: {
+      src: '/images/products/web-apps-scene.webp',
+      alt: 'Two developers reviewing a marketplace storefront live beside its code and terminal',
+      credit: 'Photo: JMcRae-WMF, CC BY-SA 4.0, via Wikimedia Commons, edited with the Codevertex screen and sign added. This image is shared under CC BY-SA 4.0.',
+    },
     features: ['Online shops and marketplaces', 'M-Pesa, card and PayHero checkout', 'Stock that stays in sync', 'Delivery and tracking'],
     cta: { label: 'Plan your store', href: '/contact?service=ecommerce' },
   },
@@ -329,7 +341,7 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Penetration tests, audits and ISO 27001',
     description: 'Security reviews of your systems and staff habits, penetration tests, and help preparing for ISO 27001 and data protection audits.',
     icon: Shield,
-    photo: { src: '/images/products/security-scene.webp', alt: 'Codevertex single sign-on with passkeys and two-step codes, on a laptop in a server room' },
+    photo: { src: '/images/products/security-scene.webp', alt: 'A security audit terminal beside threat analytics and checks against ISO 27001, OWASP Top 10 and the Kenya Data Protection Act, on a laptop in a server room' },
     features: ['Penetration testing', 'Security and code reviews', 'ISO 27001 and data protection readiness', 'Staff awareness training'],
     cta: { label: 'Request a security review', href: '/contact?service=cybersec' },
   },
