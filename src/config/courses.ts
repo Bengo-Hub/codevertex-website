@@ -9,9 +9,8 @@ import type { InstallmentPlan, Testimonial } from '../types/course';
 
 export type { InstallmentPlan, WeeklyModule, Testimonial, CourseMetadata } from '../types/course';
 
-// Cover images mapped by course ID — real photos under public/images/courses/
-// Sourced from Unsplash (Unsplash License: free for commercial use, no
-// attribution required, no watermark).
+// Cover images mapped by course ID, under public/images/courses/: our own photos and renders
+// plus CC0 photos. Sources are listed in docs/image-credits.md.
 export const COURSE_COVER_IMAGES: Record<string, string> = {
   // Software Engineering
   'code-starter':   '/images/courses/code-starter.jpg',

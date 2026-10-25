@@ -77,7 +77,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     highlights: ['Payroll with statutory deductions', 'Procurement and approvals', 'Staff records and leave'],
     serviceTag: 'erp',
     core: true,
-    screenshot: screen('erp', 'The ERP Suite reports screen on a laptop, with the employee self-service app showing a payslip breakdown on a phone'),
+    screenshot: screen('erp-ess', 'The ERP Suite reports screen on a laptop, with the employee self-service app showing a payslip breakdown on a phone'),
   },
   {
     id: 'books',
@@ -92,7 +92,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     core: true,
     docs: 'user-guide/treasury/',
     screenshot: {
-      ...screen('books', 'A finance officer reviewing the Treasury dashboard on her laptop, with a payment voucher awaiting approval on her phone'),
+      ...screen('treasury', 'A finance officer reviewing the Treasury dashboard on her laptop, with a payment voucher awaiting approval on her phone'),
       credit: 'Photo: Jaokov, CC BY-SA 4.0, via Wikimedia Commons, edited with the Treasury screens added. This image is shared under CC BY-SA 4.0.',
     },
   },
@@ -125,7 +125,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Branded online menu and shop', 'Pay online or on delivery', 'Live order and rider tracking'],
     core: true,
-    screenshot: screen('ordering', 'A Codevertex marketplace of retail and hospitality stores with flash deals on a laptop, and checkout with M-Pesa on a phone'),
+    screenshot: screen('marketplace', 'A Codevertex marketplace of retail and hospitality stores with flash deals on a laptop, and checkout with M-Pesa on a phone'),
   },
   {
     id: 'projects',
@@ -220,7 +220,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     serviceTag: 'marketflow',
     isNew: true,
     core: true,
-    screenshot: screen('marketflow', 'A MarketFlow lead-to-customer sequence on a tablet, with Vera answering a customer on WhatsApp on a phone'),
+    screenshot: screen('marketflow-vera', 'A MarketFlow lead-to-customer sequence on a tablet, with Vera answering a customer on WhatsApp on a phone'),
   },
   {
     id: 'ticketing',
@@ -259,7 +259,7 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     highlights: ['Email and WhatsApp templates', 'Delivery history per message', 'Per-tenant sender settings'],
     core: true,
     docs: 'user-guide/notifications/',
-    screenshot: screen('notifications', 'Notifications monitoring on a laptop, with the delivery flows from events to WhatsApp, email, push and SMS on a tablet'),
+    screenshot: screen('notifications-flows', 'Notifications monitoring on a laptop, with the delivery flows from events to WhatsApp, email, push and SMS on a tablet'),
   },
 ];
 
@@ -341,7 +341,7 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Penetration tests, audits and ISO 27001',
     description: 'Security reviews of your systems and staff habits, penetration tests, and help preparing for ISO 27001 and data protection audits.',
     icon: Shield,
-    photo: { src: '/images/products/security-scene.webp', alt: 'A security audit terminal beside threat analytics and checks against ISO 27001, OWASP Top 10 and the Kenya Data Protection Act, on a laptop in a server room' },
+    photo: { src: '/images/products/security-audit-scene.webp', alt: 'A security audit terminal beside threat analytics and checks against ISO 27001, OWASP Top 10 and the Kenya Data Protection Act, on a laptop in a server room' },
     features: ['Penetration testing', 'Security and code reviews', 'ISO 27001 and data protection readiness', 'Staff awareness training'],
     cta: { label: 'Request a security review', href: '/contact?service=cybersec' },
   },

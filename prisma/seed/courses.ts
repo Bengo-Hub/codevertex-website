@@ -11,7 +11,7 @@
  * This file must stay self-contained (no imports from src/): the production image
  * only ships the prisma/ folder for the seed step (see Dockerfile).
  *
- * Cover images: /public/images/courses/*.jpg (real photos, Unsplash License, or our own)
+ * Cover images: /public/images/courses/*.jpg (our own photos and renders, plus CC0 photos; see docs/image-credits.md)
  */
 
 // ---------------------------------------------------------------------------
@@ -206,7 +206,7 @@ export const DEPRECATED_COURSE_IDS = [
 
 // ---------------------------------------------------------------------------
 // Course catalog — IDs MUST match src/config/courses.ts
-// Cover images use /images/courses/<id>.jpg (real photos, Unsplash License)
+// Cover images use /images/courses/<id>.jpg (see docs/image-credits.md for sources)
 // ---------------------------------------------------------------------------
 const RAW_COURSES: CourseSeed[] = [
 

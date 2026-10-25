@@ -102,13 +102,14 @@ export function HeroSection({ liveBusinesses, tenants }: { liveBusinesses: numbe
             />
           </div>
 
-          <div className="glass absolute -left-4 sm:-left-8 bottom-8 w-[58%] rounded-2xl p-2 hidden sm:block animate-fade-in">
+          {/* Cards sit over the trees and below the faces, never on them. */}
+          <div className="glass absolute -left-4 sm:-left-8 -bottom-16 w-[58%] rounded-2xl p-2 hidden sm:block animate-fade-in">
             <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
-              <Image src="/images/products/ordering-scene.webp" alt="The Ordering marketplace on a laptop and a phone" fill sizes="30vw" className="object-cover" />
+              <Image src="/images/products/marketplace-scene.webp" alt="The Codevertex marketplace on a laptop, with M-Pesa checkout on a phone" fill sizes="30vw" className="object-cover" />
             </div>
           </div>
 
-          <div className="glass absolute -right-2 sm:-right-5 top-6 rounded-2xl px-4 py-3 max-w-[15rem]">
+          <div className="glass relative mt-4 sm:absolute sm:mt-0 sm:top-4 sm:left-4 lg:-left-24 rounded-2xl px-4 py-3 max-w-[15rem]">
             <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <BadgeCheck className="h-4 w-4 text-primary" aria-hidden /> KRA eTIMS and M-Pesa built in
             </p>
@@ -125,7 +126,7 @@ export function HeroSection({ liveBusinesses, tenants }: { liveBusinesses: numbe
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-14 lg:mt-20 grid gap-4 md:grid-cols-3">
+      <div className="max-w-7xl mx-auto mt-14 sm:mt-24 lg:mt-28 grid gap-4 md:grid-cols-3">
         {PILLARS.map((p) => (
           <a key={p.title} href={p.href} className="group glass flex items-center gap-4 rounded-3xl p-3 pr-5 transition-transform duration-300 hover:-translate-y-1">
             <span className="relative h-20 w-24 shrink-0 overflow-hidden rounded-2xl">

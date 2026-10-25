@@ -89,7 +89,7 @@ export default async function ServicesPage() {
         aside={
           <div className="glass rounded-4xl p-2 shadow-lift">
             <div className="relative aspect-[16/10] overflow-hidden rounded-3xl">
-              <Image src="/images/products/ordering-scene.webp" alt="A Codevertex marketplace of retail and hospitality stores on a laptop, with M-Pesa checkout on a phone" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+              <Image src="/images/products/marketplace-scene.webp" alt="A Codevertex marketplace of retail and hospitality stores on a laptop, with M-Pesa checkout on a phone" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
             </div>
           </div>
         }

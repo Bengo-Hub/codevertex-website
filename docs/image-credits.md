@@ -35,18 +35,18 @@ Two kinds of screen go onto the devices:
 
 | Scene | Device and backdrop | Backdrop licence |
 |-------|---------------------|------------------|
-| books | Real photo of a finance officer at her laptop: Treasury dashboard on the laptop, the approval screen on the phone on her desk, microphone retouched out | CC BY-SA 4.0, Jaokov. Scene shared under CC BY-SA 4.0, credited where shown |
+| treasury | Real photo of a finance officer at her laptop: Treasury dashboard on the laptop, the approval screen on the phone on her desk, microphone retouched out | CC BY-SA 4.0, Jaokov. Scene shared under CC BY-SA 4.0, credited where shown |
 | pos | Rendered counter terminal and receipt printer in front of a real Kenyan supermarket | CC BY-SA 4.0, Mauryndinar. Scene under CC BY-SA 4.0, credited where shown |
 | web-apps | Real photo of two developers at the Wikimania 2025 hackathon in Nairobi, storefront and code on the laptop, a Codevertex sign on the wall | CC BY-SA 4.0, JMcRae-WMF. Scene under CC BY-SA 4.0, credited where shown |
 | mobile-apps | Real photo of a developer at the same hackathon, emulator, code and terminal on the laptop | CC BY-SA 4.0, JMcRae-WMF. Scene under CC BY-SA 4.0, credited where shown |
 | ai | Laptop with the MarketFlow map and a phone with Vera, over the Kisumu skyline | CC BY 4.0, Will Ochieng', credited where shown |
 | inventory | Laptop over a Naivas supermarket aisle | CC0, safaritravelplus |
-| erp, marketflow | Laptop or tablet with a phone over a Kisumu rooftop view | CC0, Leo Hempstone |
-| notifications | Laptop and tablet over Oginga Odinga Street, Kisumu | CC0, Leo Hempstone |
-| ordering | Laptop and phone over Mega Plaza, Kisumu | CC0, Leo Hempstone |
+| erp-ess, marketflow-vera | Laptop or tablet with a phone over a Kisumu rooftop view | CC0, Leo Hempstone |
+| notifications-flows | Laptop and tablet over Oginga Odinga Street, Kisumu | CC0, Leo Hempstone |
+| marketplace | Laptop and phone over Mega Plaza, Kisumu | CC0, Leo Hempstone |
 | logistics | Laptop over Mombasa port staff | Public domain, Ministry of East African Affairs, Commerce and Tourism |
 | truload | Laptop over our own Kanyonyo install photo | Our photo |
-| security | Laptop with the audit terminal and threat analytics over a server hall | CC0, Derrick Coetzee |
+| security-audit | Laptop with the audit terminal and threat analytics over a server hall | CC0, Derrick Coetzee |
 
 Product photos inside the storefront and checkout mockups (frying pan, charger, cappuccino,
 serum, lipsticks, jumper cables) are CC0 from rawpixel, StockSnap and Flickr, found through

@@ -41,10 +41,10 @@ const INTEGRATIONS: Integration[] = [
     docs: [{ label: 'eTIMS API quickstart', path: 'integrations/etims-api/' }],
     photos: [
       {
-        src: '/images/products/books-scene.webp',
-        alt: 'A finance officer working in Books and Treasury on her laptop',
+        src: '/images/products/treasury-scene.webp',
+        alt: 'A finance officer reviewing the Treasury dashboard on her laptop, with an eTIMS-signed invoice on her phone',
         caption: 'Invoices signed with KRA from Books and Treasury',
-        credit: 'Photo: Jaokov, CC BY-SA 4.0, via Wikimedia Commons, with the Books screen added. Shared under CC BY-SA 4.0.',
+        credit: 'Photo: Jaokov, CC BY-SA 4.0, via Wikimedia Commons, edited with the Treasury screens added. Shared under CC BY-SA 4.0.',
       },
     ],
   },
@@ -64,7 +64,7 @@ const INTEGRATIONS: Integration[] = [
         caption: 'Paid at the counter',
         credit: 'Counter photo: Mauryndinar, CC BY-SA 4.0, via Wikimedia Commons, with the POS terminal added. Shared under CC BY-SA 4.0.',
       },
-      { src: '/images/products/ordering-scene.webp', alt: 'A marketplace checkout paid with M-Pesa on a phone, beside the storefront on a laptop', caption: 'Paid online' },
+      { src: '/images/products/marketplace-scene.webp', alt: 'A marketplace checkout paid with M-Pesa on a phone, beside the storefront on a laptop', caption: 'Paid online' },
     ],
     docs: [
       { label: 'How payments work', path: 'integrations/payment-workflow/' },
