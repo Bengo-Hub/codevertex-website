@@ -27,7 +27,7 @@ Two kinds of screen go onto the devices:
 
 - Real screens captured from the codevertex-demo tenant at 2x (2880 x 1800): Inventory, Logistics,
   Treasury and the TruLoad sign-in, plus the ERP reports page and Notifications monitoring
-  captured by the team. The POS terminal shows the team's capture of the POS sell screen
+  captured by the team. The POS terminal shows the team's capture of the hospitality POS sell screen
   (`public/images/photos/pos-terminal.png`, the scene's input, not used on any page).
 - Branded mockups built in HTML with sample data, for screens the demo tenant cannot show yet: the
   MarketFlow sequence map, the Vera chat, the ERP self-service phone, the Notifications delivery
@@ -38,7 +38,7 @@ Two kinds of screen go onto the devices:
 | Scene | Device and backdrop | Backdrop licence |
 |-------|---------------------|------------------|
 | treasury | Real photo of a finance officer at her laptop: Treasury dashboard on the laptop, the approval screen on the phone on her desk, microphone retouched out | CC BY-SA 4.0, Jaokov. Scene shared under CC BY-SA 4.0, credited where shown |
-| pos | Rendered counter terminal and receipt printer in front of a real Kenyan supermarket | CC BY-SA 4.0, Mauryndinar. Scene under CC BY-SA 4.0, credited where shown |
+| pos-cafe | Rendered counter terminal showing the hospitality POS (a cafe order) and a receipt printer, over Thorn Tree Cafe, Nairobi | CC BY-SA 4.0, Bahnfrend. Scene under CC BY-SA 4.0, credited where shown |
 | web-apps | Real photo of two developers at the Wikimania 2025 hackathon in Nairobi, storefront and code on the laptop, a Codevertex sign on the wall | CC BY-SA 4.0, JMcRae-WMF. Scene under CC BY-SA 4.0, credited where shown |
 | mobile-apps | Real photo of a developer at the same hackathon, emulator, code and terminal on the laptop | CC BY-SA 4.0, JMcRae-WMF. Scene under CC BY-SA 4.0, credited where shown |
 | ai | Laptop with the MarketFlow map and a phone with Vera, over the Kisumu skyline | CC BY 4.0, Will Ochieng', credited where shown |

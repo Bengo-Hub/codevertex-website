@@ -110,8 +110,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     core: true,
     docs: 'user-guide/pos/',
     screenshot: {
-      ...screen('pos', 'The POS on the counter of a busy Kenyan supermarket, with cashiers and shoppers behind it'),
-      credit: 'Photo: Mauryndinar, CC BY-SA 4.0, via Wikimedia Commons, with the POS terminal added. This image is shared under CC BY-SA 4.0.',
+      ...screen('pos-cafe', 'The POS on a cafe counter in Nairobi, taking a coffee order with cappuccino, espresso and double espresso'),
+      credit: 'Photo: Bahnfrend, CC BY-SA 4.0, via Wikimedia Commons, edited with the POS terminal added. This image is shared under CC BY-SA 4.0.',
     },
   },
   {

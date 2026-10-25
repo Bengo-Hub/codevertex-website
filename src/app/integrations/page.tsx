@@ -60,10 +60,10 @@ const INTEGRATIONS: Integration[] = [
     logos: true,
     photos: [
       {
-        src: '/images/products/pos-scene.webp',
-        alt: 'The POS on the counter of a Kenyan supermarket',
+        src: '/images/products/pos-cafe-scene.webp',
+        alt: 'The POS on a Nairobi cafe counter, with Cash, Card, PayHero and Charge to Room payment buttons',
         caption: 'Paid at the counter',
-        credit: 'Counter photo: Mauryndinar, CC BY-SA 4.0, via Wikimedia Commons, with the POS terminal added. Shared under CC BY-SA 4.0.',
+        credit: 'Cafe photo: Bahnfrend, CC BY-SA 4.0, via Wikimedia Commons, edited with the POS terminal added. Shared under CC BY-SA 4.0.',
       },
       { src: '/images/products/marketplace-scene.webp', alt: 'A marketplace checkout paid with M-Pesa on a phone, beside the storefront on a laptop', caption: 'Paid online' },
     ],
