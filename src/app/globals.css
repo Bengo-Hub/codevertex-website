@@ -1,111 +1,107 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @config "../../tailwind.config.ts";
+/* shared-ui-lib (careers, payments) ships raw Tailwind classes; scan them or they are unstyled. */
+@source "../../node_modules/@bengo-hub/shared-ui-lib/dist";
 
+/*
+ * Codevertex Africa Limited brand tokens (docs/ux-ui.md).
+ * Plum #9B2C6B is the logo colour, night #1E0F1B and gold #C8963E come from the
+ * 2026 roll-up banner. Colours are solid: no gradients, glows or glass.
+ */
 @layer base {
   :root {
-    /* Codevertex Brand — Light Mode */
-    --background: 0 0% 100%;            /* pure white */
-    --foreground: 222.2 47.4% 11.2%;   /* dark navy */
+    --background: 0 0% 100%;
+    --foreground: 264 13% 12%;          /* ink #1D1A22 */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 264 13% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 264 13% 12%;
 
-    /* Primary: Codevertex Brand Purple #9100B0 — HSL 291 100% 35% */
-    --primary: 291 100% 35%;
+    --primary: 326 56% 39%;             /* plum #9B2C6B */
     --primary-foreground: 0 0% 100%;
+    --primary-deep: 315 62% 30%;        /* pressed plum #7A1D63 */
 
-    --secondary: 210 16% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 16% 96%;
-    --muted-foreground: 215 20% 47%;
-    --accent: 291 30% 95%;
-    --accent-foreground: 291 100% 25%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 291 100% 35%;
-    --radius: 0.5rem;
+    --secondary: 280 16% 96%;           /* paper #F6F4F7 */
+    --secondary-foreground: 264 13% 12%;
+    --muted: 280 16% 96%;
+    --muted-foreground: 276 5% 41%;
+    --accent: 326 43% 94%;
+    --accent-foreground: 315 62% 30%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 280 14% 90%;
+    --input: 280 14% 86%;
+    --ring: 326 56% 39%;
+    --radius: 0.375rem;
+
+    --night: 312 33% 9%;                /* #1E0F1B */
+    --night-foreground: 300 20% 96%;
+    --gold: 38 56% 51%;                 /* #C8963E */
   }
 
   .dark {
-    /* Dark mode: near-black with slight purple tint to match brand guide */
-    --background: 270 20% 5%;          /* #0c0910 near-black */
-    --foreground: 210 40% 98%;
-    --card: 270 15% 8%;
-    --card-foreground: 210 40% 98%;
-    --popover: 270 15% 8%;
-    --popover-foreground: 210 40% 98%;
+    --background: 312 30% 7%;
+    --foreground: 300 20% 95%;
+    --card: 312 25% 10%;
+    --card-foreground: 300 20% 95%;
+    --popover: 312 25% 10%;
+    --popover-foreground: 300 20% 95%;
 
-    /* Primary: same brand purple, slightly lighter for dark bg readability */
-    --primary: 291 100% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 326 52% 62%;
+    --primary-foreground: 312 33% 9%;
+    --primary-deep: 326 56% 52%;
 
-    --secondary: 270 15% 14%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 270 15% 14%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 270 15% 14%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --border: 270 15% 14%;
-    --input: 270 15% 14%;
-    --ring: 291 100% 60%;
+    --secondary: 312 20% 14%;
+    --secondary-foreground: 300 20% 95%;
+    --muted: 312 20% 14%;
+    --muted-foreground: 300 8% 68%;
+    --accent: 312 20% 16%;
+    --accent-foreground: 300 20% 95%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 312 18% 18%;
+    --input: 312 18% 22%;
+    --ring: 326 52% 62%;
+
+    --night: 312 33% 5%;
+    --night-foreground: 300 20% 96%;
+    --gold: 38 60% 58%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
+  html { scroll-behavior: smooth; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "ss01" 1, "cv11" 1;
   }
-  h1, h2, h3, h4 { @apply tracking-tight; }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display), var(--font-body), system-ui, sans-serif;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @layer utilities {
   .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
 
-  /* Gradient text — brand purple */
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75));
-  }
-
-  /* Brand purple glow shadows */
-  .shadow-primary {
-    box-shadow: 0 8px 30px hsl(var(--primary) / 0.25);
-  }
-  .shadow-primary-lg {
-    box-shadow: 0 16px 50px hsl(var(--primary) / 0.35);
-  }
-
-  /* Mesh background */
-  .mesh-bg {
-    background-image:
-      radial-gradient(at 20% 20%, hsl(var(--primary) / 0.12) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, hsl(var(--primary) / 0.06) 0px, transparent 50%);
-  }
-
-  /* Grid overlay */
-  .grid-bg {
-    background-image:
-      linear-gradient(to right, hsl(var(--border) / 0.4) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.4) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-
-  /* Glass card */
-  .glass {
-    @apply backdrop-blur-xl bg-background/80 border border-border;
-  }
-
-  /* Infinite marquee carousel */
+  /* Slow logo strip for client and employer logos; paused on hover and for reduced motion. */
   .animate-marquee {
-    animation: marquee 25s linear infinite;
+    animation: marquee 40s linear infinite;
   }
   .animate-marquee:hover {
     animation-play-state: paused;

@@ -1,107 +1,120 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageIntro } from '@/components/site/PageIntro';
+import { CTASection } from '@/components/home/CTASection';
 import { POWER_SUITE } from '@/config/services';
+import { SITE } from '@/lib/constants';
 
-export const metadata: Metadata = { title: 'About Us', description: 'Architecting Africa\'s Digital Renaissance from Kisumu, Kenya since 2020.' };
+export const metadata: Metadata = {
+  title: 'About us',
+  description: `Codevertex Africa Limited is a software and technology company in Kisumu, Kenya. ${SITE.tagline}.`,
+};
 
+// Track record as stated in the Codevertex Africa Limited business profile.
 const TRACK_RECORD = [
-  { org: 'Public Sector', detail: 'Delivered ICDL training to 200+ corporate staff under the Digital Economy ICT Initiative.', num: '01' },
-  { org: 'Maseno University (MUCISA)', detail: 'Equipped 120+ students with coding, digital entrepreneurship, and employability skills.', num: '02' },
-  { org: 'Danka Africa Ltd', detail: 'Led end-to-end digital transformation for a prominent regional energy company.', num: '03' },
-  { org: 'KCA University & Future Hubs Kenya', detail: 'Long-term strategic collaborations for training delivery and technology development.', num: '04' },
+  { org: 'Digital Economy ICT Initiative', detail: 'Customised ICDL training for more than 200 corporate staff.' },
+  { org: 'Maseno University (MUCISA)', detail: 'More than 120 students trained in coding, digital entrepreneurship and employability skills.' },
+  { org: 'Danka Africa Ltd', detail: 'End-to-end digital transformation for a regional energy company.' },
+  { org: 'KCA University and Future Hubs Kenya', detail: 'Long-term partners in training delivery and technology development.' },
+];
+
+const COMPANY_FACTS = [
+  { label: 'Registered name', value: 'Codevertex Africa Limited' },
+  { label: 'Company number', value: 'PVT-VQ1OEVB3' },
+  { label: 'Incorporated', value: '21 May 2026, under the Kenya Companies Act, 2015' },
+  { label: 'Operating since', value: '2020, first as Codevertex IT Solutions' },
+  { label: 'Office', value: SITE.address },
 ];
 
 export default function AboutPage() {
   return (
-    <div className="pt-20">
-      <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-125 h-100 bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">About us</p>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] max-w-4xl mb-6">
-                Architecting Africa&apos;s Digital Renaissance
-              </h1>
-              <p className="text-white/70 dark:text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                Established in 2020. Headquartered in Kisumu, Kenya. Purpose-driven. Pan-African in ambition.
-              </p>
+    <>
+      <PageIntro
+        title={SITE.tagline}
+        lead="Codevertex Africa Limited builds business software, installs the hardware it runs on, and trains the people who use it. We work from Kisumu, with clients across Kenya and East Africa."
+        aside={
+          <figure>
+            <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-muted">
+              <Image src="/images/photos/team-mucisa-2025.webp" alt="Members of the Codevertex team at the MUCISA Hackathon 2025" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
             </div>
-            <div className="hidden lg:flex flex-col gap-3">
-              {[
-                { val: String(POWER_SUITE.length), label: 'SaaS products built' },
-                { val: '200+', label: 'Staff trained' },
-                { val: '120+', label: 'Students certified' },
-                { val: '5+', label: 'Years of impact' },
-              ].map(s => (
-                <div key={s.val} className="flex items-center gap-4 px-5 py-3 rounded-xl bg-white/5 dark:bg-foreground/5 border border-white/10 dark:border-foreground/10">
-                  <span className="text-2xl font-black text-primary">{s.val}</span>
-                  <span className="text-white/70 dark:text-muted-foreground text-sm font-medium">{s.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+          </figure>
+        }
+      />
 
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Who we are</p>
-            <h2 className="text-3xl font-black text-foreground tracking-tight mb-6">Beyond software development</h2>
-            <p className="text-muted-foreground leading-relaxed mb-4 text-base">
-              Codevertex Africa Limited is a premier technology firm and innovation hub headquartered in Kisumu, Kenya. We go beyond software development — we design and deploy integrated digital ecosystems.
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="max-w-7xl mx-auto grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-7 space-y-5 text-lg text-foreground/85 leading-relaxed">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">What we do</h2>
+            <p>
+              Most of our clients come to us with a business to run, not a software project. A shop that needs a till that
+              works when the internet drops. A weighbridge that needs every truck&apos;s plate on its weight ticket. A library
+              that still lends books from a paper register.
             </p>
-            <p className="text-muted-foreground leading-relaxed text-base">
-              By combining bespoke software engineering, advanced artificial intelligence, robust data analytics, and a high-calibre talent development pipeline, we enable organisations to evolve from legacy systems to agile, data-centric, high-growth operations.
+            <p>
+              For them we built the Power Suite: {POWER_SUITE.length} products that share one sign-in, from point of sale and
+              stock to books, payroll, clinics and weighbridges. Where a product does not fit, we build what is needed, host it,
+              secure it and connect it to the cameras, scales and payment systems around it.
+            </p>
+            <p>
+              Digitika Academy, our training arm, teaches software engineering, networking, data and digital skills to learners
+              and to client teams, so the people using the systems can run them well.
             </p>
           </div>
-          <div className="space-y-4">
+
+          <div className="lg:col-span-5 space-y-6">
             {[
               { label: 'Vision', text: "To serve as the preeminent catalyst for Africa's digital sovereignty, creating a future where equitable access to technology fuels broad-based continental prosperity." },
               { label: 'Mission', text: 'To empower African enterprises, governments, and communities through inclusive, innovative, and practical technology solutions that modernize workforces, digitize economies, and unlock sustainable growth.' },
-            ].map(v => (
-              <div key={v.label} className="p-6 rounded-2xl bg-card border border-border border-l-4 border-l-primary">
-                <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">{v.label}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed">{v.text}</p>
+            ].map((v) => (
+              <div key={v.label} className="border-l-2 border-gold pl-5">
+                <h3 className="font-semibold text-foreground">{v.label}</h3>
+                <p className="mt-2 text-muted-foreground leading-relaxed">{v.text}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30">
-        <div className="max-w-7xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-8">Track record & partners</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {TRACK_RECORD.map(t => (
-              <div key={t.org} className="flex gap-5 p-6 rounded-2xl bg-card border border-border">
-                <span className="font-mono text-xs text-muted-foreground shrink-0 mt-1">{t.num}</span>
-                <div>
-                  <p className="font-bold text-foreground mb-2">{t.org}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{t.detail}</p>
+      <section className="bg-secondary px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="max-w-7xl mx-auto grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">Track record</h2>
+            <ul className="mt-6 divide-y divide-border border-y border-border">
+              {TRACK_RECORD.map((t) => (
+                <li key={t.org} className="py-5">
+                  <p className="font-semibold text-foreground">{t.org}</p>
+                  <p className="mt-1 text-muted-foreground">{t.detail}</p>
+                </li>
+              ))}
+            </ul>
+            <Button variant="outline" className="mt-8" asChild><Link href="/projects">See our projects</Link></Button>
+          </div>
+
+          <div className="lg:col-span-6">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">Company details</h2>
+            <dl className="mt-6 divide-y divide-border border-y border-border">
+              {COMPANY_FACTS.map((f) => (
+                <div key={f.label} className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                  <dt className="text-sm text-muted-foreground">{f.label}</dt>
+                  <dd className="sm:col-span-2 text-foreground">{f.value}</dd>
                 </div>
+              ))}
+            </dl>
+            <figure className="mt-8">
+              <div className="relative aspect-16/9 overflow-hidden rounded-md bg-muted">
+                <Image src="/images/photos/kisumu-oginga-odinga-street.webp" alt="Oginga Odinga Street in Kisumu CBD" fill sizes="(min-width: 1024px) 45vw, 100vw" className="object-cover" />
               </div>
-            ))}
+              <figcaption className="mt-2 text-xs text-muted-foreground">
+                Oginga Odinga Street, Kisumu, where our office is. Photo: Leo Hempstone, CC0, via Wikimedia Commons.
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>
 
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-primary">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-8">
-          <h2 className="text-3xl sm:text-4xl font-black text-white dark:text-primary-foreground tracking-tight">Ready to partner with us?</h2>
-          <div className="flex gap-3 shrink-0">
-            <Button size="lg" className="bg-white text-primary hover:bg-white/90 dark:bg-primary-foreground dark:text-primary dark:hover:bg-primary-foreground/90" asChild>
-              <Link href="/contact">Get in touch <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
-            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 dark:border-primary-foreground/30 dark:text-primary-foreground dark:hover:bg-primary-foreground/10" asChild>
-              <Link href="/careers">Join our team</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-    </div>
+      <CTASection title="Work with us, or join the team." lead="Tell us about your project, or see the roles and attachment places we have open." />
+    </>
   );
 }

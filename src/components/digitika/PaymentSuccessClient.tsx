@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle2, AlertCircle, CreditCard, Calendar, BookOpen,
   ArrowRight, MessageCircle, GraduationCap, Clock, ChevronRight,
-  Sparkles, Wallet, BadgeCheck, Bookmark, Share2, Copy, Check, LogIn,
+  Wallet, BadgeCheck, Bookmark, Share2, Copy, Check, LogIn, Mail, Phone, CalendarDays, Bell,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { SITE } from '@/lib/constants';
@@ -124,7 +124,7 @@ export function PaymentSuccessClient() {
         amount: inst.amount,
         currency: summary.currency,
         referenceId: referenceId ?? summary.enrollmentId,
-        description: `${summary.courseName} — ${ordinal(inst.installmentNo)} Installment`,
+        description: `${summary.courseName}, ${ordinal(inst.installmentNo)} instalment`,
         redirectUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/digitika/success`,
       }), '_blank');
       setPayingInst(null);
@@ -199,37 +199,27 @@ export function PaymentSuccessClient() {
     <main className="min-h-screen bg-background">
 
       {/* ── Hero band ──────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-linear-to-br from-emerald-600 via-emerald-500 to-teal-500 py-14 px-4 text-white">
-        {/* Decorative rings */}
-        <div className="pointer-events-none absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/5 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5 blur-2xl" />
-
-        <div className="max-w-3xl mx-auto text-center relative z-10">
+      <div className="bg-night pt-28 lg:pt-32 pb-14 px-4 text-night-foreground">
+        <div className="max-w-3xl mx-auto text-center">
+          {/* One confirming motion: the tick appears when the page opens after payment. */}
           <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
+            initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-            className="w-20 h-20 rounded-full bg-white/15 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-black/20"
+            className="w-16 h-16 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-5"
           >
-            <CheckCircle2 className="h-10 w-10 text-white" />
+            <CheckCircle2 className="h-9 w-9 text-white" aria-hidden />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/25 text-xs font-bold uppercase tracking-widest mb-4">
-              <Sparkles className="h-3 w-3" /> Enrollment Confirmed
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-              You&rsquo;re enrolled, {firstName}!
+          <div>
+            <p className="text-sm font-semibold text-gold mb-2">Enrolment confirmed</p>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+              You are enrolled, {firstName}.
             </h1>
-            <p className="mt-3 text-emerald-100 text-base leading-relaxed max-w-lg mx-auto">
-              Welcome to <span className="font-bold text-white">{summary.courseName}</span>.
-              Your learning journey starts here.
+            <p className="mt-3 text-night-foreground/75 text-base leading-relaxed max-w-lg mx-auto">
+              Your place in <span className="font-semibold text-night-foreground">{summary.courseName}</span> is booked.
             </p>
-          </motion.div>
+          </div>
 
           {/* Student ID pill */}
           <motion.div
@@ -243,7 +233,7 @@ export function PaymentSuccessClient() {
             <span className="font-mono font-bold tracking-wider text-white text-sm">{summary.studentId}</span>
           </motion.div>
 
-          {/* Portal access CTA — the actual answer to "how do I get in?" */}
+          {/* Portal access: how the learner gets in */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -316,10 +306,10 @@ export function PaymentSuccessClient() {
             {/* Main amount row */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
               <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
+                <p className="text-xs text-muted-foreground font-medium mb-1">
                   Amount Paid
                 </p>
-                <p className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+                <p className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">
                   {formatCurrency(amountPaid, summary.currency)}
                 </p>
                 {!isUpfront && summary.remainingBalance > 0 && (
@@ -356,7 +346,7 @@ export function PaymentSuccessClient() {
               <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/8 border border-emerald-500/20 mt-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
-                  Full course fee paid — you&rsquo;re all set!
+                  Full course fee paid. You are all set.
                 </p>
               </div>
             )}
@@ -391,7 +381,7 @@ export function PaymentSuccessClient() {
                     className={`px-6 py-4 flex items-center gap-4 ${isNext ? 'bg-amber-500/3' : ''}`}
                   >
                     {/* Step circle */}
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-black text-sm ${
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-sm ${
                       isPaid
                         ? 'bg-emerald-500 text-white'
                         : isNext
@@ -405,7 +395,7 @@ export function PaymentSuccessClient() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground">
                         {ordinal(inst.installmentNo)} Payment
-                        {isNext && <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 uppercase tracking-wide">Next due</span>}
+                        {isNext && <span className="ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">Next due</span>}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                         <Clock className="h-3 w-3 shrink-0" />
@@ -505,13 +495,13 @@ export function PaymentSuccessClient() {
             </div>
             <ol className="divide-y divide-border">
               {([
-                { icon: '📧', text: 'A confirmation email is on its way to your inbox.' },
-                { icon: '📞', text: 'Our team will reach out within 24 hours with orientation details.' },
-                { icon: '📅', text: "You'll receive your class schedule before the start date." },
-                ...(!isUpfront ? [{ icon: '🔔', text: "We'll remind you before each upcoming installment." }] : []),
-              ]).map(({ icon, text }, i) => (
+                { icon: Mail, text: 'A confirmation is on its way to your email and WhatsApp.' },
+                { icon: Phone, text: 'Our team will contact you within 24 hours with orientation details.' },
+                { icon: CalendarDays, text: 'You will get your class schedule before the start date.' },
+                ...(!isUpfront ? [{ icon: Bell, text: 'We will remind you before each instalment is due.' }] : []),
+              ]).map(({ icon: Icon, text }, i) => (
                 <li key={i} className="flex items-start gap-3 px-5 py-3.5">
-                  <span className="text-base shrink-0 mt-0.5">{icon}</span>
+                  <Icon className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden />
                   <p className="text-xs text-muted-foreground leading-relaxed">{text}</p>
                 </li>
               ))}
@@ -528,7 +518,7 @@ export function PaymentSuccessClient() {
         >
           <button
             onClick={() => login('/student', 'student', summary.email)}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-primary/25"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity"
           >
             <LogIn className="h-4 w-4" />
             Access Student Portal

@@ -4,7 +4,7 @@ import { CheckCircle2, XCircle, Download } from 'lucide-react';
 import { prisma } from '@/lib/db';
 
 export const metadata: Metadata = {
-  title: 'Verify Certificate | Digitika — Codevertex',
+  title: 'Verify a certificate | Digitika Academy',
   robots: { index: false, follow: false },
 };
 
@@ -18,8 +18,8 @@ export default async function VerifyCertificatePage({
   const valid = Boolean(cert && !cert.revoked);
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm text-center space-y-5">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4 pt-28 pb-16">
+      <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 text-center space-y-5">
         {valid && cert ? (
           <>
             <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
@@ -53,7 +53,7 @@ export default async function VerifyCertificatePage({
               </p>
             </div>
             <Link href="/digitika#courses" className="text-primary text-sm underline underline-offset-2">
-              Browse Digitika courses →
+              Browse Digitika courses
             </Link>
           </>
         )}

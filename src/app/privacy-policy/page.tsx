@@ -9,19 +9,16 @@ const LAST_UPDATED = '20 August 2026';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="pt-20">
-      <section className="bg-foreground py-16 px-4 sm:px-6 lg:px-8">
+    <div>
+      <section className="border-b border-border pt-28 lg:pt-36 pb-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Legal</p>
-          <h1 className="text-4xl sm:text-5xl font-black text-white dark:text-foreground tracking-tight">
-            Privacy Policy
-          </h1>
-          <p className="text-white/60 dark:text-muted-foreground mt-3 text-sm">Last updated: {LAST_UPDATED}</p>
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-foreground tracking-tight">Privacy policy</h1>
+          <p className="text-muted-foreground mt-3 text-sm">Last updated {LAST_UPDATED}</p>
         </div>
       </section>
 
       <section className="py-14 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary">
+        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary">
           <p>
             Codevertex Africa Limited (&ldquo;Codevertex&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) respects your privacy and is
             committed to protecting the personal data you share with us through this website, our Digitika
@@ -31,11 +28,11 @@ export default function PrivacyPolicyPage() {
 
           <h2>Information we collect</h2>
           <ul>
-            <li><strong>Information you provide</strong> — your name, email, phone number, date of birth, and
+            <li><strong>Information you provide:</strong> your name, email, phone number, date of birth, and
               related details when you contact us, enrol in a course, or request a service.</li>
-            <li><strong>Payment information</strong> — enrolment and billing details are processed by our
+            <li><strong>Payment information:</strong> enrolment and billing details are processed by our
               payment partners (e.g. Paystack and M-Pesa). We do not store full card details on our servers.</li>
-            <li><strong>Usage information</strong> — basic technical data such as pages visited and device type,
+            <li><strong>Usage information:</strong> basic technical data such as pages visited and device type,
               collected to keep the site secure and improve it.</li>
           </ul>
 
@@ -88,8 +85,8 @@ export default function PrivacyPolicyPage() {
           <p>
             We use a small number of cookies: strictly necessary cookies that keep the site and admin panel
             working (e.g. session state), and optional analytics cookies that help us understand how the site
-            is used. On your first visit, a cookie banner lets you accept or decline the optional cookies —
-            strictly necessary cookies cannot be disabled, as the site cannot function without them. You can
+            is used. On your first visit, a cookie banner lets you accept or decline the optional cookies.
+            Strictly necessary cookies cannot be disabled, as the site cannot function without them. You can
             change your choice at any time via the &ldquo;Cookie settings&rdquo; link in the site footer.
           </p>
 

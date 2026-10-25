@@ -17,9 +17,9 @@ export function CourseCard({ course, category }: Props) {
   return (
     <Link
       href={`/digitika/${course.id}`}
-      className="group flex flex-col rounded-2xl bg-card border border-border overflow-hidden hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-200"
+      className="group flex flex-col rounded-lg bg-card border border-border overflow-hidden hover:border-primary/40 transition-colors"
     >
-      {/* Category colour accent strip — only decorative, thin */}
+      {/* Thin category colour strip */}
       <div className="h-1 w-full shrink-0" style={{ background: category.color }} />
 
       {/* Cover image */}
@@ -29,7 +29,7 @@ export function CourseCard({ course, category }: Props) {
             src={cover}
             alt={course.name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
           />
         </div>
@@ -38,13 +38,13 @@ export function CourseCard({ course, category }: Props) {
       <div className="p-6 flex-1">
         {/* Tags */}
         <div className="flex gap-2 flex-wrap mb-4">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border border-primary/20 bg-primary/8 text-primary">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-primary/20 bg-primary/8 text-primary">
             <Monitor className="h-2.5 w-2.5" /> {course.mode}
           </span>
           {course.audience && <Badge variant="secondary">{course.audience}</Badge>}
           {course.featured && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
-              ★ Featured
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+              Featured
             </span>
           )}
         </div>
@@ -82,7 +82,7 @@ export function CourseCard({ course, category }: Props) {
       {/* Footer */}
       <div className="px-6 py-4 border-t border-border flex items-center justify-between gap-4">
         <div>
-          <div className="text-xl font-black text-foreground">{formatCurrency(course.price, course.currency)}</div>
+          <div className="text-xl font-bold text-foreground">{formatCurrency(course.price, course.currency)}</div>
           {course.installmentsEnabled && course.installmentPlans.length > 1 ? (
             <div className="text-xs text-muted-foreground">
               from {formatCurrency(course.installmentPlans[1]?.payments[0]?.amount ?? course.price, course.currency)}/installment

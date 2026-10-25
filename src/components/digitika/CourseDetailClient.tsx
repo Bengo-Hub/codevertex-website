@@ -129,25 +129,19 @@ export function CourseDetailClient({ course, category }: Props) {
       </div>
 
       {/* ── Hero ──────────────────────────────────────────────────────────────── */}
-      <div
-        className="py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${category.color}14, ${category.color}06)` }}
-      >
-        {/* faint radial glow */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse 60% 80% at 80% 50%, ${category.color}10, transparent)` }} />
-
-        <div className="max-w-7xl mx-auto relative z-10">
+      <div className="py-12 px-4 sm:px-6 lg:px-8 bg-secondary border-b border-border">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
 
             {/* Left: text */}
             <motion.div {...fadeUp(0)}>
               <span
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium mb-4"
                 style={{ background: `${category.color}18`, color: category.color }}
               >
                 {category.name}
               </span>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight leading-tight mb-3">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight mb-3">
                 {course.name}
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed mb-5">
@@ -213,8 +207,6 @@ export function CourseDetailClient({ course, category }: Props) {
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     priority
                   />
-                  {/* overlay gradient */}
-                  <div className="absolute inset-0 bg-linear-to-t from-card/30 to-transparent pointer-events-none" />
                 </div>
 
                 {/* Certificate badge */}
@@ -255,7 +247,7 @@ export function CourseDetailClient({ course, category }: Props) {
               <div key={label} className="flex items-center gap-3 px-6 py-4">
                 <Icon className="h-5 w-5 text-primary shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{label}</p>
                   <p className="text-sm font-bold text-foreground">{value}</p>
                 </div>
               </div>
@@ -273,7 +265,7 @@ export function CourseDetailClient({ course, category }: Props) {
 
             {/* Outcomes */}
             <motion.section {...fadeUp(0)}>
-              <h2 className="text-xl font-black text-foreground mb-5 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-foreground mb-5 flex items-center gap-2">
                 <Target className="h-5 w-5 text-primary" /> What you&apos;ll achieve
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -289,7 +281,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Includes */}
             {course.includes.length > 0 && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-5">Everything included</h2>
+                <h2 className="text-xl font-bold text-foreground mb-5">Everything included</h2>
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
                   <div className="h-1 bg-primary" />
                   <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -309,7 +301,7 @@ export function CourseDetailClient({ course, category }: Props) {
               <motion.section {...fadeUp(0)}>
                 <button
                   onClick={() => setShowCurriculum(!showCurriculum)}
-                  className="w-full flex items-center justify-between text-xl font-black text-foreground mb-2 hover:text-primary transition-colors"
+                  className="w-full flex items-center justify-between text-xl font-bold text-foreground mb-2 hover:text-primary transition-colors"
                 >
                   <span className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-primary" />
@@ -331,7 +323,7 @@ export function CourseDetailClient({ course, category }: Props) {
                         transition={{ delay: idx * 0.04 }}
                         className="flex gap-4 p-4 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xs font-black bg-primary text-primary-foreground">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-xs font-bold bg-primary text-primary-foreground">
                           W{mod.week}
                         </div>
                         <div>
@@ -354,12 +346,12 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Course structure (for courses without curriculum) */}
             {!hasCurriculum && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-5 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-5 flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-primary" /> How this course works
                 </h2>
                 <div className="space-y-3">
                   {[
-                    { icon: Users,       title: 'Instructor-led sessions', desc: `${course.duration} of live, interactive classes with experienced instructors — ${course.mode.toLowerCase()}.` },
+                    { icon: Users,       title: 'Instructor-led sessions', desc: `${course.duration} of live, interactive classes with experienced instructors, ${course.mode.toLowerCase()}.` },
                     { icon: Code2,       title: 'Hands-on practicals', desc: 'Every concept is applied immediately through guided lab work, real-world exercises, and project builds.' },
                     { icon: Target,      title: 'Targeted assessments', desc: 'Regular quizzes and milestone assessments keep you on track and prepare you for the final certification exam.' },
                     { icon: Award,       title: 'Certificate & portfolio', desc: 'Graduate with a Codevertex certificate and proof-of-work to show employers and clients.' },
@@ -388,7 +380,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Stack */}
             {course.stack && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Code2 className="h-5 w-5 text-primary" /> Tech Stack
                 </h2>
                 <div className="flex flex-wrap gap-2">
@@ -407,7 +399,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Prerequisites */}
             {course.prerequisites.length > 0 && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-4">Prerequisites</h2>
+                <h2 className="text-xl font-bold text-foreground mb-4">Prerequisites</h2>
                 <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-2">
                   {course.prerequisites.map(p => (
                     <div key={p} className="flex items-center gap-2.5 text-sm text-muted-foreground">
@@ -434,7 +426,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* What to bring */}
             {meta.requirements && meta.requirements.length > 0 && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-4">What to bring</h2>
+                <h2 className="text-xl font-bold text-foreground mb-4">What to bring</h2>
                 <div className="p-4 rounded-xl bg-secondary/50 border border-border space-y-2">
                   {meta.requirements.map(r => (
                     <div key={r} className="flex items-center gap-2.5 text-sm text-muted-foreground">
@@ -449,7 +441,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Career paths */}
             {course.careerPaths.length > 0 && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-primary" /> Career Pathways
                 </h2>
                 <div className="flex flex-wrap gap-2">
@@ -468,7 +460,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Alumni companies */}
             {hasAlumni && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-2">Our graduates work at</h2>
+                <h2 className="text-xl font-bold text-foreground mb-2">Our graduates work at</h2>
                 <p className="text-sm text-muted-foreground mb-6">Companies that have hired Digitika Academy graduates</p>
                 <div className="flex flex-wrap items-center gap-8">
                   {ALUMNI_COMPANIES.map(co => (
@@ -483,7 +475,7 @@ export function CourseDetailClient({ course, category }: Props) {
             {/* Testimonials */}
             {hasTestimonials && (
               <motion.section {...fadeUp(0)}>
-                <h2 className="text-xl font-black text-foreground mb-6">What graduates say</h2>
+                <h2 className="text-xl font-bold text-foreground mb-6">What graduates say</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {meta.testimonials!.map((t, i) => (
                     <motion.div
@@ -497,7 +489,7 @@ export function CourseDetailClient({ course, category }: Props) {
                       <Star className="h-4 w-4 text-primary mb-3" />
                       <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">&ldquo;{t.quote}&rdquo;</p>
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-primary-foreground bg-primary text-xs font-black shrink-0">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-primary-foreground bg-primary text-xs font-bold shrink-0">
                           {t.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
@@ -515,7 +507,7 @@ export function CourseDetailClient({ course, category }: Props) {
             <motion.section {...fadeUp(0)}>
               <div className="rounded-2xl bg-primary/5 border border-primary/20 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-1">
-                  <h3 className="font-black text-foreground text-base mb-1">Still have questions?</h3>
+                  <h3 className="font-bold text-foreground text-base mb-1">Still have questions?</h3>
                   <p className="text-sm text-muted-foreground">Our team is available Monday–Saturday, 8am–6pm EAT. We reply within the hour.</p>
                 </div>
                 <div className="flex gap-2 flex-wrap shrink-0">
@@ -566,7 +558,7 @@ export function CourseDetailClient({ course, category }: Props) {
                                 <span className="text-sm font-bold text-foreground">{plan.label}</span>
                               </div>
                               {plan.badge && (
-                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-primary text-primary-foreground">{plan.badge}</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">{plan.badge}</span>
                               )}
                             </div>
                             <div className="ml-6 space-y-1">
@@ -582,7 +574,7 @@ export function CourseDetailClient({ course, category }: Props) {
                       </div>
                       <div className="flex justify-between items-baseline mb-5 px-1">
                         <span className="text-sm text-muted-foreground">Total</span>
-                        <span className="text-2xl font-black text-foreground">
+                        <span className="text-2xl font-bold text-foreground">
                           {formatCurrency(plans[selectedPlan]?.totalAmount ?? course.price, 'KES')}
                         </span>
                       </div>
@@ -590,7 +582,7 @@ export function CourseDetailClient({ course, category }: Props) {
                   ) : (
                     <div className="mb-6">
                       <p className="text-xs text-muted-foreground mb-1">Course fee</p>
-                      <div className="text-3xl font-black text-foreground mb-1">{formatCurrency(course.price, 'KES')}</div>
+                      <div className="text-3xl font-bold text-foreground mb-1">{formatCurrency(course.price, 'KES')}</div>
                       <p className="text-xs text-muted-foreground">one-time · M-Pesa & card accepted</p>
                     </div>
                   )}
@@ -718,7 +710,7 @@ export function CourseDetailClient({ course, category }: Props) {
                 <p className="text-xs font-bold text-foreground mb-2">Share this course</p>
                 <div className="flex gap-2 flex-wrap">
                   <a
-                    href={`https://wa.me/?text=${encodeURIComponent(`Check out this course: ${course.name} at Digitika Academy — https://codevertexafrica.com/digitika/${course.id}`)}`}
+                    href={`https://wa.me/?text=${encodeURIComponent(`Check out this course: ${course.name} at Digitika Academy: https://codevertexafrica.com/digitika/${course.id}`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex-1 text-center px-3 py-2 rounded-lg bg-[#25D366] text-white text-xs font-bold hover:opacity-90 transition-opacity"

@@ -292,10 +292,10 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
           <div className="sticky top-0 bg-background border-b border-border px-6 py-5 z-10">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: category.color }}>
+                <p className="text-sm font-medium mb-1" style={{ color: category.color }}>
                   {category.name}
                 </p>
-                <h2 className="text-lg font-black text-foreground">{course.name}</h2>
+                <h2 className="text-lg font-bold text-foreground">{course.name}</h2>
               </div>
               <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
                 <X className="h-4 w-4" />
@@ -406,7 +406,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                       <option>Complete Beginner</option>
                       <option>Some Basic Knowledge</option>
                       <option>Intermediate</option>
-                      <option>Advanced — looking to specialise</option>
+                      <option>Advanced, looking to specialise</option>
                     </select>
                   </div>
                   <div>
@@ -548,7 +548,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                     <div className="flex items-center gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/8 px-3 py-2.5">
                       <BadgePercent className="h-4 w-4 text-emerald-600 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">{discount.code}: {discount.name}</p>
+                        <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{discount.code}: {discount.name}</p>
                         <p className="text-[10px] text-emerald-600">
                           {discount.discountPct != null ? `${discount.discountPct}% off` : `${course.currency} ${discountSaving.toLocaleString()} off`}
                           {' · '}You save <strong>{formatCurrency(discountSaving, course.currency)}</strong>
@@ -610,7 +610,7 @@ export function EnrollmentModal({ course, category, cohortId, onClose }: Props) 
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
                   <CheckCircle2 className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-black text-foreground mb-3">{pay ? 'Complete your payment' : 'Payment window opened'}</h3>
+                <h3 className="text-xl font-bold text-foreground mb-3">{pay ? 'Complete your payment' : 'Payment window opened'}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                   Complete your payment of <strong>{formatCurrency(chargedNow ?? firstPayment, course.currency)}</strong> {pay ? 'to confirm your place.' : 'in the payment tab.'}
                   {isInstallment && ` You'll get reminders for the ${schedule.length - 1} remaining payment${schedule.length - 1 === 1 ? '' : 's'}.`}

@@ -1,6 +1,6 @@
 import {
-  Bell, Brain, CreditCard, Key, LayoutDashboard, Library,
-  Monitor, Network, Scale, ShieldCheck, ShoppingCart, Sparkles,
+  Bell, MessageSquare, CreditCard, Key, LayoutDashboard, Library,
+  Monitor, Network, Scale, ShieldCheck, ShoppingCart, Layers,
   Truck, Wifi, type LucideIcon,
 } from 'lucide-react';
 
@@ -49,7 +49,7 @@ export const BACKBONE: BackboneNode[] = [
     id: 'shared-ui-lib',
     name: 'Shared UI Lib',
     role: 'Frontend component layer',
-    icon: Sparkles,
+    icon: Layers,
     color: '#f59e0b',
     description:
       'A published npm package consumed by every Power Suite frontend via pinned git tags — payment modals, SSO login, tracking widgets, the app-switcher, and (as of today) the public careers-portal components shared between erp-ui and this website.',
@@ -191,7 +191,7 @@ export const SERVICES: EcosystemService[] = [
     id: 'marketflow',
     name: 'MarketFlow + Vera AI',
     category: 'CRM & AI Automation',
-    icon: Brain,
+    icon: MessageSquare,
     color: '#0EA5E9',
     url: 'https://marketflow.codevertexafrica.com',
     publicProduct: true,

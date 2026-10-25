@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Send, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 
+/** Footer newsletter form, styled for the night footer. */
 export function NewsletterSignup() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
@@ -22,47 +23,50 @@ export function NewsletterSignup() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? 'Something went wrong');
+        setError(data.error ?? 'That did not work. Check the address and try again.');
         setStatus('error');
         return;
       }
       setStatus('done');
     } catch {
-      setError('Network error — try again');
+      setError('No connection. Try again in a moment.');
       setStatus('error');
     }
   }
 
   if (status === 'done') {
     return (
-      <p className="flex items-center gap-2 text-sm font-semibold text-primary">
-        <Check className="h-4 w-4" /> You&apos;re subscribed.
+      <p role="status" className="flex items-center gap-2 text-sm font-semibold text-gold">
+        <Check className="h-4 w-4" aria-hidden /> You are subscribed.
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-1.5">
-      <p className="text-xs font-bold uppercase tracking-wide text-foreground">Stay in the loop</p>
-      <div className="flex items-center gap-1.5">
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="newsletter-email" className="block text-sm text-night-foreground/80 mb-2">
+        Product news and course dates, about once a month
+      </label>
+      <div className="flex gap-2">
         <input
+          id="newsletter-email"
           type="email"
           required
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="flex-1 min-w-0 text-sm rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          placeholder="you@company.co.ke"
+          className="h-10 flex-1 min-w-0 rounded-md border border-white/20 bg-white/5 px-3 text-sm text-night-foreground placeholder:text-night-foreground/40 focus:outline-none focus:border-gold"
         />
         <button
           type="submit"
           disabled={status === 'loading'}
-          aria-label="Subscribe"
-          className="p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 shrink-0"
+          className="h-10 shrink-0 rounded-md bg-gold px-4 text-sm font-semibold text-night hover:bg-gold/90 disabled:opacity-60"
         >
-          <Send className="h-4 w-4" />
+          {status === 'loading' ? 'Joining…' : 'Subscribe'}
         </button>
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-xs text-red-300 mt-2">{error}</p>}
     </form>
   );
 }

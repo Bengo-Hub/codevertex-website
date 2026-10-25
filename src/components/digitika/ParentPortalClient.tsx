@@ -185,16 +185,16 @@ export function ParentPortalClient() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="bg-primary pt-28 pb-12 px-4 text-primary-foreground">
+      <div className="bg-night pt-28 pb-12 px-4 text-night-foreground">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <p className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-bold uppercase tracking-widest mb-3">
+            <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold mb-3">
               <ShieldCheck className="h-3 w-3" /> Parent Portal
             </p>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
+            <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
               {step === 'dashboard' && data ? `${data.student.firstName}'s learning` : 'Track your child\'s learning'}
             </h1>
-            <p className="mt-2 text-primary-foreground/80 max-w-xl">
+            <p className="mt-2 text-night-foreground/75 max-w-xl">
               Progress, results and fees in one place. Sign in with your parent account, or use the Student ID and a one-time code.
             </p>
           </div>
@@ -297,16 +297,16 @@ export function ParentPortalClient() {
             {/* Fees summary */}
             <section className="grid sm:grid-cols-3 gap-4">
               <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Courses</p>
-                <p className="mt-1 text-2xl font-black text-foreground">{data.enrollments.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Courses</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{data.enrollments.length}</p>
               </div>
               <div className="rounded-2xl border border-border bg-card p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fee balance</p>
-                <p className="mt-1 text-2xl font-black text-foreground">{formatCurrency(data.totals.balance, data.totals.currency)}</p>
+                <p className="text-sm font-medium text-muted-foreground">Fee balance</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{formatCurrency(data.totals.balance, data.totals.currency)}</p>
               </div>
               <div className={`rounded-2xl border p-5 ${data.totals.overdue > 0 ? 'border-amber-500/40 bg-amber-500/5' : 'border-border bg-card'}`}>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Overdue (arrears)</p>
-                <p className={`mt-1 text-2xl font-black ${data.totals.overdue > 0 ? 'text-amber-600' : 'text-foreground'}`}>{formatCurrency(data.totals.overdue, data.totals.currency)}</p>
+                <p className="text-sm font-medium text-muted-foreground">Overdue (arrears)</p>
+                <p className={`mt-1 text-2xl font-bold ${data.totals.overdue > 0 ? 'text-amber-600' : 'text-foreground'}`}>{formatCurrency(data.totals.overdue, data.totals.currency)}</p>
               </div>
             </section>
 

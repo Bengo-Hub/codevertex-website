@@ -12,19 +12,19 @@ import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Digitika Academy — Tech Education',
+  title: 'Digitika Academy',
   description: 'Industry-aligned certification programmes in software engineering, AI, networking, data analytics, and ICDL. Enroll from Kisumu or online.',
   openGraph: {
     title: 'Digitika Academy | Codevertex Africa Limited',
-    description: "Closing Africa's digital skills gap. Courses in coding, AI, networking, and data analytics.",
+    description: "Courses in software engineering, networking, AI, data and ICDL digital skills, in Kisumu and online.",
     url: 'https://codevertexafrica.com/digitika',
-    images: [{ url: '/images/og-image.png', width: 1200, height: 630, alt: 'Digitika Academy by Codevertex Africa Limited' }],
+    images: [{ url: '/images/og-image.jpg', width: 1200, height: 630, alt: 'Digitika Academy by Codevertex Africa Limited' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Digitika Academy | Codevertex Africa Limited',
-    description: "Closing Africa's digital skills gap. Courses in coding, AI, networking, and data analytics.",
-    images: ['/images/og-image.png'],
+    description: "Courses in software engineering, networking, AI, data and ICDL digital skills, in Kisumu and online.",
+    images: ['/images/og-image.jpg'],
   },
 };
 

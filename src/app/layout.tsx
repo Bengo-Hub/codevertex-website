@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist_Mono, Poppins } from 'next/font/google';
+import { Bricolage_Grotesque, Figtree } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
@@ -8,26 +8,29 @@ import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner';
 import { VeraWidget } from '@/components/layout/VeraWidget';
 import { JsonLd, organizationJsonLd } from '@/lib/json-ld';
 
-const poppins = Poppins({
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-poppins',
+const display = Bricolage_Grotesque({
+  variable: '--font-display',
   subsets: ['latin'],
+  weight: ['500', '600', '700', '800'],
   display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const body = Figtree({
+  variable: '--font-body',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
+
+const DESCRIPTION =
+  'Codevertex Africa Limited builds the Power Suite, business software for shops, restaurants, hotels, schools, clinics and transport operators in Kenya, and trains developers at Digitika Academy in Kisumu.';
 
 export const metadata: Metadata = {
   title: {
     default: 'Codevertex Africa Limited',
     template: '%s | Codevertex Africa Limited',
   },
-  description:
-    "Architecting Africa's Digital Renaissance. Enterprise software, AI, cloud infrastructure, and Digitika Academy talent development from Kisumu, Kenya.",
+  description: DESCRIPTION,
   authors: [{ name: 'Codevertex Africa Limited', url: 'https://codevertexafrica.com' }],
   metadataBase: new URL('https://codevertexafrica.com'),
   openGraph: {
@@ -35,28 +38,22 @@ export const metadata: Metadata = {
     locale: 'en_KE',
     url: 'https://codevertexafrica.com',
     siteName: 'Codevertex Africa Limited',
-    title: "Codevertex Africa Limited — Architecting Africa's Digital Renaissance",
-    description:
-      'Premier technology firm in Kisumu, Kenya. Enterprise software, AI analytics, cloud infrastructure, and Digitika Academy.',
-    images: [{ url: '/images/og-image.png', width: 1200, height: 630, alt: 'Codevertex Africa Limited — Architecting Africa\'s Digital Renaissance' }],
+    title: "Codevertex Africa Limited: Architecting Africa's Digital Excellence",
+    description: DESCRIPTION,
+    images: [{ url: '/images/og-image.jpg', width: 1200, height: 630, alt: 'The Codevertex Africa Limited team' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Codevertex Africa Limited',
-    description: "Architecting Africa's Digital Renaissance.",
-    images: ['/images/og-image.png'],
-  },
-  icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/images/logo.png' }],
-    shortcut: '/icon.svg',
-    apple: '/images/logo.png',
+    description: DESCRIPTION,
+    images: ['/images/og-image.jpg'],
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0c0910' },
+    { media: '(prefers-color-scheme: dark)', color: '#1E0F1B' },
   ],
 };
 
@@ -66,9 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <JsonLd data={organizationJsonLd()} />
       </head>
-      <body
-        className={`${poppins.variable} ${geistMono.variable} font-sans min-h-screen bg-background antialiased`}
-      >
+      <body className={`${display.variable} ${body.variable} font-sans min-h-screen bg-background antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <SiteShell>{children}</SiteShell>
           <Toaster richColors position="top-right" />

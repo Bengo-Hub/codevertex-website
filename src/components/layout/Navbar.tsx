@@ -75,7 +75,7 @@ function SignInMenu() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="h-9 pl-4 pr-3 rounded-full bg-primary text-primary-foreground text-sm font-bold inline-flex items-center gap-1.5 shadow-primary hover:shadow-primary-lg transition-all duration-200"
+        className="h-9 pl-4 pr-3 rounded-full bg-primary text-primary-foreground text-sm font-bold inline-flex items-center gap-1.5 hover:bg-primary-deep transition-colors"
       >
         <LogIn className="h-4 w-4" /> Sign in
         <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')} />
@@ -215,25 +215,33 @@ export function Navbar() {
         className={cn(
           'fixed top-0 inset-x-0 z-50 transition-all duration-300',
           scrolled
-            ? 'bg-background/95 backdrop-blur-xl border-b border-border shadow-sm'
-            : 'bg-background/80 backdrop-blur-md border-b border-border/40'
+            ? 'bg-background border-b border-border shadow-sm'
+            : 'bg-background border-b border-transparent'
         )}
       >
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 lg:h-20 flex items-center justify-between gap-6">
           {/* Logo */}
           <Link href="/" className="shrink-0 group" aria-label="Codevertex Africa Limited">
             <Image
-              src="/images/logo.png"
+              src="/images/brand/logo-full.png"
               alt="Codevertex Africa Limited"
-              width={250}
-              height={100}
-              className="h-16 w-auto object-contain group-hover:opacity-90 transition-opacity dark:brightness-0 dark:invert"
+              width={597}
+              height={292}
+              className="h-11 lg:h-13 w-auto dark:hidden"
+              priority
+            />
+            <Image
+              src="/images/brand/logo-full-light.png"
+              alt=""
+              width={597}
+              height={292}
+              className="h-11 lg:h-13 w-auto hidden dark:block"
               priority
             />
           </Link>
 
           {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-0.5">
+          <div className="hidden lg:flex items-center gap-0.5">
             {NAV_LINKS.map((link) => {
               const isActive =
                 pathname === link.href || pathname.startsWith(link.href + '/');
@@ -244,7 +252,7 @@ export function Navbar() {
                   className={cn(
                     'px-3.5 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
-                      ? 'text-primary bg-primary/8'
+                      ? 'text-primary bg-accent'
                       : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                   )}
                 >
@@ -272,7 +280,7 @@ export function Navbar() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-border bg-secondary hover:bg-muted transition-colors"
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg border border-border bg-secondary hover:bg-muted transition-colors"
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileOpen}
             >
@@ -290,7 +298,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-x-0 top-20 z-40 md:hidden bg-background border-b border-border shadow-lg"
+            className="fixed inset-x-0 top-16 z-40 lg:hidden max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border-b border-border shadow-lg"
           >
             <div className="px-4 py-4 flex flex-col gap-1">
               {NAV_LINKS.map((link) => (
@@ -300,7 +308,7 @@ export function Navbar() {
                   className={cn(
                     'px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                     pathname === link.href
-                      ? 'text-primary bg-primary/8'
+                      ? 'text-primary bg-accent'
                       : 'text-foreground hover:bg-secondary'
                   )}
                 >
@@ -327,7 +335,7 @@ export function Navbar() {
                   )
                   : (
                     <div className="mt-3 pt-3 border-t border-border flex flex-col gap-1">
-                      <p className="px-4 pb-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Sign in</p>
+                      <p className="px-4 pb-1 text-sm font-semibold text-muted-foreground">Sign in</p>
                       {signInOptions.map((o) => {
                         const body = (
                           <>

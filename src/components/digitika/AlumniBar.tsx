@@ -1,39 +1,21 @@
 import Image from 'next/image';
 import { ALUMNI_COMPANIES } from '@/config/courses';
 
+/** Employers of Digitika graduates (list confirmed by the company, config/courses.ts). */
 export function AlumniBar() {
-  // Triple the list so the seamless loop always has content in view
-  const items = [...ALUMNI_COMPANIES, ...ALUMNI_COMPANIES, ...ALUMNI_COMPANIES];
-
   return (
-    <section className="py-10 border-b border-border bg-card overflow-hidden">
-      <p className="text-xs font-bold uppercase tracking-widest text-center text-muted-foreground mb-6 px-4">
-        Our graduates now work at
-      </p>
-
-      {/* Mask fade at edges */}
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 w-20 bg-linear-to-r from-card to-transparent z-10 pointer-events-none" />
-        <div className="absolute inset-y-0 right-0 w-20 bg-linear-to-l from-card to-transparent z-10 pointer-events-none" />
-
-        <div className="flex animate-marquee gap-5 w-max">
-          {items.map((company, i) => (
-            <div
-              key={`${company.name}-${i}`}
-              aria-hidden={i >= ALUMNI_COMPANIES.length ? true : undefined}
-              className="flex items-center justify-center w-44 h-16 rounded-xl bg-background border border-border px-4 py-3 shrink-0 hover:border-primary/30 transition-colors duration-200"
-              title={company.name}
-            >
-              <Image
-                src={company.logo}
-                alt={company.name}
-                width={140}
-                height={48}
-                className="h-10 w-auto object-contain"
-              />
-            </div>
+    <section aria-labelledby="alumni-heading" className="border-b border-border bg-secondary px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto lg:flex lg:items-center lg:gap-10">
+        <h2 id="alumni-heading" className="text-base font-semibold text-foreground shrink-0 mb-5 lg:mb-0">
+          Our graduates work at
+        </h2>
+        <ul className="flex flex-wrap items-center gap-x-10 gap-y-5">
+          {ALUMNI_COMPANIES.map((company) => (
+            <li key={company.name} title={company.name}>
+              <Image src={company.logo} alt={company.name} width={140} height={48} className="h-9 w-auto object-contain" />
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

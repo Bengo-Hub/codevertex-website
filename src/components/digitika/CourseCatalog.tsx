@@ -36,8 +36,7 @@ export async function CourseCatalog() {
     <section id="courses" className="scroll-mt-20 py-16 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">Course catalog</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">Find the right programme</h2>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Find the right course</h2>
           <p className="text-muted-foreground mt-2 max-w-2xl">
             {courses.length} courses for adults, teens and kids. Search, filter by level, format, duration or price, or browse by category.
           </p>

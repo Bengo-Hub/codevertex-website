@@ -1,117 +1,72 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-const CLIENTS = [
-  { name: 'Maseno University (MUCISA)', detail: '120+ students upskilled in coding & digital entrepreneurship' },
-  { name: 'Digital Economy ICT Initiative', detail: '200+ corporate staff trained under national programme' },
-  { name: 'Danka Africa Ltd', detail: 'End-to-end digital transformation, regional energy sector' },
-  { name: 'KCA University', detail: 'Long-term strategic technology & training partnership' },
-  { name: 'Future Hubs Kenya', detail: 'Collaborative training delivery and technology development' },
+// Institutional work named in the Codevertex Africa Limited business profile.
+const TRACK_RECORD = [
+  { name: 'Digital Economy ICT Initiative', detail: 'ICDL training for more than 200 corporate staff' },
+  { name: 'Maseno University (MUCISA)', detail: 'Coding, digital entrepreneurship and employability skills for more than 120 students' },
+  { name: 'Danka Africa Ltd', detail: 'Digital transformation for a regional energy company' },
+  { name: 'KCA University and Future Hubs Kenya', detail: 'Long-term training and technology partners' },
 ];
 
-const ADVANTAGES = [
-  { title: 'End-to-End Value Chain', desc: 'Software engineering, AI, cloud infrastructure, hosting, domains, and talent development — one true partner from MVP to scale.' },
-  { title: 'Security & Compliance', desc: 'OAuth 2.0, OpenID Connect, AES-256 encryption, and secure-by-design principles at every layer of the stack.' },
-  { title: 'Modular Scalability', desc: 'SSO-centric architecture enables rapid onboarding of new SaaS modules without disrupting existing client workflows.' },
-  { title: 'AI-Native Orientation', desc: "Deep investment in generative AI and analytics positions clients for the intelligent economy — not just today's requirements." },
+const PRACTICES = [
+  { title: 'One partner from build to support', desc: 'Software, hosting, domains, hardware installation and training from the same team.' },
+  { title: 'Secure by default', desc: 'Single sign-on with OAuth 2.0 and OpenID Connect, encrypted data and per-business access rules.', href: '/security' },
+  { title: 'Built for how Kenya pays', desc: 'M-Pesa, PayHero and Paystack collections and KRA eTIMS invoicing are part of the products, not add-ons.' },
+  { title: 'Registered and accountable', desc: 'Codevertex Africa Limited is a private limited company (PVT-VQ1OEVB3) under the Kenya Companies Act, 2015.' },
 ];
 
 export function TrustSection() {
   return (
-    <section className="py-10 px-4 sm:px-6 lg:px-8 bg-secondary/30">
-      <div className="max-w-7xl mx-auto space-y-10">
-
-        {/* Team photo + pull quote */}
-        <div className="relative rounded-2xl overflow-hidden h-80 sm:h-96 lg:h-[30rem] border border-border">
-          <Image
-            src="/images/team.jpg"
-            alt="Codevertex Africa Limited team at an event, wearing company t-shirts"
-            fill
-            className="object-cover object-[center_25%]"
-            sizes="(max-width: 1280px) 100vw, 1280px"
-          />
-          {/* Gradient only at the bottom so faces stay clear */}
-          <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10">
-            <div className="max-w-2xl">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-2">The team</p>
-              <blockquote className="text-2xl sm:text-3xl font-black text-white leading-snug tracking-tight mb-3">
-                &ldquo;Built in Kisumu. Engineered for Africa. Designed for the world.&rdquo;
-              </blockquote>
-              <cite className="not-italic text-sm text-white/70 font-medium">
-                Codevertex Africa Limited — Pioneer House, Oginga-Odinga Road, Kisumu
-              </cite>
+    <section aria-labelledby="company-heading" className="bg-background px-4 sm:px-6 lg:px-8 py-20 lg:py-28 border-t border-border">
+      <div className="max-w-7xl mx-auto grid gap-12 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <figure>
+            <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-muted">
+              <Image
+                src="/images/photos/brand-vest.webp"
+                alt="A Codevertex Africa Limited high-visibility vest marked ENG.T on an office chair"
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                className="object-cover"
+              />
             </div>
-          </div>
+            <figcaption className="mt-3 text-sm text-muted-foreground">Ready for the next site visit, at the Kisumu office.</figcaption>
+          </figure>
         </div>
 
-        {/* Clients + Advantages */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-6">Institutional partners</p>
-            <div className="flex flex-col gap-3">
-              {CLIENTS.map((c) => (
-                <div key={c.name} className="flex gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors">
-                  <div className="w-1 rounded-full bg-primary shrink-0" />
-                  <div>
-                    <p className="font-bold text-foreground text-sm">{c.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{c.detail}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="lg:col-span-7">
+          <h2 id="company-heading" className="font-display text-4xl font-bold tracking-tight text-foreground leading-tight">
+            A Kisumu company, working across East Africa.
+          </h2>
+          <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+            We started in 2020 and incorporated as Codevertex Africa Limited in May 2026. Our office is at Pioneer House
+            on Oginga-Odinga Road, opposite Mega Plaza, and our engineers work on sites from Kisumu to Tanzania.
+          </p>
 
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-6">Our edge</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {ADVANTAGES.map((a) => (
-                <div key={a.title} className="p-5 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors">
-                  <p className="font-bold text-foreground text-sm mb-2">{a.title}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{a.desc}</p>
-                  {a.title === 'Security & Compliance' && (
-                    <Link href="/security" className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">
-                      Read our security practices →
-                    </Link>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <h3 className="mt-12 font-semibold text-foreground">Track record</h3>
+          <ul className="mt-4 divide-y divide-border border-y border-border">
+            {TRACK_RECORD.map((c) => (
+              <li key={c.name} className="py-4 sm:flex sm:gap-6">
+                <p className="font-medium text-foreground sm:w-64 shrink-0">{c.name}</p>
+                <p className="text-sm text-muted-foreground mt-1 sm:mt-0">{c.detail}</p>
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="mt-12 font-semibold text-foreground">How we work</h3>
+          <dl className="mt-4 grid gap-6 sm:grid-cols-2">
+            {PRACTICES.map((p) => (
+              <div key={p.title}>
+                <dt className="font-medium text-foreground">{p.title}</dt>
+                <dd className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  {p.desc}{' '}
+                  {p.href && <Link href={p.href} className="text-primary hover:underline underline-offset-4">Security practices</Link>}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
-
-        {/* Facility photo strip */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative rounded-2xl overflow-hidden h-48 md:col-span-2 border border-border">
-            <Image
-              src="/images/hub.jpg"
-              alt="Codevertex Pioneer House computer lab — Lenovo workstations and fibre internet"
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 66vw"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
-            <div className="absolute bottom-4 left-4">
-              <p className="text-sm font-bold text-white drop-shadow">Pioneer House, Kisumu</p>
-              <p className="text-xs text-white/80 drop-shadow">Our flagship training lab — fully equipped with Lenovo workstations</p>
-            </div>
-          </div>
-          <div className="relative rounded-2xl overflow-hidden h-48 border border-border">
-            <Image
-              src="/images/MUSICA%20HACKATHON/SPK_6506.jpg"
-              alt="Students at MUCISA Hackathon"
-              fill
-              className="object-cover object-top"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent" />
-            <div className="absolute bottom-4 left-4">
-              <p className="text-sm font-bold text-white drop-shadow">MUCISA Hackathon</p>
-              <p className="text-xs text-white/80 drop-shadow">Co-hosted with Maseno University</p>
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
   );

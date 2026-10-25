@@ -151,7 +151,7 @@ export const GRADUATE_TESTIMONIALS: Testimonial[] = [
     name: 'Tricia Adhiambo',
     role: 'Emerging Tech Talent',
     company: 'Maseno University',
-    quote: "The hybrid format was perfect for me — I could attend Zoom sessions when I couldn't make it in person. The community of learners keeps you accountable.",
+    quote: "The hybrid format was perfect for me. I could attend Zoom sessions when I couldn't make it in person. The community of learners keeps you accountable.",
   },
 ];
 

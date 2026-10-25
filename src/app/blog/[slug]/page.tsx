@@ -44,7 +44,7 @@ export default async function BlogPostPage({ params }: Props) {
   if (!post || !post.published) notFound();
 
   return (
-    <div className="pt-20">
+    <>
       <JsonLd
         data={articleJsonLd({
           title: post.title,
@@ -56,43 +56,32 @@ export default async function BlogPostPage({ params }: Props) {
           updatedAt: post.updatedAt,
         })}
       />
-      <section className="bg-foreground pt-16 pb-12 px-4 sm:px-6 lg:px-8">
+      <header className="bg-background px-4 sm:px-6 lg:px-8 pt-28 lg:pt-36 pb-10">
         <div className="max-w-3xl mx-auto">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/60 dark:text-muted-foreground hover:text-primary transition-colors mb-6"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to blog
+          <Link href="/blog" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline underline-offset-4">
+            <ArrowLeft className="h-4 w-4" aria-hidden /> All posts
           </Link>
-          {post.tags[0] && (
-            <span className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border bg-primary/10 text-primary border-primary/20">
-              {post.tags[0]}
-            </span>
-          )}
-          <h1 className="text-3xl sm:text-4xl font-black text-white dark:text-foreground tracking-tight leading-tight mt-4 mb-4">
-            {post.title}
-          </h1>
-          <p className="text-white/60 dark:text-muted-foreground text-sm">
-            By {post.author} ·{' '}
-            {post.publishedAt?.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })} ·{' '}
-            {readTime(post.content)} read
+          {post.tags[0] && <p className="mt-6 text-sm font-medium text-primary">{post.tags[0]}</p>}
+          <h1 className="mt-2 font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-tight">{post.title}</h1>
+          <p className="mt-4 text-muted-foreground">
+            {post.author} · {post.publishedAt?.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })} · {readTime(post.content)} read
           </p>
         </div>
-      </section>
+      </header>
 
       {post.coverImage && (
-        <div className="max-w-4xl mx-auto -mt-8 px-4 sm:px-6 lg:px-8">
-          <div className="relative h-64 sm:h-96 rounded-2xl overflow-hidden border border-border">
-            <Image src={post.coverImage} alt={post.title} fill className="object-cover" sizes="900px" priority />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative aspect-16/9 rounded-lg overflow-hidden bg-secondary">
+            <Image src={post.coverImage} alt="" fill className="object-cover" sizes="(min-width: 1024px) 900px, 100vw" priority />
           </div>
         </div>
       )}
 
       <section className="py-14 px-4 sm:px-6 lg:px-8">
-        <article className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary">
+        <article className="max-w-3xl mx-auto prose prose-lg prose-neutral dark:prose-invert prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
         </article>
       </section>
-    </div>
+    </>
   );
 }

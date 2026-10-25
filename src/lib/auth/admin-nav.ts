@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, BookOpen, GraduationCap, MessageSquare, Mail,
   Calendar, CreditCard, Library, BadgePercent, Users, ShieldCheck, KeyRound, Newspaper,
-  School, Images,
+  School, Images, Network,
 } from 'lucide-react';
 import { DIGITIKA_MODULES, digitikaPerm, hasBypassRole } from '@/lib/digitika-rbac-catalog';
 import type { UserProfile } from '@/lib/store/auth-store';
@@ -95,6 +95,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       // Permissions is a read-only catalog view, not its own module/action pair — it shares
       // the "roles" module's view permission (same administrative area as Roles).
       { label: 'Permissions', href: '/admin/permissions', icon: KeyRound, permission: digitikaPerm('roles', 'view') },
+      // Internal architecture map and site review: staff only, moved off the public site.
+      { label: 'Platform map', href: '/admin/platform', icon: Network, permission: digitikaPerm('roles', 'view') },
     ],
   },
 ];

@@ -1,45 +1,54 @@
 import type { Metadata } from 'next';
-import { CareersListingClient } from '@/components/careers/CareersClient';
+import Image from 'next/image';
 import Link from 'next/link';
+import { CareersListingClient } from '@/components/careers/CareersClient';
 import { Button } from '@/components/ui/button';
+import { PageIntro } from '@/components/site/PageIntro';
 
-export const metadata: Metadata = { title: 'Careers', description: 'Join Codevertex Africa Limited and build Africa\'s digital future.' };
+export const metadata: Metadata = {
+  title: 'Careers',
+  description: 'Open roles and attachment places at Codevertex Africa Limited in Kisumu.',
+};
 
 // Job data is fetched in the browser from erp-api by CareersListingClient.
 export const dynamic = 'force-dynamic';
 
 export default function CareersPage() {
   return (
-    <div className="pt-20">
-      <section className="pt-8 px-4 sm:px-6 lg:px-8 bg-background">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-2xl bg-primary/5 border border-primary/20">
-            <div>
-              <p className="font-bold text-foreground mb-1">Student or recent graduate?</p>
-              <p className="text-sm text-muted-foreground">Apply for an industrial attachment or internship across 17 tracks.</p>
-            </div>
-            <Button asChild className="shrink-0">
-              <Link href="/careers/attachment">Attachment programme →</Link>
-            </Button>
+    <>
+      <PageIntro
+        title="Careers"
+        lead="We hire engineers, field technicians, trainers and support staff in Kisumu. Open roles are listed below as soon as they are posted."
+        aside={
+          <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-muted">
+            <Image src="/images/photos/hackathon-team-table.webp" alt="Members of the Codevertex team at the MUCISA Hackathon 2025" fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
           </div>
+        }
+      >
+        <div className="rounded-lg border border-border p-5 max-w-xl">
+          <p className="font-semibold text-foreground">Student or recent graduate?</p>
+          <p className="text-sm text-muted-foreground mt-1">Apply for an industrial attachment or internship.</p>
+          <Button className="mt-4" asChild><Link href="/careers/attachment">See attachment places</Link></Button>
+        </div>
+      </PageIntro>
+
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-5xl mx-auto">
+          <CareersListingClient subtitle="Open roles at Codevertex Africa Limited" />
         </div>
       </section>
 
-      <CareersListingClient subtitle="Join a purpose-driven team building the infrastructure for Africa's digital economy." />
-
-      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-background">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 rounded-2xl bg-card border border-border">
-            <div>
-              <p className="font-bold text-foreground mb-1">Don&apos;t see your role?</p>
-              <p className="text-sm text-muted-foreground">Send us your CV and a short note about what you&apos;d like to build.</p>
-            </div>
-            <Button variant="outline" asChild className="shrink-0">
-              <a href="mailto:careers@codevertexafrica.com">Open application →</a>
-            </Button>
+      <section className="bg-secondary px-4 sm:px-6 lg:px-8 py-14">
+        <div className="max-w-5xl mx-auto sm:flex sm:items-center sm:justify-between gap-6">
+          <div>
+            <h2 className="font-display text-2xl font-bold text-foreground">Do not see your role?</h2>
+            <p className="text-muted-foreground mt-1">Send your CV and a short note about the work you want to do.</p>
           </div>
+          <Button variant="outline" className="mt-4 sm:mt-0 shrink-0" asChild>
+            <a href="mailto:careers@codevertexafrica.com">Email careers@codevertexafrica.com</a>
+          </Button>
         </div>
       </section>
-    </div>
+    </>
   );
 }

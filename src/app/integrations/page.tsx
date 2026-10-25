@@ -1,195 +1,163 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  Camera,
-  CircuitBoard,
-  Cpu,
-  ExternalLink,
-  Receipt,
-  Scale,
-  ShieldCheck,
-} from 'lucide-react';
+import { Camera, Check, CircuitBoard, Cpu, Receipt, Scale, Smartphone, TrafficCone, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageIntro } from '@/components/site/PageIntro';
+import { CTASection } from '@/components/home/CTASection';
 import { SSO_URL } from '@/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Systems Integrations',
-  description: 'eTIMS/KRA tax fiscalization, TruLoad weighing hardware, camera systems, PLCs, Arduino, and general IoT automation — how Codevertex connects your systems and hardware.',
+  title: 'Integrations',
+  description:
+    'KRA eTIMS, M-Pesa and card payments, weighbridges, number-plate cameras, CCTV, traffic lights, PLCs and IoT hardware connected to your software by Codevertex.',
 };
 
 interface Integration {
   id: string;
   name: string;
-  tagline: string;
+  summary: string;
   description: string;
-  icon: React.ElementType;
-  color: string;
+  icon: LucideIcon;
   features: string[];
-  needsDeveloperPortal: boolean;
+  photo?: { src: string; alt: string; caption: string };
+  apiDocs?: boolean;
 }
 
 const INTEGRATIONS: Integration[] = [
   {
     id: 'etims',
-    name: 'eTIMS / KRA Tax Fiscalization',
-    tagline: 'Sign every sale with KRA, in real time',
+    name: 'KRA eTIMS',
+    summary: 'Every invoice signed with KRA as it is issued',
     description:
-      "Our treasury platform is a certified KRA eTIMS OSCU integrator. Onboarded Codevertex tenants get it as part of their plan; external businesses with their own developers can integrate directly against our eTIMS API — sandbox-test, pass a go-live certification checklist, then move to production — with no fee for self-serve integration. Prefer to have our team handle the setup for you instead? A one-time assisted-integration fee applies.",
+      'Books and Treasury is a certified KRA eTIMS OSCU integrator. Businesses on our products get it with their plan. Developers outside the suite can connect to our eTIMS API directly: test in the sandbox, pass the go-live checklist, then switch to production. Self-serve integration has no fee; if you would rather we set it up for you, a one-time fee applies.',
     icon: Receipt,
-    color: '#0EA5E9',
-    features: [
-      'Real-time KRA sales signing (OSCU)',
-      'Sandbox environment + go-live checklist',
-      'Self-serve API access (free) or assisted setup (fee)',
-      'Usage-based or subscription API pricing',
-    ],
-    needsDeveloperPortal: true,
+    features: ['Real-time invoice and credit note signing', 'Sandbox and go-live checklist', 'Self-serve API or assisted setup', 'Pay per use or by subscription'],
+    apiDocs: true,
   },
   {
-    id: 'truload',
-    name: 'TruLoad Weighing Hardware & Software',
-    tagline: 'Axle-load and commercial weighing, fully connected',
+    id: 'payments',
+    name: 'M-Pesa, PayHero and Paystack',
+    summary: 'Collect money where your customers already pay',
     description:
-      'Portable and static weighbridge integration for axle-load enforcement, commercial weight tickets, and KURA compliance reporting — hardware selection, calibration guidance, and the software layer that turns a weighbridge into real-time, auditable data.',
+      'STK push, paybill and till collections, card payments and payment links, matched to the right invoice or sale automatically and confirmed with the provider before anything is marked paid.',
+    icon: Smartphone,
+    features: ['M-Pesa STK push, paybill and till', 'Card payments through Paystack', 'Payment links on invoices and receipts', 'Automatic matching to the sale or invoice'],
+  },
+  {
+    id: 'weighbridges',
+    name: 'Weighbridges',
+    summary: 'Scale readings straight into TruLoad',
+    description:
+      'TruConnect, part of TruLoad, reads the weight from the indicator at each station over serial, TCP or UDP and passes it to the weighing software and the remote display units (RDUs) drivers read. It already runs on several indicator brands at Kenyan stations.',
     icon: Scale,
-    color: '#38bdf8',
-    features: [
-      'Mobile portable & static multideck weighing',
-      'KURA enforcement reporting',
-      'Commercial weight ticket generation',
-      'IoT sensor + weighbridge hardware integration',
-    ],
-    needsDeveloperPortal: false,
+    features: ['Static and mobile scales', 'Serial, TCP and UDP indicators', 'Remote display units for drivers', 'Weight tickets and enforcement records'],
+    photo: { src: '/images/photos/weighbridge-demo.webp', alt: 'A weighbridge plate in use at the KeNHA stand at the Mombasa show', caption: 'A weighbridge plate at the KeNHA stand, Mombasa show, 2024' },
   },
   {
-    id: 'cameras',
-    name: 'Camera & CCTV Systems',
-    tagline: 'Surveillance and computer-vision-ready camera integration',
+    id: 'anpr',
+    name: 'Number-plate cameras (ANPR)',
+    summary: 'Every truck identified as it is weighed',
     description:
-      'From basic CCTV deployment to camera feeds wired into your operational software — occupancy counts, loss-prevention alerts, or a live feed surfaced right inside your POS/inventory dashboard.',
+      'We supply, mount and configure ANPR cameras at weighbridges and gates, and link each plate read to the weight record so no ticket is written by hand.',
     icon: Camera,
-    color: '#9100B0',
-    features: [
-      'CCTV deployment and network integration',
-      'Camera-to-dashboard live feed wiring',
-      'Event-triggered alerts (motion, occupancy)',
-      'Works alongside our POS/Inventory platforms',
-    ],
-    needsDeveloperPortal: false,
+    features: ['Camera supply and mounting', 'Plate read linked to the weight record', 'Installed with Dahua ANPR cameras', 'Remote support after installation'],
+    photo: { src: '/images/photos/field-anpr-install.webp', alt: 'Mounting a Dahua ANPR camera in front of Kanyonyo weighbridge station', caption: 'Mounting an ANPR camera at Kanyonyo weighbridge, January 2025' },
+  },
+  {
+    id: 'traffic',
+    name: 'Traffic lights and lane control',
+    summary: 'Trucks directed on and off the scale automatically',
+    description:
+      'Lights and displays at the weighing lane switch from the weighing software, so drivers know when to move without an attendant waving them through. We installed this at the Rubana North and South weighbridges in Tanzania.',
+    icon: TrafficCone,
+    features: ['Lane traffic lights', 'Driver displays', 'Serial device servers for site equipment', 'Controlled from the weighing software'],
+  },
+  {
+    id: 'cctv',
+    name: 'CCTV',
+    summary: 'Cameras, recorders and remote viewing',
+    description:
+      'From a farm or office compound to a weighbridge, we design the camera layout, run the cabling, set up the recorder and show your team how to watch live and play back footage.',
+    icon: Camera,
+    features: ['Site survey and camera layout', 'Cabling and recorder setup', 'Live and remote viewing', 'Training for the people who watch it'],
+    photo: { src: '/images/photos/field-cctv-mast.webp', alt: 'A Codevertex engineer aligning a camera on a mast', caption: 'Aligning a camera on its mast' },
   },
   {
     id: 'plc',
-    name: 'PLC Automation',
-    tagline: 'Industrial control systems that talk to your software',
+    name: 'PLC automation',
+    summary: 'Machines and controllers feeding your reports',
     description:
-      'Programmable Logic Controller integration for manufacturing and industrial process automation — bridging shop-floor equipment to the same real-time data pipeline that powers your inventory and reporting.',
+      'We connect programmable logic controllers on the shop floor to the same data your stock and reporting use, so production numbers are counted, not typed.',
     icon: Cpu,
-    color: '#f59e0b',
-    features: [
-      'PLC-to-cloud data bridging',
-      'Real-time production/process monitoring',
-      'Manufacturing & warehousing use cases',
-      'Custom control-system integration',
-    ],
-    needsDeveloperPortal: false,
+    features: ['PLC data to the cloud', 'Production and process monitoring', 'Manufacturing and warehousing', 'Custom control logic'],
   },
   {
-    id: 'arduino-iot',
-    name: 'Arduino & General IoT Automation',
-    tagline: 'From a single sensor to a full automation pipeline',
+    id: 'iot',
+    name: 'Arduino and IoT',
+    summary: 'Sensors and small devices, properly monitored',
     description:
-      "Arduino programming and general IoT hardware automation — sensors, actuators, microcontrollers — engineered into a reliable, monitored pipeline feeding your business software, not a one-off hobby build.",
+      'Microcontroller programming, sensors and actuators wired into a monitored pipeline that feeds your business software, built to keep running after we leave the site.',
     icon: CircuitBoard,
-    color: '#4ade80',
-    features: [
-      'Arduino / microcontroller programming',
-      'Sensor & actuator integration',
-      'Real-time hardware-to-cloud sync',
-      'Custom automation pipelines',
-    ],
-    needsDeveloperPortal: false,
+    features: ['Microcontroller programming', 'Sensor and actuator wiring', 'Device-to-cloud sync', 'Alerts when a device goes quiet'],
+    photo: { src: '/images/photos/lab-camera-bench.webp', alt: 'Cameras and a laptop being configured on a workbench', caption: 'Configuring equipment on the bench before it goes to site' },
   },
 ];
 
 export default function IntegrationsPage() {
   return (
-    <div className="pt-20">
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-125 h-125 bg-primary/15 rounded-full blur-[120px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Network, Hardware and Integrations</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-6xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] mb-6">
-              Systems Integrations
-            </h1>
-            <p className="text-white/70 dark:text-muted-foreground text-lg max-w-2xl leading-relaxed mb-8">
-              Every integration we build or support — from KRA tax fiscalization to weighbridges, cameras, PLCs, and IoT hardware — engineered into a real, monitored data pipeline, not a one-off script.
-            </p>
-            <div className="flex gap-3 flex-wrap">
-              <Button asChild>
-                <Link href="/contact">Talk to an integration engineer <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-              <Button variant="outline" className="border-white/20 dark:border-foreground/20 text-white dark:text-foreground bg-transparent hover:bg-white/10 dark:hover:bg-foreground/10 hover:border-white/30 dark:hover:border-foreground/30" asChild>
-                <Link href={`${SSO_URL}/docs`} target="_blank" rel="noreferrer">
-                  Developer portal &amp; API docs <ExternalLink className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-          </div>
+    <>
+      <PageIntro
+        title="Integrations"
+        lead="Tax, payments, scales, cameras and controllers, connected to your software and installed by our own engineers."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Button size="lg" asChild><Link href="/contact?service=iot">Talk to an engineer</Link></Button>
+          <Button size="lg" variant="outline" asChild>
+            <a href={`${SSO_URL}/docs`} target="_blank" rel="noreferrer">API documentation</a>
+          </Button>
         </div>
-      </section>
+      </PageIntro>
 
-      {/* ── Integration cards ───────────────────────────────────────── */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {INTEGRATIONS.map((it) => {
-            const Icon = it.icon;
-            return (
-              <div
-                key={it.id}
-                className="rounded-2xl bg-card border border-border p-8 lg:p-10 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border" style={{ background: `${it.color}15`, borderColor: `${it.color}30` }}>
-                    <Icon className="h-5 w-5" style={{ color: it.color }} />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black text-foreground tracking-tight">{it.name}</h2>
-                    <p className="text-sm font-semibold text-muted-foreground italic">{it.tagline}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-5 max-w-3xl">{it.description}</p>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-6 max-w-2xl">
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+        <ul className="max-w-7xl mx-auto divide-y divide-border border-y border-border">
+          {INTEGRATIONS.map((it) => (
+            <li key={it.id} id={it.id} className="scroll-mt-28 grid gap-8 py-12 lg:grid-cols-12">
+              <div className={it.photo ? 'lg:col-span-7' : 'lg:col-span-9'}>
+                <it.icon className="h-6 w-6 text-primary mb-3" aria-hidden />
+                <h2 className="font-display text-2xl sm:text-3xl font-bold text-foreground">{it.name}</h2>
+                <p className="mt-1 text-muted-foreground">{it.summary}</p>
+                <p className="mt-4 text-foreground/85 leading-relaxed max-w-2xl">{it.description}</p>
+                <ul className="mt-5 grid gap-2 sm:grid-cols-2 max-w-2xl">
                   {it.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <ShieldCheck className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: it.color }} />
-                      {f}
+                    <li key={f} className="flex gap-2 text-sm text-muted-foreground">
+                      <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden /> {f}
                     </li>
                   ))}
                 </ul>
-                <div className="flex gap-3 flex-wrap">
-                  <Button size="sm" asChild>
-                    <Link href="/contact">Request this integration <ArrowRight className="h-3.5 w-3.5" /></Link>
-                  </Button>
-                  {it.needsDeveloperPortal && (
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`${SSO_URL}/docs`} target="_blank" rel="noreferrer">
-                        Explore the API <ExternalLink className="h-3.5 w-3.5" />
-                      </Link>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" asChild><Link href="/contact?service=iot">Ask about this</Link></Button>
+                  {it.apiDocs && (
+                    <Button size="sm" variant="ghost" asChild>
+                      <a href={`${SSO_URL}/docs`} target="_blank" rel="noreferrer">Read the API docs</a>
                     </Button>
                   )}
                 </div>
               </div>
-            );
-          })}
-
-          <p className="text-center text-sm text-muted-foreground pt-4">
-            Prefer to ask? Open the chat in the corner of this page — Vera can capture the details and route your request straight to our integration team.
-          </p>
-        </div>
+              {it.photo && (
+                <figure className="lg:col-span-5">
+                  <div className="relative aspect-4/3 overflow-hidden rounded-md bg-muted">
+                    <Image src={it.photo.src} alt={it.photo.alt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+                  </div>
+                  <figcaption className="mt-2 text-sm text-muted-foreground">{it.photo.caption}</figcaption>
+                </figure>
+              )}
+            </li>
+          ))}
+        </ul>
       </section>
-    </div>
+
+      <CTASection title="Have equipment that should talk to your software?" lead="Tell us what is on site and what you want to see on screen, and we will plan the connection with you." />
+    </>
   );
 }

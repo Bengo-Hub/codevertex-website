@@ -134,9 +134,13 @@ export interface DigitikaAccessCodeEvent {
 export interface DigitikaContactEvent {
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   message: string;
+  /** Topic value from the form (a product or service id). */
   service?: string;
+  /** Readable topic name for the reply and the team alert. */
+  serviceLabel?: string;
+  source?: 'contact' | 'attachment';
 }
 
 export interface DigitikaCertificateEvent extends NoticePeople {

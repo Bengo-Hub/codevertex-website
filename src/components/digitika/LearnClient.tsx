@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   GraduationCap, CheckCircle2, Lock, PlayCircle, FileText, Download,
   Award, Loader2, AlertCircle, Megaphone, MessagesSquare, Send, Wifi, WifiOff,
-  ChevronRight, Sparkles,
+  ChevronRight, ListChecks,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +77,7 @@ const LESSON_ICON: Record<Lesson['type'], typeof PlayCircle> = {
   VIDEO: PlayCircle,
   TEXT: FileText,
   RESOURCE: Download,
-  QUIZ: Sparkles,
+  QUIZ: ListChecks,
 };
 
 function formatDuration(sec: number | null) {
@@ -298,19 +298,18 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
   if (!verifiedStudentId) {
     return (
       <main className="min-h-screen bg-background flex flex-col">
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 py-20 px-4 text-primary-foreground">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.12),transparent_55%)]" />
+        <div className="relative bg-night pt-28 pb-16 px-4 text-night-foreground">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="max-w-2xl mx-auto text-center relative z-10"
           >
-            <div className="w-16 h-16 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center mx-auto mb-5 backdrop-blur-sm">
+            <div className="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center mx-auto mb-5 text-gold">
               <GraduationCap className="h-8 w-8" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">{courseName}</h1>
-            <p className="mt-3 text-primary-foreground/80 text-base max-w-md mx-auto leading-relaxed">
+            <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">{courseName}</h1>
+            <p className="mt-3 text-night-foreground/75 text-base max-w-md mx-auto leading-relaxed">
               Enter your Student ID to access your course content, track progress, and earn your certificate.
             </p>
           </motion.div>
@@ -373,8 +372,8 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
           <div className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-primary">Course</p>
-                <h1 className="text-lg font-black text-foreground leading-tight mt-0.5 truncate">{courseName}</h1>
+                <p className="text-xs font-semibold text-primary">Course</p>
+                <h1 className="text-lg font-bold text-foreground leading-tight mt-0.5 truncate">{courseName}</h1>
               </div>
                        <button
                 onClick={toggleDataSaver}
@@ -466,7 +465,7 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
               <motion.div key="lessons" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
                 {data.modules.map((m) => (
                   <div key={m.id}>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 px-1">{m.title}</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1.5 px-1">{m.title}</p>
                     <ul className="space-y-1">
                       {m.lessons.map((l) => {
                         const Icon = LESSON_ICON[l.type];
@@ -533,7 +532,7 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
               <motion.div key="qa" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-xl font-black text-foreground flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                       <MessagesSquare className="h-5 w-5 text-primary" /> Course Q&amp;A
                     </h2>
                     {unansweredCount > 0 && (
@@ -581,7 +580,7 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                 ) : !threads || threads.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-border p-8 text-center">
                     <MessagesSquare className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">No questions yet — be the first to ask.</p>
+                    <p className="text-sm text-muted-foreground">No questions yet. Ask the first one.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -649,7 +648,7 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     {(() => { const Icon = LESSON_ICON[activeLesson.type]; return <Icon className="h-4.5 w-4.5" />; })()}
                   </span>
-                  <h2 className="text-xl font-black text-foreground leading-tight">{activeLesson.title}</h2>
+                  <h2 className="text-xl font-bold text-foreground leading-tight">{activeLesson.title}</h2>
                 </div>
 
                 {activeLesson.type === 'VIDEO' && activeLesson.videoUrl && (() => {
@@ -658,9 +657,9 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                     return (
                       <button
                         onClick={() => setVideoLoaded(true)}
-                        className="group w-full aspect-video rounded-xl bg-gradient-to-br from-neutral-900 to-black flex flex-col items-center justify-center gap-3 text-white/90 hover:from-neutral-800 transition-colors"
+                        className="group w-full aspect-video rounded-xl bg-neutral-900 flex flex-col items-center justify-center gap-3 text-white/90 hover:bg-neutral-800 transition-colors"
                       >
-                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 group-hover:bg-white/15 group-hover:scale-105 transition-all">
+                        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 group-hover:bg-white/15 transition-colors">
                           <PlayCircle className="h-8 w-8" />
                         </span>
                         <span className="text-sm font-semibold">
@@ -721,7 +720,7 @@ export function LearnClient({ courseId, courseName }: { courseId: string; course
                         quizResult.passed ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-destructive/20 bg-destructive/10 text-destructive'
                       )}>
                         {quizResult.passed ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
-                        Score: {quizResult.scorePct}% — {quizResult.passed ? 'Passed!' : `Needs ${quizResult.passingScore}% to pass, try again.`}
+                        Score: {quizResult.scorePct}%. {quizResult.passed ? 'Passed!' : `Needs ${quizResult.passingScore}% to pass, try again.`}
                       </div>
                     )}
                                     <Button onClick={submitQuiz} disabled={busy}>

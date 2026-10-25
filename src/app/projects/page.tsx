@@ -1,89 +1,58 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Calendar, Images, MapPin } from 'lucide-react';
-import { prisma } from '@/lib/db';
+import { PageIntro } from '@/components/site/PageIntro';
+import { CTASection } from '@/components/home/CTASection';
+import { formatProjectDate, listPublishedProjects } from '@/lib/projects-server';
 
 export const metadata: Metadata = {
-  title: 'Projects & Events',
-  description: 'Meetings, events and projects Codevertex Africa has taken part in — with photos, venues and highlights.',
+  title: 'Projects',
+  description: 'Installations, system rollouts and training Codevertex Africa Limited has delivered, with photos from each site.',
 };
 
-// Rendered per-request: the build stage has no live DATABASE_URL (same reason as /blog).
+// Rendered per request: the build stage has no live DATABASE_URL (same as /blog).
 export const dynamic = 'force-dynamic';
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
 export default async function ProjectsPage() {
-  const events = await prisma.projectEvent.findMany({
-    where: { published: true },
-    orderBy: { eventDate: 'desc' },
-    include: {
-      photos: { select: { id: true }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] },
-    },
-  });
+  const projects = await listPublishedProjects();
 
   return (
-    <div className="pt-20">
-      <section className="bg-foreground pt-20 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute bottom-0 left-0 w-100 h-75 bg-primary/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-4">Projects &amp; events</p>
-          <h1 className="text-5xl sm:text-6xl font-black text-white dark:text-foreground tracking-tight leading-[1.05] mb-4">
-            Where we show up
-          </h1>
-          <p className="text-white/70 dark:text-muted-foreground text-lg max-w-xl leading-relaxed">
-            Meetings, hackathons and partner events we take part in — in pictures.
-          </p>
-        </div>
-      </section>
+    <>
+      <PageIntro
+        title="Projects"
+        lead="Cameras at weighbridges, systems in libraries, training for officers and students. Here is the work, with photos from each site."
+      />
 
-      <section className="py-14 px-4 sm:px-6 lg:px-8">
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
         <div className="max-w-7xl mx-auto">
-          {events.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              <Images className="h-8 w-8 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">No events to show yet — check back soon.</p>
-            </div>
+          {projects.length === 0 ? (
+            <p className="py-16 text-muted-foreground">Projects will appear here as soon as they are published.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((e) => (
-                <Link
-                  key={e.id.toString()}
-                  href={`/projects/${e.slug}`}
-                  className="group rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 transition-colors flex flex-col"
-                >
-                  <div className="relative h-52 bg-muted overflow-hidden">
-                    {e.photos[0] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={`/api/projects/photos/${e.photos[0].id}`}
-                        alt={e.title}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground"><Images className="h-7 w-7 opacity-40" /></div>
-                    )}
-                    {e.photos.length > 1 && (
-                      <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/70 text-white text-[11px] font-semibold flex items-center gap-1">
-                        <Images className="h-3 w-3" /> {e.photos.length}
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-5 flex-1 flex flex-col">
-                    <h2 className="font-bold text-foreground text-lg leading-snug group-hover:text-primary transition-colors">{e.title}</h2>
-                    <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 shrink-0" />{e.venue}</p>
-                    <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 shrink-0" />{formatDate(e.eventDate)}</p>
-                    <p className="text-sm text-muted-foreground mt-3 line-clamp-3 leading-relaxed">{e.description}</p>
-                  </div>
-                </Link>
+            <ul className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {projects.map((p) => (
+                <li key={p.slug}>
+                  <Link href={`/projects/${p.slug}`} className="group block">
+                    <div className="relative aspect-3/2 overflow-hidden rounded-md bg-muted">
+                      {p.coverPhotoId && (
+                        // eslint-disable-next-line @next/next/no-img-element -- photos are served from the database
+                        <img src={`/api/projects/photos/${p.coverPhotoId}`} alt="" loading="lazy" className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      {formatProjectDate(p.eventDate)}
+                      {p.photoCount > 1 && <span> · {p.photoCount} photos</span>}
+                    </p>
+                    <h2 className="mt-1 font-display text-xl font-bold text-foreground leading-snug group-hover:text-primary">{p.title}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">{p.venue}</p>
+                    <p className="mt-3 text-[15px] text-foreground/80 leading-relaxed line-clamp-3">{p.description}</p>
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
       </section>
-    </div>
+
+      <CTASection title="Have a site that needs the same?" lead="Tell us about the equipment, the people and the software involved, and we will plan it with you." />
+    </>
   );
 }

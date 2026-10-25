@@ -63,16 +63,23 @@ async function shrinkDataUri(dataUri: string): Promise<string | null> {
   }
 }
 
-// Only real, branded customers belong in a public logo showcase — a tenant without a
-// logo hasn't set up branding yet, so it's excluded rather than shown as a bare name.
-export async function fetchShowcaseTenants(): Promise<ClientTenant[]> {
+export interface Showcase {
+  /** Tenants with a logo, for the logo wall. */
+  tenants: ClientTenant[];
+  /** Every live business on the marketplace, with or without a logo. */
+  total: number;
+}
+
+// Only real, branded customers belong in the logo wall: a tenant without a logo has not set up
+// branding yet, so it is left out there, but it still counts towards the live total.
+export async function fetchShowcaseTenants(): Promise<Showcase> {
   try {
     // The raw listing can exceed Next's 2MB data-cache limit once inline logos are
     // included, so this fetch is deliberately never cached at the fetch level — the
     // page itself still revalidates hourly (see `revalidate` export on the homepage).
     const res = await fetch(`${AUTH_API_URL}/api/v1/tenants/marketplace?limit=100`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const body = (await res.json()) as { data: RawMarketplaceTenant[] };
+    if (!res.ok) return { tenants: [], total: 0 };
+    const body = (await res.json()) as { data: RawMarketplaceTenant[]; total?: number };
 
     const withLogos = (body.data ?? []).filter((t) => !!t.logo_url);
 
@@ -93,8 +100,11 @@ export async function fetchShowcaseTenants(): Promise<ClientTenant[]> {
       })
     );
 
-    return resolved.filter((t): t is ClientTenant => t !== null);
+    return {
+      tenants: resolved.filter((t): t is ClientTenant => t !== null),
+      total: body.total ?? body.data?.length ?? 0,
+    };
   } catch {
-    return [];
+    return { tenants: [], total: 0 };
   }
 }

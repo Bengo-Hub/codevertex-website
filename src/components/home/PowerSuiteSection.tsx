@@ -1,151 +1,84 @@
-'use client';
-import { Button } from '@/components/ui/button';
-import { SSO_URL } from '@/lib/constants';
-import { POWER_SUITE } from '@/config/services';
-import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
+import { MASKANI, POWER_SUITE, type PowerSuiteProduct } from '@/config/services';
+import type { ProductPricing } from '@/lib/subscriptions';
+import { Button } from '@/components/ui/button';
 
-const SUITE = [
-  {
-    id: 'erp',
-    name: 'ERP',
-    tag: 'Business Operations',
-    desc: 'Unified finance, HR, procurement and CRM in one modular platform. Designed for African corporates and SMEs.',
-    href: 'https://erp.codevertexafrica.com',
-    img: '/images/illustrations/product-erp.svg',
-  },
-  {
-    id: 'truload',
-    name: 'TruLoad',
-    tag: 'Transport & Logistics',
-    desc: 'IoT axle-load monitoring with tamper-proof data, camera integration, and automated compliance reporting.',
-    href: 'https://truload.codevertexafrica.com',
-    img: '/images/illustrations/product-truload.svg',
-  },
-  {
-    id: 'pos',
-    name: 'POS',
-    tag: 'Retail & Hospitality',
-    desc: 'Offline-capable point-of-sale with inventory intelligence, multi-location support, and M-Pesa integration.',
-    href: 'https://pos.codevertexafrica.com',
-    img: '/images/illustrations/product-pos.svg',
-  },
-  {
-    id: 'isp',
-    name: 'ISP Billing',
-    tag: 'Telecommunications',
-    desc: 'Zero-touch provisioning, subscriber billing, captive portal management and payment reconciliation.',
-    href: 'https://ispbilling.codevertexafrica.com',
-    img: '/images/illustrations/product-isp.svg',
-  },
-  {
-    id: 'books',
-    name: 'Books',
-    tag: 'Finance & Projects',
-    desc: 'Invoicing, Paystack and M-Pesa payments, project tracking, and collaborative team workflows.',
-    href: 'https://books.codevertexafrica.com',
-    img: '/images/illustrations/product-books.svg',
-  },
-  {
-    id: 'chatbot',
-    name: 'AI & Automation',
-    tag: 'Business Intelligence & Workflow Automation',
-    desc: 'Tailored AI chatbot deployments for your business — customer support, lead capture, internal helpdesks, and workflow automation built on your data.',
-    href: '/contact',
-    img: '/images/illustrations/product-vera.svg',
-  },
-];
+export function formatFromPrice(p?: ProductPricing) {
+  if (!p || p.fromPrice <= 0) return null;
+  return `From ${p.currency} ${p.fromPrice.toLocaleString('en-KE')} a month`;
+}
 
-export function PowerSuiteSection() {
-  const [active, setActive] = useState(0);
+export function priceFor(product: PowerSuiteProduct, pricing: ProductPricing[]) {
+  return product.serviceTag ? pricing.find((p) => p.key === product.serviceTag) : undefined;
+}
 
+function NewTag() {
+  return <span className="rounded-sm bg-accent px-1.5 py-0.5 text-[11px] font-semibold text-accent-foreground">New</span>;
+}
+
+/** The 14 Power Suite products as one scannable list, with live "from" prices where a plan exists. */
+export function PowerSuiteSection({ pricing }: { pricing: ProductPricing[] }) {
   return (
-    <section className="py-10 px-4 sm:px-6 lg:px-8 bg-secondary/30">
+    <section aria-labelledby="suite-heading" className="bg-background px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
-          <div className="max-w-xl">
-            <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">One Account</p>
-            <h2 className="text-4xl sm:text-5xl font-black text-foreground leading-tight tracking-tight">
-              The Codevertex<br />Power Suite
-            </h2>
-            <p className="text-muted-foreground mt-3 text-base font-medium max-w-md leading-relaxed">
-              {POWER_SUITE.length} integrated products. One SSO identity. Zero friction between your tools.
+        <div className="grid gap-6 lg:grid-cols-12 lg:items-end mb-12">
+          <h2 id="suite-heading" className="lg:col-span-7 font-display text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-tight">
+            {POWER_SUITE.length} products. One sign-in.
+          </h2>
+          <p className="lg:col-span-5 text-muted-foreground text-lg leading-relaxed">
+            Every product shares one account, one set of users and one bill. Start with the one you need and switch
+            the others on as you grow.
+          </p>
+        </div>
+
+        <ul className="grid sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-border">
+          {POWER_SUITE.map((p) => {
+            const price = formatFromPrice(priceFor(p, pricing));
+            return (
+              <li key={p.id} className="border-b border-r border-border">
+                <a href={p.url} target="_blank" rel="noreferrer" className="group flex h-full flex-col gap-3 p-6 hover:bg-secondary focus-visible:bg-secondary">
+                  <div className="flex items-center justify-between gap-3">
+                    <p.icon className="h-5 w-5 text-primary" aria-hidden />
+                    <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden />
+                  </div>
+                  <div>
+                    <h3 className="flex items-center gap-2 font-semibold text-foreground">
+                      {p.name} {p.isNew && <NewTag />}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{p.summary}</p>
+                  </div>
+                  <p className="mt-auto pt-2 text-xs text-muted-foreground">
+                    {p.tag}
+                    {price && <span className="block mt-0.5 font-semibold text-foreground">{price}</span>}
+                  </p>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="mt-10 grid gap-6 rounded-lg bg-night text-night-foreground p-8 lg:p-10 lg:grid-cols-12 lg:items-center">
+          <div className="lg:col-span-8">
+            <p className="flex items-center gap-2 text-sm font-semibold text-gold mb-2">
+              <MASKANI.icon className="h-4 w-4" aria-hidden /> {MASKANI.name}
             </p>
+            <h3 className="font-display text-2xl sm:text-3xl font-bold">{MASKANI.summary}</h3>
+            <p className="mt-3 text-night-foreground/75 max-w-2xl">{MASKANI.description}</p>
           </div>
-          <Button size="lg" variant="outline" asChild className="self-start lg:self-auto">
-            <Link href={SSO_URL} target="_blank" rel="noreferrer">
-              Access portal <ChevronRight className="h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="lg:col-span-4 flex flex-wrap gap-3 lg:justify-end">
+            <Button variant="gold" asChild>
+              <a href={MASKANI.url} target="_blank" rel="noreferrer">Visit Maskani</a>
+            </Button>
+            <Button variant="outline-light" asChild>
+              <Link href="/contact?service=maskani">Ask about Maskani</Link>
+            </Button>
+          </div>
         </div>
 
-        {/* Tab layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
-          {/* Product list */}
-          <div className="lg:col-span-2 border-r border-border divide-y divide-border">
-            {SUITE.map((item, i) => (
-              <button
-                key={item.id}
-                onClick={() => setActive(i)}
-                className={`w-full text-left px-6 py-5 transition-all duration-200 flex items-center justify-between gap-4
-                  ${active === i ? 'bg-primary/5 border-l-2 border-primary' : 'hover:bg-secondary/60 border-l-2 border-transparent'}`}
-              >
-                <div>
-                  <p className={`font-bold text-base ${active === i ? 'text-primary' : 'text-foreground'}`}>{item.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.tag}</p>
-                </div>
-                <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${active === i ? 'text-primary rotate-90' : 'text-muted-foreground'}`} />
-              </button>
-            ))}
-          </div>
-
-          {/* Detail with illustration */}
-          <motion.div
-            key={active}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25 }}
-            className="lg:col-span-3 flex flex-col"
-          >
-            {/* Product illustration */}
-            <div className="relative w-full h-64 overflow-hidden bg-foreground dark:bg-card border-b border-border flex items-center justify-center">
-              <Image
-                src={SUITE[active].img}
-                alt={SUITE[active].name}
-                fill
-                className="object-contain p-4"
-                sizes="(max-width: 1024px) 100vw, 60vw"
-              />
-            </div>
-
-            {/* Text content */}
-            <div className="p-6 lg:p-8 flex flex-col justify-center flex-1">
-              <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">{SUITE[active].tag}</p>
-              <h3 className="text-3xl font-black text-foreground tracking-tight mb-4">{SUITE[active].name}</h3>
-              <p className="text-muted-foreground leading-relaxed text-base mb-6">{SUITE[active].desc}</p>
-              <div className="flex gap-3 flex-wrap">
-                <Button asChild>
-                  <Link href={SUITE[active].href} target={SUITE[active].href.startsWith('http') ? '_blank' : undefined} rel={SUITE[active].href.startsWith('http') ? 'noreferrer' : undefined}>
-                    Open {SUITE[active].name} <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link href="/services">All products</Link>
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Security badges */}
-        <div className="mt-6 flex flex-wrap gap-3 justify-center">
-          {['OAuth 2.0', 'OpenID Connect', 'AES-256', 'GDPR-aware', 'Multi-tenant SSO'].map(b => (
-            <span key={b} className="px-3 py-1.5 rounded-full bg-card border border-border text-xs font-semibold text-muted-foreground">{b}</span>
-          ))}
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Button asChild><Link href="/services">Compare the products</Link></Button>
+          <Button variant="outline" asChild><Link href="/pricing">See prices</Link></Button>
         </div>
       </div>
     </section>

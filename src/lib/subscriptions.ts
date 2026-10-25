@@ -1,8 +1,8 @@
 import { SUBSCRIPTIONS_API_URL } from '@/lib/constants';
+import { MASKANI, POWER_SUITE, productNameForServiceTag } from '@/config/services';
 
-// Server-only fetch from subscriptions-api's real, public plan catalog — never called
-// from the browser (subscriptions-api's CORS allowlist doesn't include this site's own
-// domain, so this must stay a server-side fetch, not a client one).
+// Server-only fetch from subscriptions-api's public plan catalogue. It is never called from the
+// browser: subscriptions-api's CORS allowlist does not include this site, so it stays server side.
 
 interface RawPlan {
   planCode: string;
@@ -27,22 +27,12 @@ export interface ProductPricing {
   freeTrialDays: number;
 }
 
-// Friendly display name per serviceTag — falls back to a title-cased version of the tag.
-const PRODUCT_NAMES: Record<string, string> = {
-  erp: 'ERP Suite',
-  pos: 'POS System',
-  inventory: 'Inventory',
-  isp_billing: 'ISP Billing',
-  marketflow: 'MarketFlow + Vera AI',
-  logistics: 'Logistics',
-  hospital: 'Codevertex Afya',
-  library: 'Library Management',
-  projects: 'Projects',
-  etims_api: 'eTIMS API',
-};
+// Display names come from the product config so a product is named the same everywhere.
+// Tags with no product there (an API-only plan) fall back to a title-cased tag.
+const EXTRA_NAMES: Record<string, string> = { etims_api: 'eTIMS API' };
 
-// Display order — flagship products first, matching /services' emphasis.
-const PRODUCT_ORDER = ['erp', 'pos', 'inventory', 'isp_billing', 'marketflow', 'logistics', 'hospital', 'library', 'projects', 'etims_api'];
+// Display order follows the product list on /services, extras last.
+const PRODUCT_ORDER = [...POWER_SUITE, MASKANI].map((p) => p.serviceTag).filter(Boolean) as string[];
 
 export async function fetchPublicPricing(): Promise<ProductPricing[]> {
   try {
@@ -63,7 +53,7 @@ export async function fetchPublicPricing(): Promise<ProductPricing[]> {
 
     const products: ProductPricing[] = Array.from(cheapestByTag.entries()).map(([tag, plan]) => ({
       key: tag,
-      name: PRODUCT_NAMES[tag] ?? tag.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      name: productNameForServiceTag(tag) ?? EXTRA_NAMES[tag] ?? tag.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
       fromPrice: plan.basePrice,
       currency: plan.currency,
       description: plan.description,

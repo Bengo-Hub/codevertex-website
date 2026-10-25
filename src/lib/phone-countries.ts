@@ -28,3 +28,22 @@ export function isValidLocalPhone(cc: PhoneCountry, phone: string): boolean {
 export function toInternationalPhone(cc: PhoneCountry, phone: string): string {
   return `${cc.code}${phone.replace(/[\s\-()]/g, '').replace(/^0/, '')}`;
 }
+
+/**
+ * Normalises a phone typed in any common form to +<country><number>, or null when it is not a
+ * usable number. "0712 345 678" and "712345678" are read as Kenyan; "+255 ..." and "254..." keep
+ * their country code. Used by the contact form API, where the visitor types a free-form number.
+ */
+export function normalisePhone(raw: string): string | null {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  let intl: string;
+  if (trimmed.startsWith('+') || trimmed.startsWith('00')) intl = digits.replace(/^00/, '');
+  else if (/^0[17]\d{8}$/.test(digits)) intl = `254${digits.slice(1)}`;
+  else if (/^[17]\d{8}$/.test(digits)) intl = `254${digits}`;
+  else intl = digits;
+  if (!/^[1-9]\d{8,14}$/.test(intl)) return null;
+  const cc = COUNTRY_CODES.find((c) => intl.startsWith(c.code.slice(1)));
+  if (cc && !isValidLocalPhone(cc, intl.slice(cc.code.length - 1))) return null;
+  return `+${intl}`;
+}

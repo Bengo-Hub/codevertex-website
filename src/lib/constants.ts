@@ -1,10 +1,10 @@
 export const SITE = {
   name: 'Codevertex Africa Limited',
-  tagline: "Architecting Africa's Digital Renaissance",
+  tagline: "Architecting Africa's Digital Excellence",
   url: 'https://codevertexafrica.com',
   email: 'info@codevertexafrica.com',
   phone1: '+254 743 793 901',
-  phone2: '+254 743 793 901',
+  phone2: '+254 742 201 368',
   phone3: '+254 792 548 766',
   whatsapp: 'https://wa.me/254743793901',
   address: 'Pioneer House, Oginga-Odinga Road, Kisumu CBD, Kenya',
@@ -31,7 +31,8 @@ export const ERP = {
 export const SUBSCRIPTIONS_API_URL = process.env.SUBSCRIPTIONS_API_URL ?? 'https://pricingapi.codevertexafrica.com';
 
 export const NAV_LINKS = [
-  { label: 'Services', href: '/services' },
+  { label: 'Products', href: '/services' },
+  { label: 'Pricing', href: '/pricing' },
   { label: 'Digitika', href: '/digitika' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },

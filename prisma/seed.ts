@@ -5,6 +5,7 @@
  *   prisma/seed/courses.ts  — course catalog (with SVG cover images)
  *   prisma/seed/cohorts.ts  — scheduled cohorts
  *   prisma/seed/blog.ts     — starter blog posts
+ *   prisma/seed/projects.ts — delivered projects, photos in prisma/seed/project-photos/
  *
  * Run:  pnpm prisma db seed
  * Env:  DATABASE_URL must be set
@@ -15,6 +16,9 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { COURSES, DEPRECATED_COURSE_IDS } from './seed/courses';
 import { COHORTS } from './seed/cohorts';
 import { BLOG_POSTS } from './seed/blog';
+import { PROJECTS } from './seed/projects';
+import fs from 'node:fs';
+import path from 'node:path';
 import { seedDigitikaRbac, pushDigitikaRolesToAuthRegistry } from './seed/digitika-rbac';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
@@ -104,6 +108,34 @@ async function main() {
   console.log(`\n📝 Seeding ${BLOG_POSTS.length} blog posts...`);
   const blog = await prisma.blogPost.createMany({ data: BLOG_POSTS, skipDuplicates: true });
   console.log(`  ✓ Created ${blog.count}, kept ${BLOG_POSTS.length - blog.count} existing`);
+
+  // ── Projects ──────────────────────────────────────────────────────────────
+  // Create-only, like blog posts. Photos are attached only while a project has none, so
+  // photos removed or reordered in /admin/projects are never put back by a deploy.
+  console.log(`\n🏗️  Seeding ${PROJECTS.length} projects...`);
+  const photoDir = path.join(__dirname, 'seed', 'project-photos');
+  for (const { photos, ...project } of PROJECTS) {
+    const event = await prisma.projectEvent.upsert({
+      where: { slug: project.slug },
+      create: project,
+      update: {},
+      select: { id: true, _count: { select: { photos: true } } },
+    });
+    if (event._count.photos > 0) continue;
+    let added = 0;
+    for (const [i, photo] of photos.entries()) {
+      const file = path.join(photoDir, project.slug, photo.file);
+      if (!fs.existsSync(file)) {
+        console.warn(`  ! Missing photo ${project.slug}/${photo.file}`);
+        continue;
+      }
+      await prisma.projectPhoto.create({
+        data: { eventId: event.id, caption: photo.caption, mimeType: 'image/webp', data: fs.readFileSync(file), sortOrder: i },
+      });
+      added++;
+    }
+    console.log(`  ✓ ${project.title}: ${added} photo(s)`);
+  }
 
   console.log('\n✅ Seed complete.');
 }

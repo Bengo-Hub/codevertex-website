@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = dbCourse.description;
   const image = dbCourse.coverImage
     ? new URL(dbCourse.coverImage, SITE_URL).toString()
-    : `${SITE_URL}/images/students.jpg`;
+    : `${SITE_URL}/images/og-image.jpg`;
 
   return {
     title,

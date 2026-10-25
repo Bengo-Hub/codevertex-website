@@ -32,23 +32,20 @@ export function ProjectGallery({ photos, title }: { photos: GalleryPhoto[]; titl
 
   return (
     <>
-      <div className="columns-2 md:columns-3 gap-3 [&>*]:mb-3">
+      <div className="columns-1 sm:columns-2 md:columns-3 gap-4 *:mb-6">
         {photos.map((p, i) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => setOpen(i)}
-            className="block w-full overflow-hidden rounded-xl border border-border bg-muted break-inside-avoid focus:outline-none focus:ring-2 focus:ring-primary/50"
-            aria-label={`View photo ${i + 1} of ${photos.length}`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/projects/photos/${p.id}`}
-              alt={p.caption ?? `${title} — photo ${i + 1}`}
-              loading="lazy"
-              className="w-full h-auto transition-transform duration-300 hover:scale-[1.03]"
-            />
-          </button>
+          <figure key={p.id} className="break-inside-avoid">
+            <button
+              type="button"
+              onClick={() => setOpen(i)}
+              className="block w-full overflow-hidden rounded-md bg-muted"
+              aria-label={`Open photo ${i + 1} of ${photos.length} full size`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- photos are served from the database */}
+              <img src={`/api/projects/photos/${p.id}`} alt={p.caption ?? `${title}, photo ${i + 1}`} loading="lazy" className="w-full h-auto" />
+            </button>
+            {p.caption && <figcaption className="mt-2 text-sm text-muted-foreground">{p.caption}</figcaption>}
+          </figure>
         ))}
       </div>
 
@@ -85,7 +82,7 @@ export function ProjectGallery({ photos, title }: { photos: GalleryPhoto[]; titl
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/api/projects/photos/${photos[open].id}`}
-              alt={photos[open].caption ?? `${title} — photo ${open + 1}`}
+              alt={photos[open].caption ?? `${title}, photo ${open + 1}`}
               className="max-h-[85vh] w-auto mx-auto rounded-lg"
             />
             <figcaption className="text-center text-xs text-white/70 mt-2">

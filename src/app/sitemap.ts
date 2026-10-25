@@ -13,7 +13,6 @@ const STATIC_ROUTES: Array<{ path: string; priority: number; changeFrequency: Me
   { path: '/services', priority: 0.8, changeFrequency: 'monthly' },
   { path: '/digitika', priority: 0.9, changeFrequency: 'weekly' },
   { path: '/pricing', priority: 0.7, changeFrequency: 'weekly' },
-  { path: '/platform', priority: 0.6, changeFrequency: 'monthly' },
   { path: '/about', priority: 0.5, changeFrequency: 'monthly' },
   { path: '/blog', priority: 0.7, changeFrequency: 'daily' },
   { path: '/projects', priority: 0.6, changeFrequency: 'weekly' },

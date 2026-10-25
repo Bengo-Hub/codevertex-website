@@ -8,25 +8,21 @@ export const metadata: Metadata = {
 
 export default function SecurityPage() {
   return (
-    <div className="pt-20">
-      <section className="bg-foreground py-16 px-4 sm:px-6 lg:px-8">
+    <div>
+      <section className="border-b border-border pt-28 lg:pt-36 pb-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Security</p>
-          <h1 className="text-4xl sm:text-5xl font-black text-white dark:text-foreground tracking-tight">
-            Vulnerability disclosure
-          </h1>
-          <p className="text-white/60 dark:text-muted-foreground mt-3 text-sm">
-            We run security audits for our customers — here&apos;s how to report an issue with our own systems.
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-foreground tracking-tight">Reporting a security issue</h1>
+          <p className="text-muted-foreground mt-3">
+            We run security audits for our customers. Here is how to report an issue with our own systems.
           </p>
         </div>
       </section>
 
       <section className="py-14 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary">
+        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary">
           <p>
-            If you believe you&apos;ve found a security vulnerability in any Codevertex Africa Limited product —
-            this website, the Power Suite platform, or any service under <code>*.codevertexafrica.com</code> —
-            we want to hear about it before anyone else does.
+            If you believe you&apos;ve found a security vulnerability in this website, the Power Suite, or any
+            service under <code>*.codevertexafrica.com</code>, we want to hear about it before anyone else does.
           </p>
 
           <div className="not-prose grid sm:grid-cols-3 gap-4 my-8">

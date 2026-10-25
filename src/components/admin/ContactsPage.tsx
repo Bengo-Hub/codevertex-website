@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Search, Trash2, MessageCircle, Mail } from 'lucide-react';
+import { Search, Trash2, MessageCircle, Mail, RotateCw } from 'lucide-react';
+import { enquiryTopicLabel } from '@/config/services';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { AdminPageHeader } from './AdminPageHeader';
@@ -16,6 +17,7 @@ interface Contact {
   service: string | null;
   message: string;
   source: string;
+  noticeSentAt: string | null;
   createdAt: string;
 }
 
@@ -48,6 +50,17 @@ export function ContactsPage() {
     load();
   }
 
+  const [resending, setResending] = useState<string | null>(null);
+  async function resend(row: Contact) {
+    setResending(row.id);
+    const res = await authedFetch(`/api/admin/contacts/${row.id}/resend`, { method: 'POST' });
+    const body = await res.json().catch(() => ({}));
+    if (res.ok) toast.success(`Acknowledgement sent to ${row.name}`);
+    else toast.error(body.error ?? 'Could not send the acknowledgement');
+    setResending(null);
+    load();
+  }
+
   const waLink = (phone: string) => `https://wa.me/${phone.replace(/[^\d]/g, '').replace(/^0/, '254')}`;
 
   const columns: Column<Contact>[] = [
@@ -65,7 +78,17 @@ export function ContactsPage() {
     {
       key: 'service',
       header: 'Service',
-      render: (row) => <span className="text-xs text-muted-foreground">{row.service ?? '—'}</span>,
+      render: (row) => <span className="text-xs text-muted-foreground">{enquiryTopicLabel(row.service) ?? 'Not given'}</span>,
+    },
+    {
+      key: 'noticeSentAt',
+      header: 'Acknowledgement',
+      render: (row) =>
+        row.noticeSentAt ? (
+          <span className="text-xs text-emerald-700 dark:text-emerald-400">Sent {new Date(row.noticeSentAt).toLocaleDateString('en-GB')}</span>
+        ) : (
+          <span className="text-xs text-destructive">Not sent</span>
+        ),
     },
     {
       key: 'message',
@@ -106,6 +129,9 @@ export function ContactsPage() {
           <a href={`mailto:${row.email}?subject=${encodeURIComponent('Re: your enquiry to Codevertex')}`} title="Reply by email" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><Mail className="h-3.5 w-3.5" /></a>
           {row.phone && (
             <a href={waLink(row.phone)} target="_blank" rel="noreferrer" title="WhatsApp" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><MessageCircle className="h-3.5 w-3.5" /></a>
+          )}
+          {row.phone && (
+            <button onClick={() => resend(row)} disabled={resending === row.id} title={row.noticeSentAt ? 'Send the acknowledgement again' : 'Send the acknowledgement'} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><RotateCw className={`h-3.5 w-3.5 ${resending === row.id ? 'animate-spin' : ''}`} /></button>
           )}
           <button onClick={() => setDeleting(row)} title="Delete" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
         </div>

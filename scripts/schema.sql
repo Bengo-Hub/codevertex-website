@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS contact_submissions (
   service     TEXT,
   message     TEXT NOT NULL,
   source      TEXT DEFAULT 'website',
+  notice_sent_at TIMESTAMPTZ,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 

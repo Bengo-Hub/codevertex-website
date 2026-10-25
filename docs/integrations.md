@@ -299,6 +299,25 @@ index.
 Trigger for the payment receipt: `treasury.payment.succeeded` (NATS) -> `treasury-subscriber.ts` ->
 `publishInstallmentPaid`.
 
+### Contact form (Oct 2026)
+
+The contact page and the attachment application both post to `/api/contact`. Phone is required on
+both: `normalisePhone` (`src/lib/phone-countries.ts`) stores it as `+254...` and rejects anything that
+is not a real number for its country. The route saves the `contact_submissions` row, publishes
+`digitika.contact.received` and waits for the publish; when it reaches NATS the row's `notice_sent_at`
+is set. A row without it shows "Not sent" in `/admin/contacts`, where Resend
+(`POST /api/admin/contacts/{id}/resend`, `contacts.manage`) publishes it again.
+
+The payload carries `serviceLabel`, the readable topic name from `ENQUIRY_TOPICS` in
+`src/config/services.ts`, and `source` (`contact` or `attachment`). notifications-api then sends:
+
+- the visitor: email `digitika/contact_form_reply` and WhatsApp `codevertex_enquiry_received_v1_btn`
+  (name and topic, "Visit our website" button to `codevertexafrica.com/services`);
+- the team: email `platform/website_enquiry` to `PLATFORM_ALERT_EMAILS` on notifications-api (the
+  same inbox as the new-tenant alert), with the phone, topic, message and a link to `/admin/contacts`.
+
+Until Meta approves `codevertex_enquiry_received_v1_btn`, WhatsApp is skipped and both emails still go.
+
 ---
 
 ## 7. Course Catalog Data Model (DB single source of truth)

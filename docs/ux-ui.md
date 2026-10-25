@@ -1,142 +1,74 @@
-# Codevertex Website — UX/UI Design System
+# Codevertex website design system
 
-## Brand Identity
+The public site follows the Codevertex Africa Limited brand as printed on the 2026 roll-up banner:
+plum from the logo, a deep night plum for dark sections and gold for the accent. The tagline is
+"Architecting Africa's Digital Excellence" and is never paraphrased.
 
-### Color System
+## Colour tokens
 
-| Token | Light Mode | Dark Mode | Usage |
-|-------|-----------|-----------|-------|
-| `--primary` | Hot Pink `hsl(330 81% 60%)` | Sky Blue `hsl(199 89% 48%)` | CTAs, accents, highlights |
-| `--background` | Creamy white `hsl(48 100% 96%)` | Deep navy `hsl(222.2 84% 4.9%)` | Page background |
-| `--foreground` | Dark navy `hsl(222.2 47.4% 11.2%)` | White `hsl(210 40% 98%)` | Body text |
-| `--card` | Pure white | Deep navy | Card surfaces |
-| `--muted-foreground` | Slate `hsl(215 20% 47%)` | Slate `hsl(215 20% 65%)` | Secondary text |
-| `--border` | Light slate | Dark slate | Dividers, card borders |
+Defined once in `src/app/globals.css` as HSL variables and exposed as Tailwind colours in
+`tailwind.config.ts`. Colours are solid: the site has no gradients, glows, blurred blobs or glass.
 
-### Typography
+| Token | Light | Use |
+|-------|-------|-----|
+| `--primary` | plum `#9B2C6B` | Buttons, links, icons |
+| `--primary-deep` | `#7A1D63` | Button hover and pressed state |
+| `--night` | `#1E0F1B` | Footer, call-to-action bands, the Maskani band |
+| `--gold` | `#C8963E` | Accent on night sections only (gold buttons, small labels). Never text on white: contrast is too low |
+| `--foreground` | ink `#1D1A22` | Body text |
+| `--secondary` / `--muted` | paper `#F6F4F7` | Alternate section background |
+| `--border` | `#E7E2EA` | Dividers and outlines |
 
-- **Font:** Geist Sans (Google Fonts) — geometric, modern, highly legible
-- **Mono:** Geist Mono — code blocks, tech stack badges
-- **Scale:** Tailwind `text-xs` through `text-8xl` with `tracking-tight` on headings
+Dark mode redefines the same tokens under `.dark`.
 
-### Logo & Identity
-- Primary logo: `/public/images/codevertex.png`
-- Digitika Academy: wordmark with gradient accent
-- BengoHub (internal brand): `/public/images/bengo-hub.png`
+## Type
 
----
+- Display: Bricolage Grotesque (`font-display`), for headings only, weights 600 to 800.
+- Body: Figtree (`font-sans`).
+- Headings are sentence case. No all-caps eyebrow labels above headings, no single word picked out
+  in another colour, no "→" in button text.
 
-## Design Principles
+## Layout rules
 
-1. **Data-dense but breathable** — Show rich information without visual clutter. Use tight spacing within cards, generous whitespace between sections.
-2. **Dark-first aesthetics** — Dark hero sections (slate-900/950) with light body; not a generic toggle afterthought.
-3. **Motion with purpose** — Framer Motion scroll-triggered reveals; no gratuitous animations. Entry animations limited to opacity + 16-24px translateY.
-4. **African context** — M-Pesa payment prominently featured; Kenyan English tone; local partner logos displayed with pride.
-5. **Mobile-first** — 375px baseline; hero text uses `clamp()` via Tailwind responsive prefixes; tap targets ≥ 44px.
+- Every public page opens with `components/site/PageIntro.tsx`: a left-aligned headline, one lead
+  paragraph and an optional image or actions beside it.
+- Lists are lists, not identical card grids: products are a bordered directory, services and track
+  record are divided lists, photos carry captions.
+- Numbered markers only where the content is a sequence (Digitika enrolment steps, attachment
+  "How it works").
+- Motion: one fade on the home hero and the confirming tick on payment success. Nothing else animates
+  on its own; `prefers-reduced-motion` turns all motion off.
+- Buttons: `default` (plum), `outline`, `ghost`, and on night sections `gold` and `outline-light`.
 
----
+## Images
 
-## Component Library
+- Real photos only. No illustrations, mock dashboards or AI-generated people.
+- Sources and processing are in `docs/image-credits.md`. Photos are WebP, at most 1800 px wide, with
+  EXIF (including GPS) stripped, under `public/images/photos/`.
+- The logo comes from `public/images/brand/`: `logo-full.png` on light backgrounds,
+  `logo-full-light.png` on night backgrounds, `logo-mark.png` for the favicon and small uses.
+- Photos showing the old "CodeVertex IT Solutions" name are cropped so it does not show, or left
+  out. The MUCISA 2025 "code" shirts carry it in small print that is not legible at web size.
 
-### Primitive Components (shadcn/ui)
-- `Button` — variants: `default`, `outline`, `ghost`, `destructive`; sizes: `sm`, `default`, `xl`
-- `Badge` — secondary/accent variants
-- `Card` — with `CardHeader`, `CardContent`, `CardFooter`
+## Copy
 
-### Layout Components
-- `Navbar` — sticky top, glass blur, mobile hamburger, theme toggle
-- `Footer` — 4-column grid, social links, M-Pesa paybill info
+Plain sentences from the customer's side, following the humanise rules: no em-dash connectors, no
+"§", no narrating the product. Figures on the page are either live (businesses on the Power Suite
+from auth-api, prices from subscriptions-api, course counts and projects from the database) or the
+training figures confirmed in the business profile.
 
-### Section Components (Home)
-| Component | Purpose |
-|-----------|---------|
-| `HeroSection` | Full-viewport hero with animated headline, stats grid |
-| `ServicesSection` | Power Suite 6-product grid with icons |
-| `PowerSuiteSection` | Detailed product showcase with feature lists |
-| `DigitikaTeaser` | Two-column: pitch left, course categories right |
-| `TrustSection` | Client logos + advantage grid + pull quote |
-| `CTASection` | Bottom conversion CTA with dual buttons |
+## Data shown live
 
-### Section Components (Digitika)
-| Component | Purpose |
-|-----------|---------|
-| `DigitikaHero` | Dark hero with stats bar |
-| `AlumniBar` | "Our graduates work at" logo strip |
-| `TestimonialsSection` | 3-column testimonial cards |
-| `CodeStarterFeatured` | Highlighted Code-Starter bootcamp with curriculum |
-| `CourseCatalog` | Filterable grid of all courses |
-| `CourseCard` | Individual course card with expand/collapse |
-| `EnrollmentModal` | 3-step: form → review → payment redirect |
+| What | Source | Code |
+|------|--------|------|
+| Businesses on the Power Suite and their logos | auth-api `/api/v1/tenants/marketplace` | `lib/tenants.ts` |
+| "From KES x a month" prices | subscriptions-api `/api/v1/plans` | `lib/subscriptions.ts` |
+| Products, services, contact topics | `config/services.ts` | one list used everywhere |
+| Projects | `project_events` table, seeded from `prisma/seed/projects.ts` | `lib/projects-server.ts` |
+| Course counts | `courses` table | `DigitikaTeaser`, `/digitika` |
 
----
+## Admin and portals
 
-## Page Structure
-
-### Home (`/`)
-```
-Navbar (sticky)
-└── HeroSection (full viewport, dark gradient)
-└── ServicesSection (light bg, 6-card grid)
-└── PowerSuiteSection (alternating layout)
-└── DigitikaTeaser (two-column CTA)
-└── TrustSection (clients + advantages)
-└── CTASection (dark bottom CTA)
-Footer
-ChatBot (floating)
-```
-
-### Digitika (`/digitika`)
-```
-Navbar (sticky)
-└── DigitikaHero (dark, stats)
-└── AlumniBar (graduates employer logos)
-└── TestimonialsSection (graduate testimonials)
-└── CodeStarterFeatured (highlighted bootcamp)
-└── CourseCatalog (filterable by category)
-Footer
-```
-
----
-
-## Responsive Breakpoints
-
-| Breakpoint | Min Width | Key Changes |
-|-----------|-----------|-------------|
-| `sm` | 640px | 2-col grids, hero text up |
-| `md` | 768px | 2-col nav layout |
-| `lg` | 1024px | 3-col grids, sticky sidebar patterns |
-| `xl` | 1280px | Max content width containers |
-
----
-
-## Animation Spec
-
-| Element | Animation | Duration | Delay |
-|---------|-----------|----------|-------|
-| Hero badge | opacity 0→1, y 16→0 | 500ms | 0ms |
-| Hero headline | opacity 0→1, y 20→0 | 700ms | 100ms |
-| Hero subtext | opacity 0→1, y 20→0 | 700ms | 200ms |
-| Hero CTAs | opacity 0→1, y 20→0 | 600ms | 300ms |
-| Hero stats | opacity 0→1, y 24→0 | 600ms | 550ms |
-| Scroll sections | opacity 0→1 (IntersectionObserver) | 500ms | stagger 100ms |
-
----
-
-## Accessibility
-
-- Color contrast: WCAG AA minimum (4.5:1 for body, 3:1 for large text)
-- Focus rings: `focus:ring-2 focus:ring-primary/50` on all interactive elements
-- ARIA labels on icon-only buttons (theme toggle, close modal)
-- Semantic HTML: `<main>`, `<nav>`, `<section>`, `<article>`, `<footer>`
-- `alt` text on all images; decorative images `alt=""`
-
----
-
-## Planned Improvements (Sprint 8)
-
-- [ ] Next.js `<Image>` for all public assets (auto-WebP, lazy loading)
-- [ ] Open Graph images for each page
-- [ ] Structured data (JSON-LD) for courses and organization
-- [ ] Sitemap generation (`next-sitemap`)
-- [ ] PWA manifest and service worker (`@ducanh2912/next-pwa`)
-- [ ] Lighthouse score target: Performance 90+, Accessibility 95+
+Admin, student and auth screens use the same tokens and fonts but keep their own layout. The
+platform architecture map and website review moved from the public `/platform` page to
+`/admin/platform` (staff only).

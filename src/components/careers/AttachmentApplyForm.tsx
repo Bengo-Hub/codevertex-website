@@ -66,6 +66,7 @@ export function AttachmentApplyForm() {
           phone: data.phone,
           service: ATTACHMENT_SERVICE_LABEL,
           message: buildAttachmentMessage(data),
+          source: 'attachment',
         }),
       });
       if (res.ok) {
@@ -86,7 +87,7 @@ export function AttachmentApplyForm() {
         <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
           <Send className="h-7 w-7 text-primary" />
         </div>
-        <h3 className="text-xl font-black text-foreground mb-2">Application received</h3>
+        <h3 className="text-xl font-bold text-foreground mb-2">Application received</h3>
         <p className="text-muted-foreground text-sm mb-6 max-w-sm">
           Thank you. We review applications on a rolling basis and will contact you by email or phone.
         </p>

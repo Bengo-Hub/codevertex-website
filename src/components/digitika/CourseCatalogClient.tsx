@@ -135,7 +135,7 @@ export function CourseCatalogClient({ courses, categories }: { courses: CatalogC
     <div className="space-y-6">
       {facetOptions.map((f) => (
         <fieldset key={f.key}>
-          <legend className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{f.label}</legend>
+          <legend className="text-sm font-medium text-muted-foreground mb-2">{f.label}</legend>
           <div className="space-y-1">
             {f.visible.map((o) => {
               const checked = selected[f.key].includes(o.value);
@@ -288,8 +288,8 @@ export function CourseCatalogClient({ courses, categories }: { courses: CatalogC
                   <section key={cat.id} aria-labelledby={`cat-${cat.id}`}>
                     <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: cat.color }}>{cat.tagline}</p>
-                        <h3 id={`cat-${cat.id}`} className="text-2xl font-black text-foreground tracking-tight">{cat.name}</h3>
+                        <p className="text-sm font-medium mb-1" style={{ color: cat.color }}>{cat.tagline}</p>
+                        <h3 id={`cat-${cat.id}`} className="font-display text-2xl font-bold text-foreground tracking-tight">{cat.name}</h3>
                         {cat.description && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{cat.description}</p>}
                       </div>
                       <button onClick={() => update({ category: cat.id })} className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">

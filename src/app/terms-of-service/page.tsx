@@ -9,19 +9,16 @@ const LAST_UPDATED = '25 June 2026';
 
 export default function TermsOfServicePage() {
   return (
-    <div className="pt-20">
-      <section className="bg-foreground py-16 px-4 sm:px-6 lg:px-8">
+    <div>
+      <section className="border-b border-border pt-28 lg:pt-36 pb-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">Legal</p>
-          <h1 className="text-4xl sm:text-5xl font-black text-white dark:text-foreground tracking-tight">
-            Terms of Service
-          </h1>
-          <p className="text-white/60 dark:text-muted-foreground mt-3 text-sm">Last updated: {LAST_UPDATED}</p>
+          <h1 className="font-display text-4xl sm:text-5xl font-bold text-foreground tracking-tight">Terms of service</h1>
+          <p className="text-muted-foreground mt-3 text-sm">Last updated {LAST_UPDATED}</p>
         </div>
       </section>
 
       <section className="py-14 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-a:text-primary">
+        <div className="max-w-3xl mx-auto prose prose-neutral dark:prose-invert prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary">
           <p>
             These Terms of Service (&ldquo;Terms&rdquo;) govern your use of the website, software products, and
             Digitika Academy training programmes provided by Codevertex Africa Limited (&ldquo;Codevertex&rdquo;,

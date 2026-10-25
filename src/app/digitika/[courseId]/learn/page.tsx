@@ -6,7 +6,7 @@ import { LearnClient } from '@/components/digitika/LearnClient';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Course Content | Digitika — Codevertex',
+  title: 'Course Content | Digitika Academy',
   robots: { index: false, follow: false },
 };
 

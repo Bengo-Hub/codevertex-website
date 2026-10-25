@@ -43,14 +43,12 @@ const config: Config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        brand: {
-          purple: '#9100B0',
-          'purple-dark': '#6a0082',
-          'purple-light': '#b800e0',
-          black: '#000000',
-          grey: '#6E6873',
-          navy: '#0f172a',
+        'primary-deep': 'hsl(var(--primary-deep))',
+        night: {
+          DEFAULT: 'hsl(var(--night))',
+          foreground: 'hsl(var(--night-foreground))',
         },
+        gold: 'hsl(var(--gold))',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -58,27 +56,15 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-poppins)', 'var(--font-geist-sans)', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'monospace'],
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-body)', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out',
-        'slide-up': 'slideUp 0.5s ease-out',
-        float: 'float 6s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
-        slideUp: {
-          from: { opacity: '0', transform: 'translateY(20px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        float: {
-          '0%,100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-8px)' },
-        },
-      },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
       },
     },
   },

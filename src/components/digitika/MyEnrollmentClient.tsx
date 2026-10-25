@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { GraduationCap, Search, AlertCircle, ArrowRight, BookOpen, Sparkles } from 'lucide-react';
+import { GraduationCap, Search, AlertCircle, ArrowRight, BookOpen } from 'lucide-react';
 
 export function MyEnrollmentClient() {
   const router = useRouter();
@@ -39,31 +39,14 @@ export function MyEnrollmentClient() {
   return (
     <main className="min-h-screen bg-background flex flex-col">
       {/* Header band */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 py-16 px-4 text-primary-foreground">
-        <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-white/5 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-12 w-48 h-48 rounded-full bg-white/5 blur-2xl" />
-        <div className="max-w-2xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ scale: 0.7, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 18 }}
-            className="w-16 h-16 rounded-full bg-white/15 border-2 border-white/25 flex items-center justify-center mx-auto mb-5"
-          >
-            <GraduationCap className="h-8 w-8" />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/20 text-xs font-bold uppercase tracking-widest mb-4">
-              <Sparkles className="h-3 w-3" /> Student Portal
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">My Enrollment</h1>
-            <p className="mt-3 text-primary-foreground/80 text-base max-w-md mx-auto leading-relaxed">
-              Enter your Student ID to view your enrollment status, installment schedule, and pay upcoming fees.
-            </p>
-          </motion.div>
+      <div className="bg-night text-night-foreground pt-28 lg:pt-32 pb-14 px-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <GraduationCap className="h-8 w-8 mx-auto mb-4 text-gold" aria-hidden />
+          <p className="text-sm font-semibold text-gold mb-2">Digitika student portal</p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">My enrolment</h1>
+          <p className="mt-3 text-night-foreground/75 text-base max-w-md mx-auto leading-relaxed">
+            Enter your Student ID to see your enrolment, your instalment schedule and pay what is due.
+          </p>
         </div>
       </div>
 
@@ -109,7 +92,7 @@ export function MyEnrollmentClient() {
             <button
               type="submit"
               disabled={loading || !studentId.trim()}
-              className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-60 shadow-lg shadow-primary/20"
+              className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               {loading ? (
                 <>
