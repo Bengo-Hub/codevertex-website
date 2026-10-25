@@ -8,6 +8,7 @@ import { PageIntro } from '@/components/site/PageIntro';
 import { Reveal } from '@/components/site/Reveal';
 import { ServiceCards } from '@/components/site/ServiceCards';
 import { ProviderLogos } from '@/components/site/ProviderLogos';
+import { PhotoCredit } from '@/components/site/PhotoCredit';
 import { CTASection } from '@/components/home/CTASection';
 import { fetchPublicPricing, type ProductPricing } from '@/lib/subscriptions';
 import { formatFromPrice, priceFor } from '@/components/home/PowerSuiteSection';
@@ -41,9 +42,9 @@ function CoreProduct({ product, pricing, flip }: { product: PowerSuiteProduct; p
             <div className="glass rounded-4xl p-2 shadow-lift">
               <div className="relative aspect-[16/10] overflow-hidden rounded-3xl bg-night">
                 <Image src={product.screenshot.src} alt={product.screenshot.alt} fill sizes="(min-width: 1024px) 55vw, 100vw" className="object-cover" />
+                {product.screenshot.credit && <PhotoCredit credit={product.screenshot.credit} />}
               </div>
             </div>
-            {product.screenshot.credit && <p className="mt-2 text-xs text-muted-foreground">{product.screenshot.credit}</p>}
           </div>
         )}
         <div className="lg:col-span-5">

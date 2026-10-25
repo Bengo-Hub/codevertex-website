@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { SERVICE_PILLARS, type ServicePillar } from '@/config/services';
 import { Reveal } from '@/components/site/Reveal';
+import { PhotoCredit } from '@/components/site/PhotoCredit';
 
 /** The client services (everything except Digitika, which has its own section), as photo cards. */
 export const CLIENT_SERVICES: ServicePillar[] = SERVICE_PILLARS.filter((s) => s.id !== 'digitika');
@@ -28,9 +29,7 @@ export function ServiceCards({ services = CLIENT_SERVICES, detailed = false }: {
               <span className="glass absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl">
                 <s.icon className="h-5 w-5 text-primary" aria-hidden />
               </span>
-              {s.photo?.credit && (
-                <span className="absolute right-2 bottom-2 max-w-[85%] rounded-full bg-black/55 px-2 py-0.5 text-[10px] text-white/90">{s.photo.credit}</span>
-              )}
+              {s.photo?.credit && <PhotoCredit credit={s.photo.credit} />}
             </div>
             <div className="flex flex-1 flex-col p-6">
               <h3 className="font-display text-xl font-bold text-foreground">{s.name}</h3>

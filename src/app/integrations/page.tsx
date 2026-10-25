@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { IntroImage, PageIntro } from '@/components/site/PageIntro';
 import { Reveal } from '@/components/site/Reveal';
 import { ProviderLogos } from '@/components/site/ProviderLogos';
+import { PhotoCredit } from '@/components/site/PhotoCredit';
 import { CTASection } from '@/components/home/CTASection';
 import { docsUrl } from '@/lib/constants';
 
@@ -118,7 +119,6 @@ const INTEGRATIONS: Integration[] = [
 
 /** One wide photo, two side by side, three with the first spanning, or a 2 by 2 grid. */
 function PhotoGrid({ photos }: { photos: Shot[] }) {
-  const credits = photos.map((p) => p.credit).filter(Boolean);
   const wide = (i: number) => photos.length === 1 || (photos.length === 3 && i === 0);
   return (
     <div>
@@ -127,10 +127,10 @@ function PhotoGrid({ photos }: { photos: Shot[] }) {
           <figure key={p.src} className={`group relative overflow-hidden rounded-3xl bg-muted shadow-soft ${wide(i) ? 'col-span-2 aspect-video' : 'aspect-4/3'}`}>
             <Image src={p.src} alt={p.alt} fill sizes={wide(i) ? '(min-width: 1024px) 45vw, 100vw' : '(min-width: 1024px) 25vw, 50vw'} className="object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
             <figcaption className="glass absolute left-2 bottom-2 right-2 sm:right-auto rounded-full px-3 py-1 text-xs font-medium text-foreground">{p.caption}</figcaption>
+            {p.credit && <PhotoCredit credit={p.credit} className="inset-x-2 top-2" />}
           </figure>
         ))}
       </div>
-      {credits.map((c) => <p key={c} className="mt-2 text-xs text-muted-foreground">{c}</p>)}
     </div>
   );
 }

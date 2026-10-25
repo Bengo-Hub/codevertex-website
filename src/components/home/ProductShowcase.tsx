@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Check } from 'lucide-react';
+import { PhotoCredit } from '@/components/site/PhotoCredit';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -57,9 +58,9 @@ export function ProductShowcase({ products }: { products: ShowcaseProduct[] }) {
             <a href={p.url} target="_blank" rel="noreferrer" className="glass absolute left-3 bottom-3 rounded-full px-3 py-1 text-xs font-medium text-foreground hover:bg-white">
               {p.url.replace('https://', '')}
             </a>
+            {p.screenshot.credit && <PhotoCredit key={p.id} credit={p.screenshot.credit} />}
           </div>
         </div>
-        {p.screenshot.credit && <p className="mt-2 text-xs text-muted-foreground">{p.screenshot.credit}</p>}
 
         <div className="mt-6 grid gap-6 sm:grid-cols-5">
           <div className="sm:col-span-3">
