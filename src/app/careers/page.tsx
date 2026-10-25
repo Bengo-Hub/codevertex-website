@@ -7,7 +7,7 @@ import { PageIntro } from '@/components/site/PageIntro';
 
 export const metadata: Metadata = {
   title: 'Careers',
-  description: 'Open roles and attachment places at Codevertex Africa Limited in Kisumu.',
+  description: 'Open roles and attachment places at Codevertex Africa Limited.',
 };
 
 // Job data is fetched in the browser from erp-api by CareersListingClient.
@@ -18,9 +18,9 @@ export default function CareersPage() {
     <>
       <PageIntro
         title="Careers"
-        lead="We hire engineers, field technicians, trainers and support staff in Kisumu. Open roles are listed below as soon as they are posted."
+        lead="We hire engineers, field technicians, trainers and support staff for our office and client sites. Open roles are listed below as soon as they are posted."
         aside={
-          <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-muted">
+          <div className="relative aspect-4/3 overflow-hidden rounded-4xl shadow-lift">
             <Image src="/images/photos/hackathon-team-table.webp" alt="Members of the Codevertex team at the MUCISA Hackathon 2025" fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
           </div>
         }

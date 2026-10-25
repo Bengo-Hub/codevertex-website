@@ -13,6 +13,8 @@ export type ServiceStatus = 'live' | 'beta' | 'coming-soon' | 'offline';
 export interface Photo {
   src: string;
   alt: string;
+  /** Attribution required by the photo's licence (CC BY-SA), shown wherever it appears. */
+  credit?: string;
 }
 
 export interface PowerSuiteProduct {
@@ -32,7 +34,24 @@ export interface PowerSuiteProduct {
   /** Real screen from the app, captured from the demo tenant. */
   screenshot?: Photo;
   isNew?: boolean;
+  /** One of the core products shown with a real screen in the home page showcase. */
+  core?: boolean;
+  /** Path of this product's user guide on docs.codevertexafrica.com, where one is published. */
+  docs?: string;
 }
+
+/** User guides that exist for every product. */
+export const GENERAL_DOCS = {
+  start: 'user-guide/getting-started/',
+  billing: 'user-guide/subscriptions-and-billing/',
+  signIn: 'user-guide/organisation/signing-in/',
+};
+
+/**
+ * Real screens from the codevertex-demo tenant shown on a counter terminal, laptop or phone over
+ * a real CC0 Kenyan backdrop (docs/image-credits.md).
+ */
+const screen = (id: string, alt: string): Photo => ({ src: `/images/products/${id}-scene.webp`, alt });
 
 export interface ServicePillar {
   id: string;
@@ -57,6 +76,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Payroll with statutory deductions', 'Procurement and approvals', 'Staff records and leave'],
     serviceTag: 'erp',
+    core: true,
+    screenshot: screen('erp', 'The ERP Suite HR dashboard on a laptop in a city office'),
   },
   {
     id: 'books',
@@ -68,6 +89,12 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     url: 'https://books.codevertexafrica.com',
     status: 'live',
     highlights: ['KRA eTIMS invoices and credit notes', 'M-Pesa, PayHero and Paystack collections', 'Receivables, payables and bank reconciliation'],
+    core: true,
+    docs: 'user-guide/treasury/',
+    screenshot: {
+      ...screen('books', 'A finance officer working in Books and Treasury on her laptop'),
+      credit: 'Photo: Jaokov, CC BY-SA 4.0, via Wikimedia Commons, with the Books screen added. This image is shared under CC BY-SA 4.0.',
+    },
   },
   {
     id: 'pos',
@@ -80,6 +107,12 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Works offline and syncs later', 'M-Pesa, card and split tenders', 'Kitchen display and table service'],
     serviceTag: 'pos',
+    core: true,
+    docs: 'user-guide/pos/',
+    screenshot: {
+      ...screen('pos', 'The POS on the counter of a busy Kenyan supermarket, with cashiers and shoppers behind it'),
+      credit: 'Photo: Mauryndinar, CC BY-SA 4.0, via Wikimedia Commons, with the POS terminal added. This image is shared under CC BY-SA 4.0.',
+    },
   },
   {
     id: 'ordering',
@@ -91,6 +124,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     url: 'https://ordering.codevertexafrica.com',
     status: 'live',
     highlights: ['Branded online menu and shop', 'Pay online or on delivery', 'Live order and rider tracking'],
+    core: true,
+    screenshot: screen('ordering', 'Alpha China Market, a real store on the Ordering platform, on a laptop and a phone'),
   },
   {
     id: 'projects',
@@ -115,6 +150,9 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Stock per branch and warehouse', 'Purchase orders and supplier returns', 'Stock counts and adjustments'],
     isNew: true,
+    core: true,
+    docs: 'user-guide/inventory/',
+    screenshot: screen('inventory', 'The Inventory dashboard on a laptop in a supermarket'),
   },
   {
     id: 'logistics',
@@ -127,6 +165,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Delivery zones and fee quotes', 'Rider app with live location', 'Proof of delivery'],
     isNew: true,
+    core: true,
+    screenshot: screen('logistics', 'The Logistics dashboard with a live fleet map, on a laptop at Mombasa port'),
   },
   {
     id: 'truload',
@@ -139,7 +179,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     status: 'live',
     highlights: ['Static and mobile weighing', 'Number-plate camera capture', 'Enforcement and weight tickets'],
     serviceTag: 'truload',
-    screenshot: { src: '/images/photos/weighbridge-demo.webp', alt: 'A weighbridge plate in use at the KeNHA stand, Mombasa show' },
+    core: true,
+    screenshot: screen('truload', 'The TruLoad sign-in screen on a laptop at Kanyonyo weighbridge station'),
   },
   {
     id: 'isp',
@@ -178,6 +219,8 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     highlights: ['Lead pipeline and follow-ups', 'Website and WhatsApp chat', 'Vera answers from your own knowledge base'],
     serviceTag: 'marketflow',
     isNew: true,
+    core: true,
+    screenshot: screen('marketflow', 'The MarketFlow dashboard on a laptop, with a customer ordering on a phone'),
   },
   {
     id: 'ticketing',
@@ -214,6 +257,9 @@ export const POWER_SUITE: PowerSuiteProduct[] = [
     url: 'https://notifications.codevertexafrica.com',
     status: 'live',
     highlights: ['Email and WhatsApp templates', 'Delivery history per message', 'Per-tenant sender settings'],
+    core: true,
+    docs: 'user-guide/notifications/',
+    screenshot: screen('notifications', 'The Notifications dashboard with delivery rate and recent messages, on a laptop'),
   },
 ];
 
@@ -229,6 +275,7 @@ export const MASKANI: PowerSuiteProduct = {
   status: 'live',
   highlights: ['Rent and service charge', 'Unit sales and instalments', 'Gate, visitors and notices'],
   isNew: true,
+  docs: 'user-guide/maskani/',
 };
 
 export const SERVICE_PILLARS: ServicePillar[] = [
@@ -248,7 +295,7 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Chatbots, workflows and BI dashboards',
     description: 'Chat assistants that answer from your own documents, reports that build themselves, and dashboards your managers read every morning.',
     icon: Workflow,
-    photo: { src: '/images/photos/hackathon-talk.webp', alt: 'A Codevertex panelist speaking at the MUCISA Hackathon 2025' },
+    photo: { src: '/images/products/marketflow-scene.webp', alt: 'MarketFlow and the Vera assistant on a laptop, with a customer ordering on a phone' },
     features: ['Chat assistants on your own data', 'Scheduled reports and alerts', 'BI dashboards', 'Document and data extraction'],
     cta: { label: 'Discuss an AI project', href: '/contact?service=ai' },
   },
@@ -258,6 +305,7 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Marketplaces and multi-currency stores',
     description: 'Online shops and marketplaces that take M-Pesa and card payments, connected to your stock and your delivery riders.',
     icon: ShoppingBag,
+    photo: { src: '/images/products/ordering-scene.webp', alt: 'An online marketplace of real stores on a laptop and a phone' },
     features: ['Online shops and marketplaces', 'M-Pesa, card and PayHero checkout', 'Stock that stays in sync', 'Delivery and tracking'],
     cta: { label: 'Plan your store', href: '/contact?service=ecommerce' },
   },
@@ -267,7 +315,11 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Backups, disaster recovery and domains',
     description: 'We host and look after your systems: daily backups, monitoring, recovery plans, domains and email.',
     icon: Cloud,
-    photo: { src: '/images/photos/network-rack.webp', alt: 'A server and network rack installed by the Codevertex team' },
+    photo: {
+      src: '/images/photos/data-centre.webp',
+      alt: 'A server room aisle lined with racks of servers, their status lights glowing green and blue',
+      credit: 'Photo: The National Archives (UK), CC BY 3.0, via Wikimedia Commons',
+    },
     features: ['Managed hosting and monitoring', 'Daily backups and recovery plans', 'Domains, SSL and business email', 'Migrations from old servers'],
     cta: { label: 'Talk about hosting', href: '/contact?service=cloud' },
   },
@@ -277,24 +329,25 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     tagline: 'Penetration tests, audits and ISO 27001',
     description: 'Security reviews of your systems and staff habits, penetration tests, and help preparing for ISO 27001 and data protection audits.',
     icon: Shield,
+    photo: { src: '/images/products/security-scene.webp', alt: 'Codevertex single sign-on with passkeys and two-step codes, on a laptop in a server room' },
     features: ['Penetration testing', 'Security and code reviews', 'ISO 27001 and data protection readiness', 'Staff awareness training'],
     cta: { label: 'Request a security review', href: '/contact?service=cybersec' },
   },
   {
     id: 'iot',
-    name: 'IoT and integrations',
-    tagline: 'Hardware to cloud, M-Pesa and Paystack',
-    description: 'Cameras, weighbridges, sensors and payment gateways connected to your software, installed and supported by our own field team.',
+    name: 'IoT, PLC and automation',
+    tagline: 'Cameras, sensors, controllers and payments',
+    description: 'Cameras, weighbridges, sensors, PLCs and payment gateways connected to your software, installed and supported by our own field team.',
     icon: Cpu,
     photo: { src: '/images/photos/field-anpr-install.webp', alt: 'A Codevertex engineer installing a number-plate camera at a KeNHA weighbridge' },
-    features: ['Number-plate and CCTV cameras', 'Weighbridge and sensor integration', 'M-Pesa, PayHero and Paystack', 'KRA eTIMS integration'],
+    features: ['Number-plate and CCTV cameras', 'Weighbridges, sensors and PLCs', 'M-Pesa, PayHero and Paystack', 'KRA eTIMS integration'],
     cta: { label: 'See integrations', href: '/integrations' },
   },
   {
     id: 'digitika',
     name: 'Digitika Academy',
     tagline: 'Training for learners and teams',
-    description: 'Courses in software engineering, networking, data, AI and digital skills, taught in Kisumu and online, with certificates and corporate packages.',
+    description: 'Courses in software engineering, networking, data, AI and digital skills, taught in class and online, with certificates and corporate packages.',
     icon: GraduationCap,
     photo: { src: '/images/photos/hackathon-laptops.webp', alt: 'Students coding on laptops at the MUCISA Hackathon 2025' },
     features: ['Software engineering', 'Networking and IT support', 'Data and AI', 'ICDL digital skills', 'Corporate training'],

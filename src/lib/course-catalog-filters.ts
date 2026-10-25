@@ -38,7 +38,7 @@ export const FACETS: FacetDef[] = [
     key: 'format',
     label: 'Format',
     options: [
-      { value: 'in-person', label: 'In-person (Kisumu)' },
+      { value: 'in-person', label: 'In person' },
       { value: 'online', label: 'Online' },
       { value: 'hybrid', label: 'Hybrid' },
     ],

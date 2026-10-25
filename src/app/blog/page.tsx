@@ -31,9 +31,9 @@ export default async function BlogPage() {
 
   return (
     <>
-      <PageIntro title="Blog" lead="Notes from the team on business software, payments, tax, training and the work we do on site." />
+      <PageIntro eyebrow="Blog" title="Notes from the team" lead="Business software, payments, tax, training and the work we do on site." />
 
-      <section className="bg-background px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="max-w-7xl mx-auto">
           {posts.length === 0 ? (
             <p className="py-16 text-muted-foreground">No posts published yet.</p>
@@ -42,7 +42,7 @@ export default async function BlogPage() {
               {posts.map((post) => (
                 <li key={post.id.toString()}>
                   <Link href={`/blog/${post.slug}`} className="group block">
-                    <div className="relative aspect-16/9 overflow-hidden rounded-md bg-secondary">
+                    <div className="relative aspect-16/9 overflow-hidden rounded-3xl bg-secondary shadow-soft">
                       {post.coverImage && (
                         <Image src={post.coverImage} alt="" fill className="object-cover" sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" />
                       )}

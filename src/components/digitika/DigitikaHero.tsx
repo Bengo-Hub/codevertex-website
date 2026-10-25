@@ -12,7 +12,7 @@ function heroStats(courseCount: number, categoryCount: number) {
     courseCount > 0
       ? { value: String(courseCount), label: `courses in ${categoryCount} subjects` }
       : { value: '25+', label: 'courses' },
-    { value: 'Kisumu', label: 'and online' },
+    { value: 'In class', label: 'and online, at your pace' },
   ];
 }
 
@@ -37,7 +37,7 @@ export function DigitikaHero({ courseCount, categoryCount }: { courseCount: numb
           </h1>
           <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-xl">
             Certified courses in software engineering, networking, AI, data and digital skills, taught by working
-            engineers in Kisumu and online.
+            engineers, in class and online.
           </p>
 
           <ul className="mt-7 flex flex-wrap gap-2">

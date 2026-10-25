@@ -215,8 +215,8 @@ export function Navbar() {
         className={cn(
           'fixed top-0 inset-x-0 z-50 transition-all duration-300',
           scrolled
-            ? 'bg-background border-b border-border shadow-sm'
-            : 'bg-background border-b border-transparent'
+            ? 'bg-background/75 backdrop-blur-xl backdrop-saturate-150 border-b border-border/60 shadow-soft'
+            : 'bg-transparent border-b border-transparent'
         )}
       >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 lg:h-20 flex items-center justify-between gap-6">

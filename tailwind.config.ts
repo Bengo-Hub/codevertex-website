@@ -49,8 +49,10 @@ const config: Config = {
           foreground: 'hsl(var(--night-foreground))',
         },
         gold: 'hsl(var(--gold))',
+        mist: 'hsl(var(--mist))',
       },
       borderRadius: {
+        '4xl': '2rem',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',

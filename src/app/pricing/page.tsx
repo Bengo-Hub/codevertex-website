@@ -5,7 +5,8 @@ import { PageIntro } from '@/components/site/PageIntro';
 import { CTASection } from '@/components/home/CTASection';
 import { formatCurrency } from '@/lib/utils';
 import { fetchPublicPricing } from '@/lib/subscriptions';
-import { MASKANI, POWER_SUITE } from '@/config/services';
+import { GENERAL_DOCS, MASKANI, POWER_SUITE } from '@/config/services';
+import { docsUrl } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -27,7 +28,7 @@ export default async function PricingPage() {
         lead="Each product is priced on its own, so you pay only for what you use. These prices come straight from our billing system and are the cheapest monthly plan for each product."
       />
 
-      <section className="bg-background px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="max-w-5xl mx-auto">
           {plans.length > 0 ? (
             <ul className="divide-y divide-border border-y border-border">
@@ -75,6 +76,8 @@ export default async function PricingPage() {
           <p className="mt-14 text-sm text-muted-foreground">
             Prices are in Kenya shillings and VAT may apply. Digitika Academy courses are priced separately:{' '}
             <Link href="/digitika#courses" className="text-primary font-semibold hover:underline underline-offset-4">see course fees</Link>.
+            How trials, renewals and invoices work is explained in the{' '}
+            <a href={docsUrl(GENERAL_DOCS.billing)} target="_blank" rel="noreferrer" className="text-primary font-semibold hover:underline underline-offset-4">subscriptions and billing guide</a>.
           </p>
         </div>
       </section>

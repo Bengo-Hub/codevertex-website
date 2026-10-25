@@ -23,6 +23,10 @@ export const TREASURY = {
 
 export const SSO_URL = 'https://accounts.codevertexafrica.com';
 
+/** Public user guides and integration references (shared-docs, built with MkDocs). */
+export const DOCS_URL = 'https://docs.codevertexafrica.com';
+export const docsUrl = (path = '') => `${DOCS_URL}/${path.replace(/^\//, '')}`;
+
 export const ERP = {
   apiBaseUrl: process.env.NEXT_PUBLIC_ERP_API_URL ?? 'https://erpapi.codevertexafrica.com',
   tenant: process.env.NEXT_PUBLIC_ERP_TENANT ?? 'codevertex',
@@ -31,9 +35,9 @@ export const ERP = {
 export const SUBSCRIPTIONS_API_URL = process.env.SUBSCRIPTIONS_API_URL ?? 'https://pricingapi.codevertexafrica.com';
 
 export const NAV_LINKS = [
+  { label: 'Digitika', href: '/digitika' },
   { label: 'Products', href: '/services' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Digitika', href: '/digitika' },
   { label: 'About', href: '/about' },
   { label: 'Blog', href: '/blog' },
   { label: 'Projects', href: '/projects' },

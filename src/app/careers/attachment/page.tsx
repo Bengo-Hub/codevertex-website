@@ -16,10 +16,10 @@ import {
 export const metadata: Metadata = {
   title: 'Industrial Attachment & Internships',
   description:
-    'Apply for an industrial attachment or internship at Codevertex Africa in Kisumu: 17 tracks across engineering, design, data and business, with a named mentor and real project work.',
+    'Apply for an industrial attachment or internship at Codevertex Africa Limited: 17 tracks across engineering, design, data and business, with a named mentor and real project work.',
   openGraph: {
     title: 'Industrial Attachment & Internships | Codevertex Africa Limited',
-    description: 'Hands-on placements in software, mobile, networks, security, AI, design and business. Apply from Kisumu or anywhere in Kenya.',
+    description: 'Hands-on placements in software, mobile, networks, security, AI, design and business. Apply from anywhere in Kenya.',
     url: 'https://codevertexafrica.com/careers/attachment',
     images: [{ url: '/images/og-image.jpg', width: 1200, height: 630, alt: 'Codevertex Africa Limited' }],
   },
@@ -30,16 +30,16 @@ export default function AttachmentPage() {
     <div>
       <PageIntro
         title="Industrial attachment and internships"
-        lead={`Spend your placement building real software, networks and products with our team in Kisumu. Choose from ${ATTACHMENT_TRACKS.length} tracks and work with a mentor from day one.`}
+        lead={`Spend your placement building real software, networks and products with our engineering team. Choose from ${ATTACHMENT_TRACKS.length} tracks and work with a mentor from day one.`}
         aside={
-          <div className="relative aspect-4/3 overflow-hidden rounded-lg bg-muted">
+          <div className="relative aspect-4/3 overflow-hidden rounded-4xl shadow-lift">
             <Image src="/images/photos/hackathon-pairing.webp" alt="Students and a mentor working through code on a laptop" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
           </div>
         }
       >
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" asChild><a href="#apply">Apply now</a></Button>
-          <Button size="lg" variant="outline" asChild><a href="#tracks">Browse tracks</a></Button>
+          <Button size="lg" className="rounded-full" asChild><a href="#apply">Apply now</a></Button>
+          <Button size="lg" variant="outline" className="rounded-full bg-white/70" asChild><a href="#tracks">Browse tracks</a></Button>
         </div>
       </PageIntro>
 

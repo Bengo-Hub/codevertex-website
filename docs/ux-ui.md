@@ -7,7 +7,10 @@ plum from the logo, a deep night plum for dark sections and gold for the accent.
 ## Colour tokens
 
 Defined once in `src/app/globals.css` as HSL variables and exposed as Tailwind colours in
-`tailwind.config.ts`. Colours are solid: the site has no gradients, glows, blurred blobs or glass.
+`tailwind.config.ts`. Surfaces are solid tints and frosted glass (`.glass` over light surfaces and
+photos, `.glass-dark` on night sections) with soft neutral shadows (`.shadow-soft`, `.shadow-lift`).
+There are no colour gradient washes, coloured glows or blurred colour blobs (the user asked for a
+glassy, soft look on 2026-10-25; glass is allowed, gradients still are not).
 
 | Token | Light | Use |
 |-------|-------|-----|
@@ -18,6 +21,7 @@ Defined once in `src/app/globals.css` as HSL variables and exposed as Tailwind c
 | `--foreground` | ink `#1D1A22` | Body text |
 | `--secondary` / `--muted` | paper `#F6F4F7` | Alternate section background |
 | `--border` | `#E7E2EA` | Dividers and outlines |
+| `--mist` | `#F8F0F4` | Soft plum-tinted surface for page intros and alternate sections |
 
 Dark mode redefines the same tokens under `.dark`.
 
@@ -30,19 +34,36 @@ Dark mode redefines the same tokens under `.dark`.
 
 ## Layout rules
 
-- Every public page opens with `components/site/PageIntro.tsx`: a left-aligned headline, one lead
-  paragraph and an optional image or actions beside it.
-- Lists are lists, not identical card grids: products are a bordered directory, services and track
-  record are divided lists, photos carry captions.
+- Every public page opens with `components/site/PageIntro.tsx` on the mist surface: with an image
+  the text and image sit side by side, vertically centred; without one the title and lead share the
+  row so it is never half empty.
+- Card grids divide evenly: client services are six cards (`components/site/ServiceCards.tsx`, used
+  on the home page and /services), photo grids are one wide, two, three with the first spanning, or
+  two by two. Photos carry captions; licensed photos carry their credit.
+- The Products page lists the core services first (POS, Books and Treasury, ERP, Inventory, Ordering,
+  Logistics, TruLoad, Notifications, MarketFlow), each with its scene, then the rest of the suite.
 - Numbered markers only where the content is a sequence (Digitika enrolment steps, attachment
   "How it works").
-- Motion: one fade on the home hero and the confirming tick on payment success. Nothing else animates
-  on its own; `prefers-reduced-motion` turns all motion off.
+- Motion, all off under `prefers-reduced-motion`:
+  - `Reveal`: blocks below the fold fade up once when scrolled into view (rendered visible on the
+    server, so content never depends on JavaScript);
+  - `TypedWords`: the hero headline types who the software runs (shops, hotels, clinics, schools,
+    weighbridges) and settles on "African business"; screen readers get the final text;
+  - `CountUp`: figures count up once in view; the server renders the real number;
+  - marquee strips for customer and employer logos (pause on hover), hover lift and image zoom on
+    cards, the header turning to frosted glass on scroll, smooth scrolling to anchors.
 - Buttons: `default` (plum), `outline`, `ghost`, and on night sections `gold` and `outline-light`.
+  Calls to action are pill shaped.
 
 ## Images
 
-- Real photos only. No illustrations, mock dashboards or AI-generated people.
+- Real photos only. No illustrations, fake dashboards or AI-generated people. Product images are
+  real screens from the demo tenant placed on devices over real Kenyan backdrops (see
+  `docs/image-credits.md`); where people appear they are African.
+- Wording is inclusive of the whole region: "a Kenyan company working across East Africa", not
+  "a Kisumu company". Kisumu appears only where it is a fact (the office address).
+- Documentation links go to the public guides on docs.codevertexafrica.com (`docsUrl()` in
+  `lib/constants.ts`, per-product `docs` paths in `config/services.ts`).
 - Sources and processing are in `docs/image-credits.md`. Photos are WebP, at most 1800 px wide, with
   EXIF (including GPS) stripped, under `public/images/photos/`.
 - The logo comes from `public/images/brand/`: `logo-full.png` on light backgrounds,

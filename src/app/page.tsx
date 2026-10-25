@@ -22,7 +22,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection liveBusinesses={showcase.total} />
+      <HeroSection liveBusinesses={showcase.total} tenants={showcase.tenants} />
       <ClientLogosBar tenants={showcase.tenants} />
       <PowerSuiteSection pricing={pricing} />
       <FieldWorkSection projects={projects} />

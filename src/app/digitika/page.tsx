@@ -13,17 +13,17 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Digitika Academy',
-  description: 'Industry-aligned certification programmes in software engineering, AI, networking, data analytics, and ICDL. Enroll from Kisumu or online.',
+  description: 'Industry-aligned certification programmes in software engineering, AI, networking, data analytics, and ICDL. Learn in class or online.',
   openGraph: {
     title: 'Digitika Academy | Codevertex Africa Limited',
-    description: "Courses in software engineering, networking, AI, data and ICDL digital skills, in Kisumu and online.",
+    description: "Courses in software engineering, networking, AI, data and ICDL digital skills, in class and online.",
     url: 'https://codevertexafrica.com/digitika',
     images: [{ url: '/images/og-image.jpg', width: 1200, height: 630, alt: 'Digitika Academy by Codevertex Africa Limited' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Digitika Academy | Codevertex Africa Limited',
-    description: "Courses in software engineering, networking, AI, data and ICDL digital skills, in Kisumu and online.",
+    description: "Courses in software engineering, networking, AI, data and ICDL digital skills, in class and online.",
     images: ['/images/og-image.jpg'],
   },
 };

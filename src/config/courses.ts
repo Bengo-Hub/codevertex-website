@@ -121,6 +121,8 @@ export function getCategory(categoryId: string): CourseCategory {
 
 // --- Shared alumni data ---
 export const ALUMNI_COMPANIES = [
+  { name: 'Google', logo: '/images/logos/google.svg' },
+  { name: 'Codevertex Africa Limited', logo: '/images/brand/logo-full.png' },
   { name: 'Safaricom PLC', logo: '/images/safaricom-plc.png' },
   { name: 'Boxcraft', logo: '/images/boxcraft.png' },
   { name: 'Danka Africa', logo: '/images/danka-africa.jpeg' },

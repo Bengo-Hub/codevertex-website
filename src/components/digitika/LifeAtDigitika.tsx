@@ -17,8 +17,8 @@ const HIGHLIGHTS = [
 
 const PRACTICAL = [
   { label: 'Next intake', value: 'Rolling intake', sub: 'See each course for start dates' },
-  { label: 'Where', value: 'Kisumu and online', sub: 'Pioneer House, Oginga-Odinga Road' },
-  { label: 'Payment', value: 'M-Pesa or card', sub: 'Paybill 542542, account 87660' },
+  { label: 'Where', value: 'In class and online', sub: 'Live sessions and recorded lessons' },
+  { label: 'Payment', value: 'M-Pesa or card', sub: 'In full or in instalments' },
   { label: 'Length', value: '2 to 12 weeks', sub: 'Depending on the programme' },
 ];
 

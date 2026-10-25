@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { SITE, SSO_URL } from '@/lib/constants';
+import { docsUrl, SITE, SSO_URL } from '@/lib/constants';
 import { MASKANI, POWER_SUITE } from '@/config/services';
 import { NewsletterSignup } from './NewsletterSignup';
 
@@ -78,6 +78,7 @@ export function Footer() {
                 <li key={l.href}><Link href={l.href} className={link}>{l.label}</Link></li>
               ))}
               <li><a href={SSO_URL} target="_blank" rel="noreferrer" className={link}>Client portal</a></li>
+              <li><a href={docsUrl('user-guide/')} target="_blank" rel="noreferrer" className={link}>User guides</a></li>
               <li><a href={SITE.whatsapp} target="_blank" rel="noreferrer" className={link}>WhatsApp us</a></li>
             </ul>
           </div>

@@ -22,7 +22,7 @@ export default async function ProjectsPage() {
         lead="Cameras at weighbridges, systems in libraries, training for officers and students. Here is the work, with photos from each site."
       />
 
-      <section className="bg-background px-4 sm:px-6 lg:px-8 py-14 lg:py-20">
+      <section className="bg-background px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="max-w-7xl mx-auto">
           {projects.length === 0 ? (
             <p className="py-16 text-muted-foreground">Projects will appear here as soon as they are published.</p>
@@ -31,7 +31,7 @@ export default async function ProjectsPage() {
               {projects.map((p) => (
                 <li key={p.slug}>
                   <Link href={`/projects/${p.slug}`} className="group block">
-                    <div className="relative aspect-3/2 overflow-hidden rounded-md bg-muted">
+                    <div className="relative aspect-3/2 overflow-hidden rounded-3xl bg-muted shadow-soft">
                       {p.coverPhotoId && (
                         // eslint-disable-next-line @next/next/no-img-element -- photos are served from the database
                         <img src={`/api/projects/photos/${p.coverPhotoId}`} alt="" loading="lazy" className="h-full w-full object-cover" />
