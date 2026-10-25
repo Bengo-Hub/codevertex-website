@@ -9,11 +9,12 @@ import {
   Star, Briefcase, GraduationCap, Award, TrendingUp, Zap, Code2, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { type CourseCategory, ALUMNI_COMPANIES } from '@/config/courses';
+import { type CourseCategory, ALUMNI_COMPANIES, COURSE_COVER_CREDITS } from '@/config/courses';
 import { type DbCourse } from '@/types/course';
 import { formatCurrency } from '@/lib/utils';
 import { EnrollmentModal } from './EnrollmentModal';
 import { cn } from '@/lib/utils';
+import { PhotoCredit } from '@/components/site/PhotoCredit';
 
 interface CohortInfo {
   id: string;
@@ -207,6 +208,7 @@ export function CourseDetailClient({ course, category }: Props) {
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     priority
                   />
+                  {COURSE_COVER_CREDITS[course.coverImage] && <PhotoCredit credit={COURSE_COVER_CREDITS[course.coverImage]} />}
                 </div>
 
                 {/* Certificate badge */}

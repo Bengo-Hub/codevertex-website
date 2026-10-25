@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Clock, Monitor, ArrowRight } from 'lucide-react';
-import { type CourseCategory, COURSE_COVER_IMAGES } from '@/config/courses';
+import { type CourseCategory, COURSE_COVER_CREDITS, COURSE_COVER_IMAGES } from '@/config/courses';
+import { PhotoCredit } from '@/components/site/PhotoCredit';
 import { type DbCourse } from '@/types/course';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
@@ -32,6 +33,7 @@ export function CourseCard({ course, category }: Props) {
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
           />
+          {COURSE_COVER_CREDITS[cover] && <PhotoCredit credit={COURSE_COVER_CREDITS[cover]} />}
         </div>
       )}
 

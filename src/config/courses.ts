@@ -11,6 +11,13 @@ export type { InstallmentPlan, WeeklyModule, Testimonial, CourseMetadata } from 
 
 // Cover images mapped by course ID, under public/images/courses/: our own photos and renders
 // plus CC0 photos. Sources are listed in docs/image-credits.md.
+// Licence credits for covers that need one, keyed by image path; shown behind PhotoCredit.
+const DEV_PHOTO_CREDIT = 'Photo: JMcRae-WMF, CC BY-SA 4.0, via Wikimedia Commons, edited with the Codevertex screen added. This image is shared under CC BY-SA 4.0.';
+export const COURSE_COVER_CREDITS: Record<string, string> = {
+  '/images/courses/fullstack.jpg': DEV_PHOTO_CREDIT,
+  '/images/courses/mobile-dev.jpg': DEV_PHOTO_CREDIT,
+};
+
 export const COURSE_COVER_IMAGES: Record<string, string> = {
   // Software Engineering
   'code-starter':   '/images/courses/code-starter.jpg',

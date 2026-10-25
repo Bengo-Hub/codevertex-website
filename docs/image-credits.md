@@ -39,8 +39,7 @@ Two kinds of screen go onto the devices:
 |-------|---------------------|------------------|
 | treasury | Real photo of a finance officer at her laptop: Treasury dashboard on the laptop, the approval screen on the phone on her desk, microphone retouched out | CC BY-SA 4.0, Jaokov. Scene shared under CC BY-SA 4.0, credited where shown |
 | pos-cafe | Rendered counter terminal showing the hospitality POS (a cafe order) and a receipt printer, over Thorn Tree Cafe, Nairobi | CC BY-SA 4.0, Bahnfrend. Scene under CC BY-SA 4.0, credited where shown |
-| web-apps | Real photo of two developers at the Wikimania 2025 hackathon in Nairobi, storefront and code on the laptop, a Codevertex sign on the wall | CC BY-SA 4.0, JMcRae-WMF. Scene under CC BY-SA 4.0, credited where shown |
-| mobile-apps | Real photo of a developer at the same hackathon, emulator, code and terminal on the laptop | CC BY-SA 4.0, JMcRae-WMF. Scene under CC BY-SA 4.0, credited where shown |
+| web-mobile | Laptop with a client web portal (Logistics dashboard) and a phone with the customer checkout app, over a Kisumu rooftop view | CC0, Leo Hempstone |
 | ai | Laptop with the MarketFlow map and a phone with Vera, over the Kisumu skyline | CC BY 4.0, Will Ochieng', credited where shown |
 | inventory | Laptop over a Naivas supermarket aisle | CC0, safaritravelplus |
 | erp-ess, marketflow-vera | Laptop or tablet with a phone over a Kisumu rooftop view | CC0, Leo Hempstone |
@@ -65,7 +64,9 @@ screens above and the listed backdrops.
 | `photos/data-centre.webp` | "A view of the server room at The National Archives", The National Archives (UK) | CC BY 3.0, credited on the card |
 | `courses/kids-scratch.jpg`, `courses/kids-games.jpg` | "Looking at the laptop 02", "Students using a computer laptop", Kwameghana | CC0 |
 | `courses/cybersec.jpg` | Our own render: a hardening-check terminal and standards badges | Ours |
-| `courses/mobile-dev.jpg` | Our mobile IDE and checkout renders over the Kisumu rooftop view | CC0 backdrop, Leo Hempstone |
+| `courses/fullstack.jpg` | Real photo of two developers at the Wikimania 2025 hackathon in Nairobi, our storefront and its code on the laptop, a Codevertex sign on the wall | CC BY-SA 4.0, JMcRae-WMF. Credited behind the info button (`COURSE_COVER_CREDITS`) |
+| `courses/mobile-dev.jpg` | Real photo of a developer at the same hackathon, emulator, code and terminal on the laptop | CC BY-SA 4.0, JMcRae-WMF. Credited the same way |
+| `courses/sql-db.jpg` | Our own render: a SQL query, its results and a revenue-by-branch chart | Ours |
 
 ## Logos
 
