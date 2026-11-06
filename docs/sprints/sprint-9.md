@@ -27,6 +27,8 @@
 - [x] Image quality pass: app screens captured at 2x, screens downscaled with Lanczos before the
   perspective warp, devices brought closer, scenes exported at 2000 x 1250 and served at quality
   90 (`next.config.ts` `images.qualities`). The POS scene shows the team's POS terminal screen.
+- [x] `/pricing` links to the full price list at accounts.codevertexafrica.com/pricing, which
+  groups every tier and perpetual licence by product (Nov 2026).
 
 ## Open items
 - Dates for the ALEHU, Rubana and Rongo projects (seeded as drafts dated 2026-09-29).

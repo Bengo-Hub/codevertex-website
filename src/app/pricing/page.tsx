@@ -6,7 +6,7 @@ import { CTASection } from '@/components/home/CTASection';
 import { formatCurrency } from '@/lib/utils';
 import { fetchPublicPricing } from '@/lib/subscriptions';
 import { GENERAL_DOCS, MASKANI, POWER_SUITE } from '@/config/services';
-import { docsUrl } from '@/lib/constants';
+import { SSO_URL, docsUrl } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -47,7 +47,15 @@ export default async function PricingPage() {
                 </li>
               ))}
             </ul>
-          ) : (
+          ) : null}
+          {plans.length > 0 && (
+            <p className="mt-6 text-muted-foreground">
+              Every tier, perpetual licence and limit, grouped by product, is on the{' '}
+              <a href={`${SSO_URL}/pricing`} className="text-primary font-semibold hover:underline underline-offset-4">full price list</a>,
+              where you can start a free trial.
+            </p>
+          )}
+          {plans.length > 0 ? null : (
             <div className="rounded-lg border border-border p-8">
               <p className="font-semibold text-foreground">Prices could not be loaded just now.</p>
               <p className="text-muted-foreground mt-1">Call or message us and we will send you a quote today.</p>
