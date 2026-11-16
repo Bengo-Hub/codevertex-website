@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SITE } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Terms of Service',
@@ -75,7 +76,7 @@ export default function TermsOfServicePage() {
           <h2>Contact us</h2>
           <p>
             Questions about these Terms? Email{' '}
-            <a href="mailto:codevertexitsolutions@gmail.com">codevertexitsolutions@gmail.com</a> or visit our{' '}
+            <a href={`mailto:${SITE.emails.legal}`}>{SITE.emails.legal}</a> or visit our{' '}
             <a href="/contact">contact page</a>.
           </p>
         </div>

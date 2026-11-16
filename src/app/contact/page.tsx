@@ -67,7 +67,16 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
                 <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden />
                 <div>
                   <dt className="text-sm font-semibold text-foreground">Email</dt>
-                  <dd className="text-sm"><a href={`mailto:${SITE.email}`} className="text-muted-foreground hover:text-foreground">{SITE.email}</a></dd>
+                  {[
+                    { label: 'General', email: SITE.emails.info },
+                    { label: 'Support', email: SITE.emails.support },
+                    { label: 'Sales and quotes', email: SITE.emails.sales },
+                    { label: 'Billing', email: SITE.emails.billing },
+                  ].map(({ label, email }) => (
+                    <dd key={email} className="text-sm text-muted-foreground">
+                      {label}: <a href={`mailto:${email}`} className="hover:text-foreground">{email}</a>
+                    </dd>
+                  ))}
                 </div>
               </div>
               <div className="flex gap-3">

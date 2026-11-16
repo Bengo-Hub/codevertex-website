@@ -164,7 +164,7 @@ export function PaymentSuccessClient() {
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <a
-                href={`mailto:${SITE.email}`}
+                href={`mailto:${SITE.emails.billing}`}
                 className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
               >
                 Email Us
@@ -539,7 +539,7 @@ export function PaymentSuccessClient() {
             Chat on WhatsApp
           </a>
           <a
-            href={`mailto:${SITE.email}`}
+            href={`mailto:${SITE.emails.billing}`}
             className="hidden sm:flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border border-border bg-card text-muted-foreground font-semibold text-sm hover:bg-muted hover:text-foreground transition-colors"
           >
             <ArrowRight className="h-4 w-4" />

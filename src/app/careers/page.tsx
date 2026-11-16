@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { CareersListingClient } from '@/components/careers/CareersClient';
 import { Button } from '@/components/ui/button';
 import { PageIntro } from '@/components/site/PageIntro';
+import { SITE } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Careers',
@@ -45,7 +46,7 @@ export default function CareersPage() {
             <p className="text-muted-foreground mt-1">Send your CV and a short note about the work you want to do.</p>
           </div>
           <Button variant="outline" className="mt-4 sm:mt-0 shrink-0" asChild>
-            <a href="mailto:careers@codevertexafrica.com">Email careers@codevertexafrica.com</a>
+            <a href={`mailto:${SITE.emails.careers}`}>Email {SITE.emails.careers}</a>
           </Button>
         </div>
       </section>

@@ -135,7 +135,7 @@ export default function AttachmentPage() {
           </div>
           <p className="text-sm text-muted-foreground text-center mt-8">
             Still have a question? Email{' '}
-            <a href="mailto:careers@codevertexafrica.com" className="text-primary font-semibold hover:underline">careers@codevertexafrica.com</a>{' '}
+            <a href={`mailto:${SITE.emails.careers}`} className="text-primary font-semibold hover:underline">{SITE.emails.careers}</a>{' '}
             or message us on{' '}
             <a href={SITE.whatsapp} className="text-primary font-semibold hover:underline">WhatsApp</a>.
           </p>

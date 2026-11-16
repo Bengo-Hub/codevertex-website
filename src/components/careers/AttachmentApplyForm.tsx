@@ -73,7 +73,7 @@ export function AttachmentApplyForm() {
         setSent(true);
         reset();
       } else {
-        toast.error(`We could not send your application. Please email ${SITE.email} instead.`);
+        toast.error(`We could not send your application. Please email ${SITE.emails.careers} instead.`);
       }
     } catch {
       toast.error('Network error. Please try again.');

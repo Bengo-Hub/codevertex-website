@@ -3,6 +3,16 @@ export const SITE = {
   tagline: "Architecting Africa's Digital Excellence",
   url: 'https://codevertexafrica.com',
   email: 'info@codevertexafrica.com',
+  /** Mailboxes by purpose. `email` above is the general enquiries address. */
+  emails: {
+    info: 'info@codevertexafrica.com',
+    support: 'support@codevertexafrica.com',
+    sales: 'sales@codevertexafrica.com',
+    billing: 'billing@codevertexafrica.com',
+    careers: 'careers@codevertexafrica.com',
+    legal: 'legal@codevertexafrica.com',
+    security: 'security@codevertexafrica.com',
+  },
   /** The number for calls and WhatsApp everywhere on the site. */
   phone1: '+254 743 793 901',
   phone2: '+254 742 201 368',

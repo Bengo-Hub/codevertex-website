@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ShieldCheck, Mail, Clock } from 'lucide-react';
+import { SITE } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Security',
@@ -31,8 +32,8 @@ export default function SecurityPage() {
               <p className="text-sm font-bold text-foreground mb-1">Report privately</p>
               <p className="text-xs text-muted-foreground">
                 Email{' '}
-                <a href="mailto:security@codevertexafrica.com" className="text-primary underline">
-                  security@codevertexafrica.com
+                <a href={`mailto:${SITE.emails.security}`} className="text-primary underline">
+                  {SITE.emails.security}
                 </a>
                 . Don&apos;t open a public issue or post about it before we&apos;ve responded.
               </p>

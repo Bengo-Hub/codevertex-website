@@ -49,7 +49,13 @@ export function Footer() {
                 <a href={`tel:${SITE.phone1.replace(/\s/g, '')}`} className="hover:text-night-foreground">{SITE.phone1}</a> (calls and{' '}
                 <a href={SITE.whatsapp} target="_blank" rel="noreferrer" className="hover:text-night-foreground">WhatsApp</a>)
               </p>
-              <p><a href={`mailto:${SITE.email}`} className="hover:text-night-foreground">{SITE.email}</a></p>
+              <p><a href={`mailto:${SITE.emails.info}`} className="hover:text-night-foreground">{SITE.emails.info}</a></p>
+              <p>
+                Support: <a href={`mailto:${SITE.emails.support}`} className="hover:text-night-foreground">{SITE.emails.support}</a>
+              </p>
+              <p>
+                Sales: <a href={`mailto:${SITE.emails.sales}`} className="hover:text-night-foreground">{SITE.emails.sales}</a>
+              </p>
             </address>
             <div className="mt-6 max-w-sm">
               <NewsletterSignup />

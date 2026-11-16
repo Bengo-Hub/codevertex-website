@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SITE } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -93,7 +94,7 @@ export default function PrivacyPolicyPage() {
           <h2>Contact us</h2>
           <p>
             For any privacy questions or requests, email{' '}
-            <a href="mailto:codevertexitsolutions@gmail.com">codevertexitsolutions@gmail.com</a> or reach us via
+            <a href={`mailto:${SITE.emails.legal}`}>{SITE.emails.legal}</a> or reach us via
             our <a href="/contact">contact page</a>.
           </p>
         </div>

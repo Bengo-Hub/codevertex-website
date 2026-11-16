@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { GraduationCap, Search, AlertCircle, ArrowRight, BookOpen } from 'lucide-react';
+import { SITE } from '@/lib/constants';
 
 export function MyEnrollmentClient() {
   const router = useRouter();
@@ -130,8 +131,8 @@ export function MyEnrollmentClient() {
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-0.5">•</span>
                 Can&apos;t find your email? Contact us at{' '}
-                <a href="mailto:info@codevertexafrica.com" className="text-primary underline underline-offset-2">
-                  info@codevertexafrica.com
+                <a href={`mailto:${SITE.emails.support}`} className="text-primary underline underline-offset-2">
+                  {SITE.emails.support}
                 </a>
               </li>
               <li className="flex items-start gap-2">
