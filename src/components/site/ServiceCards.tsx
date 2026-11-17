@@ -19,7 +19,7 @@ export function ServiceCards({ services = CLIENT_SERVICES, detailed = false }: {
         <Reveal key={s.id} as="li" delay={(i % 3) * 100} className="h-full">
           <Link
             id={`service-${s.id}`}
-            href={s.cta?.href ?? '/contact'}
+            href={s.cta?.href ?? `/contact?service=${s.id}`}
             className="group flex h-full scroll-mt-28 flex-col overflow-hidden rounded-3xl bg-background shadow-soft ring-1 ring-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
           >
             <div className="relative aspect-[16/10] overflow-hidden bg-mist">

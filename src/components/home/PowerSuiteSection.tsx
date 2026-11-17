@@ -56,7 +56,7 @@ export function PowerSuiteSection({ pricing }: { pricing: ProductPricing[] }) {
               const price = formatFromPrice(priceFor(p, pricing));
               return (
                 <li key={p.id}>
-                  <Link href={`/services#${p.id}`} className="group flex h-full gap-3 rounded-2xl border border-border bg-background p-4 shadow-soft transition-transform duration-300 hover:-translate-y-0.5">
+                  <Link href={`/contact?service=${p.id}`} className="group flex h-full gap-3 rounded-2xl border border-border bg-background p-4 shadow-soft transition-transform duration-300 hover:-translate-y-0.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mist">
                       <p.icon className="h-5 w-5 text-primary" aria-hidden />
                     </span>

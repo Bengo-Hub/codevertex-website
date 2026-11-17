@@ -345,7 +345,7 @@ export const SERVICE_PILLARS: ServicePillar[] = [
     icon: Cpu,
     photo: { src: '/images/photos/field-anpr-install.webp', alt: 'A Codevertex engineer installing a number-plate camera at a KeNHA weighbridge' },
     features: ['Number-plate and CCTV cameras', 'Weighbridges, sensors and PLCs', 'M-Pesa, PayHero and Paystack', 'KRA eTIMS integration'],
-    cta: { label: 'See integrations', href: '/integrations' },
+    cta: { label: 'Plan an integration', href: '/contact?service=iot' },
   },
   {
     id: 'digitika',
