@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ENQUIRY_TOPICS } from '@/config/services';
+import { ENQUIRY_GROUPS, ENQUIRY_TOPICS, INTEGRATION_TOPICS } from '@/config/services';
 import { COUNTRY_CODES, isValidLocalPhone, toInternationalPhone } from '@/lib/phone-countries';
 import { SITE } from '@/lib/constants';
 
@@ -28,6 +28,8 @@ const schema = z
   });
 
 type FormData = z.infer<typeof schema>;
+
+const isIntegration = (service?: string) => service === 'iot' || INTEGRATION_TOPICS.some((t) => t.value === service);
 
 const control =
   'h-11 px-3.5 rounded-md bg-background border text-[15px] text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20';
@@ -52,6 +54,7 @@ export function ContactForm({ initialService }: { initialService?: string }) {
   const known = ENQUIRY_TOPICS.some((t) => t.value === initialService);
   const {
     register,
+    watch,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -132,16 +135,20 @@ export function ContactForm({ initialService }: { initialService?: string }) {
       <div>
         <Label htmlFor="service" optional>What is it about?</Label>
         <select id="service" {...register('service')} className={`${field} border-input`}>
-          <option value="">Choose a product or service</option>
-          {ENQUIRY_TOPICS.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+          <option value="">Choose a product, integration or service</option>
+          {ENQUIRY_GROUPS.map((g) => (
+            <optgroup key={g.label} label={g.label}>
+              {g.topics.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>
 
       <div>
         <Label htmlFor="message">Message</Label>
-        <textarea id="message" rows={5} {...register('message')} aria-invalid={!!errors.message} aria-describedby="message-error" placeholder="What do you need, and for how many branches or users?" className={`${field} h-auto py-3 resize-y ${errors.message ? 'border-destructive' : 'border-input'}`} />
+        <textarea id="message" rows={5} {...register('message')} aria-invalid={!!errors.message} aria-describedby="message-error" placeholder={isIntegration(watch('service')) ? 'What system or device do you use today, and what should it do once connected?' : 'What do you need, and for how many branches or users?'} className={`${field} h-auto py-3 resize-y ${errors.message ? 'border-destructive' : 'border-input'}`} />
         <Error id="message-error" message={errors.message?.message} />
       </div>
 

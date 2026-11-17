@@ -1,19 +1,19 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BookOpen, Camera, Check, Cpu, Receipt, Scale, Smartphone, type LucideIcon } from 'lucide-react';
+import { BookOpen, Camera, Check, Code2, Cpu, MessageSquare, Printer, Receipt, Scale, Smartphone, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IntroImage, PageIntro } from '@/components/site/PageIntro';
 import { Reveal } from '@/components/site/Reveal';
 import { ProviderLogos } from '@/components/site/ProviderLogos';
 import { PhotoCredit } from '@/components/site/PhotoCredit';
 import { CTASection } from '@/components/home/CTASection';
-import { docsUrl } from '@/lib/constants';
+import { SSO_URL, docsUrl } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Integrations',
   description:
-    'KRA eTIMS, M-Pesa, Airtel Money, PayHero and Paystack, weighbridges, number-plate cameras, CCTV, lane lights, PLCs and IoT hardware connected to your software by Codevertex.',
+    'KRA eTIMS, M-Pesa, Airtel Money, PayHero and Paystack, SMS, WhatsApp and email, sign-in with Codevertex, APIs, printers, weighbridges, number-plate cameras, CCTV and PLCs connected to your business by Codevertex.',
 };
 
 interface Shot { src: string; alt: string; caption: string; credit?: string }
@@ -24,10 +24,14 @@ interface Integration {
   summary: string;
   description: string;
   icon: LucideIcon;
+  /** The contact form topic the "Ask about this" button opens with (INTEGRATION_TOPICS). */
+  topic: string;
   features: string[];
   photos?: Shot[];
   logos?: boolean;
   docs?: { label: string; path: string }[];
+  /** Links outside the docs site, such as the developer access form. */
+  links?: { label: string; href: string }[];
 }
 
 const INTEGRATIONS: Integration[] = [
@@ -38,6 +42,7 @@ const INTEGRATIONS: Integration[] = [
     description:
       'Books and Treasury is a certified KRA eTIMS OSCU integrator. Businesses on our products get it with their plan. Developers outside the suite can connect to our eTIMS API directly: test in the sandbox, pass the go-live checklist, then switch to production. Self-serve integration has no fee; if you would rather we set it up for you, a one-time fee applies.',
     icon: Receipt,
+    topic: 'etims_integration',
     features: ['Real-time invoice and credit note signing', 'Sandbox and go-live checklist', 'Self-serve API or assisted setup', 'Pay per use or by subscription'],
     docs: [{ label: 'eTIMS API quickstart', path: 'integrations/etims-api/' }],
     photos: [
@@ -56,6 +61,7 @@ const INTEGRATIONS: Integration[] = [
     description:
       'STK push, paybill and till collections, card payments and payment links, matched to the right invoice or sale automatically and confirmed with the provider before anything is marked paid.',
     icon: Smartphone,
+    topic: 'payments_integration',
     features: ['M-Pesa STK push, paybill and till', 'Card payments through Paystack', 'Payment links on invoices and receipts', 'Automatic matching to the sale or invoice'],
     logos: true,
     photos: [
@@ -73,12 +79,46 @@ const INTEGRATIONS: Integration[] = [
     ],
   },
   {
+    id: 'messaging',
+    name: 'SMS, WhatsApp, email and sign-in',
+    summary: 'Reach your customers and let them log in, from your own system',
+    description:
+      'Send receipts, reminders and alerts by SMS, WhatsApp or email from your own software through our Notifications API, the same one our products use. If you build your own app, your users can also sign in with their Codevertex account instead of yet another password. Developers apply for a sandbox key first, and we turn on live sending once it works.',
+    icon: MessageSquare,
+    topic: 'notifications_integration',
+    features: ['SMS, WhatsApp and email from one API', 'Message templates you can edit', 'Sign in with Codevertex (SSO) for your app', 'Sandbox key before going live'],
+    docs: [{ label: 'Notifications API guide', path: 'integrations/notifications-rest-api-integration/' }],
+    links: [{ label: 'Apply for developer access', href: `${SSO_URL}/developer/apply` }],
+  },
+  {
+    id: 'apps',
+    name: 'Your app, website or old system',
+    summary: 'Your systems and ours sharing the same records',
+    description:
+      'Have a website, an app or an older system you want to keep? We connect it to our POS, stock and ordering so sales, products and orders match on both sides, and POS webhooks tell your system when something changes. Moving from another system? We bring your product list across in bulk and help you move the rest of your records, so you start with your real data.',
+    icon: Code2,
+    topic: 'api_integration',
+    features: ['Your website or app linked to POS, stock and orders', 'POS webhooks to your system', 'Product lists imported in bulk', 'Help moving off your old system'],
+  },
+  {
+    id: 'printers',
+    name: 'Barcode, label and receipt printers',
+    summary: 'Print from the till without fighting printer settings',
+    description:
+      'The POS prints receipts and kitchen tickets, and Inventory prints barcode labels for your products. For a shared till or a printer on the network, our small Print Agent runs on a computer in the shop and sends each job to the right printer.',
+    icon: Printer,
+    topic: 'printing_hardware',
+    features: ['Receipt and kitchen ticket printers', 'Barcode label printers', 'Print Agent for shared or network printers', 'Help choosing a printer that works'],
+    docs: [{ label: 'Receipts and printing', path: 'user-guide/pos/receipts-and-printing/' }],
+  },
+  {
     id: 'weighbridges',
     name: 'Weighbridges, ANPR cameras and lane lights',
     summary: 'Every truck identified, weighed and directed automatically',
     description:
       'TruConnect, part of TruLoad, reads the weight from the indicator at each station over serial, TCP or UDP. We mount number-plate (ANPR) cameras so each plate is captured with its weight, and wire the remote display units and lane traffic lights so drivers know when to move. Installed at Kanyonyo in Kenya and at Rubana North and South in Tanzania.',
     icon: Scale,
+    topic: 'truload_weighing',
     features: ['Static and mobile scales', 'ANPR plate read on every weight record', 'Remote display units and lane lights', 'Serial device servers for site equipment'],
     photos: [
       { src: '/images/photos/field-anpr-install.webp', alt: 'Mounting a Dahua ANPR camera in front of Kanyonyo weighbridge station', caption: 'ANPR camera, Kanyonyo weighbridge, Kenya' },
@@ -94,6 +134,7 @@ const INTEGRATIONS: Integration[] = [
     description:
       'From a farm or office compound to a weighbridge, we design the camera layout, run the cabling, set up the recorder and show your team how to watch live and play back footage.',
     icon: Camera,
+    topic: 'camera_systems',
     features: ['Site survey and camera layout', 'Cabling and recorder setup', 'Live and remote viewing', 'Training for the people who watch it'],
     photos: [
       { src: '/images/photos/rongo-cctv-team.webp', alt: 'The Codevertex field team on site with CCTV equipment', caption: 'Field team at Moyafarm, Rongo' },
@@ -103,11 +144,12 @@ const INTEGRATIONS: Integration[] = [
   },
   {
     id: 'automation',
-    name: 'IoT, PLC and automation',
-    summary: 'Sensors, controllers and machines feeding your software',
+    name: 'Machines, sensors and PLCs',
+    summary: 'Readings from the factory floor or the farm, straight into your reports',
     description:
-      'Programmable logic controllers on the shop floor, microcontrollers, sensors and actuators, wired into a monitored pipeline that feeds your stock, production and reporting, and built to keep running after we leave the site.',
+      'Controllers (PLCs) on the shop floor, small boards like Arduino, and the sensors around them, wired so their readings feed your stock, production and reports. We set it up to keep running after we leave the site.',
     icon: Cpu,
+    topic: 'plc_automation',
     features: ['PLC data to the cloud', 'Arduino and microcontroller programming', 'Sensor and actuator wiring', 'Alerts when a device goes quiet'],
     photos: [
       { src: '/images/photos/lab-camera-bench.webp', alt: 'Cameras and a laptop being configured on a workbench', caption: 'Configuring equipment on the bench' },
@@ -140,8 +182,8 @@ export default function IntegrationsPage() {
     <>
       <PageIntro
         eyebrow="Integrations"
-        title="Your equipment and your software, talking to each other."
-        lead="Tax, payments, scales, cameras and controllers, connected to your software and installed by our own engineers."
+        title="Your systems, your equipment and your software, talking to each other."
+        lead="KRA eTIMS, M-Pesa and card payments, SMS and WhatsApp, your own app or website, printers, scales, cameras and machines. Our own engineers connect them and install what goes on site."
         aside={
           <IntroImage>
             <Image src="/images/photos/field-anpr-install.webp" alt="Mounting a Dahua ANPR camera at Kanyonyo weighbridge station" fill priority sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
@@ -149,7 +191,7 @@ export default function IntegrationsPage() {
         }
       >
         <div className="flex flex-wrap gap-3">
-          <Button size="lg" className="rounded-full" asChild><Link href="/contact?service=iot">Talk to an engineer</Link></Button>
+          <Button size="lg" className="rounded-full" asChild><Link href="/contact?service=other_integration">Talk to an engineer</Link></Button>
           <Button size="lg" variant="outline" className="rounded-full bg-white/70" asChild>
             <a href={docsUrl('integrations/')} target="_blank" rel="noreferrer">Integration guides</a>
           </Button>
@@ -175,10 +217,15 @@ export default function IntegrationsPage() {
                   </ul>
                   {it.logos && <ProviderLogos className="mt-6" />}
                   <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <Button size="sm" className="rounded-full" asChild><Link href="/contact?service=iot">Ask about this</Link></Button>
+                    <Button size="sm" className="rounded-full" asChild><Link href={`/contact?service=${it.topic}`}>Ask about this</Link></Button>
                     {it.docs?.map((d) => (
                       <a key={d.path} href={docsUrl(d.path)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline underline-offset-4">
                         <BookOpen className="h-4 w-4" aria-hidden /> {d.label}
+                      </a>
+                    ))}
+                    {it.links?.map((l) => (
+                      <a key={l.href} href={l.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline underline-offset-4">
+                        <Code2 className="h-4 w-4" aria-hidden /> {l.label}
                       </a>
                     ))}
                   </div>
@@ -190,7 +237,7 @@ export default function IntegrationsPage() {
         </ul>
       </section>
 
-      <CTASection title="Have equipment that should talk to your software?" lead="Tell us what is on site and what you want to see on screen, and we will plan the connection with you." />
+      <CTASection title="Have a system or a device that should talk to your software?" lead="Tell us what you use today and what you want to see on screen, and we will plan the connection with you. Not sure what to call it? Pick “Another integration, or not sure” on the form." />
     </>
   );
 }

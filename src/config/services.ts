@@ -339,8 +339,8 @@ export const SERVICE_PILLARS: ServicePillar[] = [
   },
   {
     id: 'iot',
-    name: 'IoT, PLC and automation',
-    tagline: 'Cameras, sensors, controllers and payments',
+    name: 'Integrations and site equipment',
+    tagline: 'Payments, tax, cameras, scales and machines',
     description: 'Cameras, weighbridges, sensors, PLCs and payment gateways connected to your software, installed and supported by our own field team.',
     icon: Cpu,
     photo: { src: '/images/photos/field-anpr-install.webp', alt: 'A Codevertex engineer installing a number-plate camera at a KeNHA weighbridge' },
@@ -367,13 +367,40 @@ export const STATUS_STYLES: Record<ServiceStatus, string> = {
   offline: 'bg-rose-50 text-rose-700 border-rose-200',
 };
 
-/** Every option of the contact form's "interested in" list: products, then services. */
-export const ENQUIRY_TOPICS: { value: string; label: string }[] = [
-  ...POWER_SUITE.map((p) => ({ value: p.id, label: p.name })),
-  { value: MASKANI.id, label: MASKANI.name },
-  ...SERVICE_PILLARS.map((s) => ({ value: s.id, label: s.name })),
-  { value: 'other', label: 'Something else' },
+/**
+ * The integrations someone can ask about. The values are the request types the Vera chat form
+ * sends to auth-api (marketflow-ui public/widget/chat.js INTEGRATION_TYPES), so an enquiry reads
+ * the same whichever form it came through. The integrations page links to each one directly.
+ */
+export const INTEGRATION_TOPICS: { value: string; label: string }[] = [
+  { value: 'etims_integration', label: 'KRA eTIMS invoices from my POS, ERP or accounting system' },
+  { value: 'payments_integration', label: 'M-Pesa, Airtel Money or card payments' },
+  { value: 'notifications_integration', label: 'Sending SMS, WhatsApp or email from my system' },
+  { value: 'sso_integration', label: 'Sign in with a Codevertex account (SSO)' },
+  { value: 'api_integration', label: 'My app or website talking to your POS, stock or orders' },
+  { value: 'data_import', label: 'Moving my products, customers or records from another system' },
+  { value: 'printing_hardware', label: 'Barcode, label or receipt printers' },
+  { value: 'truload_weighing', label: 'Weighbridges and number-plate cameras' },
+  { value: 'camera_systems', label: 'CCTV and security cameras' },
+  { value: 'plc_automation', label: 'Machines, sensors and PLCs' },
+  { value: 'other_integration', label: 'Another integration, or not sure' },
 ];
+
+/** The contact form's "What is it about?" list, in groups: products, integrations, services. */
+export const ENQUIRY_GROUPS: { label: string; topics: { value: string; label: string }[] }[] = [
+  {
+    label: 'Our products',
+    topics: [...POWER_SUITE.map((p) => ({ value: p.id, label: p.name })), { value: MASKANI.id, label: MASKANI.name }],
+  },
+  { label: 'Connecting a system or device', topics: INTEGRATION_TOPICS },
+  {
+    label: 'Services',
+    topics: [...SERVICE_PILLARS.map((s) => ({ value: s.id, label: s.name })), { value: 'other', label: 'Something else' }],
+  },
+];
+
+/** Every option of the contact form's list, flat, for lookups. */
+export const ENQUIRY_TOPICS: { value: string; label: string }[] = ENQUIRY_GROUPS.flatMap((g) => g.topics);
 
 export function enquiryTopicLabel(value?: string | null): string | undefined {
   if (!value) return undefined;
