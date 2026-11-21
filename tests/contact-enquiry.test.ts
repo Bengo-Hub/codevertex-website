@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalisePhone } from '../src/lib/phone-countries';
-import { ENQUIRY_TOPICS, MASKANI, POWER_SUITE, SERVICE_PILLARS, enquiryTopicLabel, productNameForServiceTag } from '../src/config/services';
+import { ENQUIRY_TOPICS, INTEGRATION_TOPICS, MASKANI, POWER_SUITE, SERVICE_PILLARS, enquiryTopicLabel, productNameForServiceTag } from '../src/config/services';
 import { PROJECTS } from '../prisma/seed/projects';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -29,8 +29,9 @@ test('rubbish is rejected so the WhatsApp acknowledgement is never sent to a bad
 test('every topic has a readable label and unknown values fall back to themselves', () => {
   const values = ENQUIRY_TOPICS.map((t) => t.value);
   assert.equal(new Set(values).size, values.length, 'topic values are unique');
-  assert.equal(ENQUIRY_TOPICS.length, POWER_SUITE.length + 1 + SERVICE_PILLARS.length + 1);
+  assert.equal(ENQUIRY_TOPICS.length, POWER_SUITE.length + 1 + INTEGRATION_TOPICS.length + SERVICE_PILLARS.length + 1);
   assert.equal(enquiryTopicLabel('pos'), 'POS System');
+  assert.equal(enquiryTopicLabel('etims_integration'), 'KRA eTIMS invoices from my POS, ERP or accounting system');
   assert.equal(enquiryTopicLabel(MASKANI.id), 'Maskani');
   assert.equal(enquiryTopicLabel('Attachment Application'), 'Attachment Application');
   assert.equal(enquiryTopicLabel(undefined), undefined);

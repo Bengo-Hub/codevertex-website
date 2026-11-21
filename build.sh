@@ -127,7 +127,10 @@ if [[ -z ${CI:-}${GITHUB_ACTIONS:-} && -f KubeSecrets/devENV.yml ]]; then
 fi
 
 # Registry credentials
-if [[ -n ${REGISTRY_USERNAME:-} && -n ${REGISTRY_PASSWORD:-} ]]; then
+# registry-credentials is sealed in devops-k8s (registry-credentials.yml writes it); create it here
+# only in a namespace that has no SealedSecret for it yet.
+if [[ -n ${REGISTRY_USERNAME:-} && -n ${REGISTRY_PASSWORD:-} ]] \
+  && [[ -z "$(kubectl -n "$NAMESPACE" get secret registry-credentials -o jsonpath='{.metadata.ownerReferences[?(@.kind=="SealedSecret")].name}' 2>/dev/null)" ]]; then
   kubectl -n "$NAMESPACE" create secret docker-registry registry-credentials \
     --docker-server="$REGISTRY_SERVER" \
     --docker-username="$REGISTRY_USERNAME" \
@@ -185,7 +188,7 @@ else
 fi
 
 # =============================================================================
-# Patch secret with Prisma-specific keys:
+# Seal the Prisma-specific keys into the service Secret:
 #   DATABASE_URL        → pgbouncer URL (?pgbouncer=true) for Next.js runtime
 #   DIRECT_DATABASE_URL → direct postgres URL for migrations (entrypoint.sh)
 #   ANTHROPIC_API_KEY   → Vera AI chatbot
@@ -193,7 +196,7 @@ fi
 # These keys supplement the Go-style POSTGRES_URL written by create-service-secrets.sh.
 # =============================================================================
 if [[ -n "${KUBE_CONFIG:-}" ]] && kubectl get ns "$NAMESPACE" >/dev/null 2>&1; then
-  log_info "Patching ${ENV_SECRET_NAME} with Prisma + AI keys..."
+  log_info "Checking ${ENV_SECRET_NAME} for the Prisma + AI keys..."
 
   PG_DIRECT_HOST="postgresql.infra.svc.cluster.local"
   PG_DIRECT_PORT="5432"
@@ -216,26 +219,24 @@ if [[ -n "${KUBE_CONFIG:-}" ]] && kubectl get ns "$NAMESPACE" >/dev/null 2>&1; t
   DATABASE_URL="postgresql://${SERVICE_DB_USER}:${ENCODED_PASS}@${PG_BOUNCER_HOST}:${PG_BOUNCER_PORT}/${SERVICE_DB_NAME}?pgbouncer=true&sslmode=disable"
   DIRECT_DATABASE_URL="postgresql://${SERVICE_DB_USER}:${ENCODED_PASS}@${PG_DIRECT_HOST}:${PG_DIRECT_PORT}/${SERVICE_DB_NAME}?sslmode=disable"
 
-  PATCH_JSON='{"data":{'
-  PATCH_JSON+="\"DATABASE_URL\":\"$(echo -n "${DATABASE_URL}" | base64 -w0)\","
-  PATCH_JSON+="\"DIRECT_DATABASE_URL\":\"$(echo -n "${DIRECT_DATABASE_URL}" | base64 -w0)\""
-  [[ -n "${ANTHROPIC_API_KEY:-}" ]] && PATCH_JSON+=",\"ANTHROPIC_API_KEY\":\"$(echo -n "${ANTHROPIC_API_KEY}" | base64 -w0)\""
-  [[ -n "${INTERNAL_SERVICE_KEY:-}" ]] && PATCH_JSON+=",\"INTERNAL_SERVICE_KEY\":\"$(echo -n "${INTERNAL_SERVICE_KEY}" | base64 -w0)\""
-  PATCH_JSON+='}}'
-
-  if kubectl get secret "$ENV_SECRET_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
-    kubectl patch secret "$ENV_SECRET_NAME" -n "$NAMESPACE" --type merge -p "$PATCH_JSON" \
-      && log_success "Patched ${ENV_SECRET_NAME} with DATABASE_URL / DIRECT_DATABASE_URL" \
-      || log_warn "Secret patch failed"
-  else
-    log_info "Creating ${ENV_SECRET_NAME} with Prisma keys..."
+  # The Secret is a SealedSecret in devops-k8s, so it is never patched here. seal-desired.sh adds
+  # any of these keys the Secret lacks (sealed, committed, synced) and keeps existing values; a
+  # changed value (for example after a database password rotation) is reported by key name and
+  # replaced only when the deploy runs with SEAL_OVERWRITE=1.
+  if [[ -f "$DEVOPS_DIR/scripts/sealing/seal-desired.sh" ]]; then
     kubectl -n "$NAMESPACE" create secret generic "$ENV_SECRET_NAME" \
       --from-literal=DATABASE_URL="${DATABASE_URL}" \
       --from-literal=DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL}" \
       ${ANTHROPIC_API_KEY:+--from-literal=ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}"} \
       ${INTERNAL_SERVICE_KEY:+--from-literal=INTERNAL_SERVICE_KEY="${INTERNAL_SERVICE_KEY}"} \
-      --dry-run=client -o yaml | kubectl apply -f - || log_warn "Secret creation failed"
+      --dry-run=client -o json \
+      | GIT_USER="$GIT_USER" GIT_EMAIL="$GIT_EMAIL" bash "$DEVOPS_DIR/scripts/sealing/seal-desired.sh" "$NAMESPACE" "$ENV_SECRET_NAME" "$APP_NAME" \
+      && log_success "${ENV_SECRET_NAME} holds the Prisma and AI keys (sealed)" \
+      || log_warn "Sealing ${ENV_SECRET_NAME} failed; the live Secret was not changed"
+  else
+    log_warn "devops-k8s sealing scripts not available; ${ENV_SECRET_NAME} left as it is"
   fi
+  unset DATABASE_URL DIRECT_DATABASE_URL DB_PASS ENCODED_PASS
 fi
 
 # =============================================================================
