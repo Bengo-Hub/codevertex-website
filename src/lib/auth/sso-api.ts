@@ -3,6 +3,10 @@
 
 const SSO_API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'https://sso.codevertexafrica.com';
 const SSO_CLIENT_ID = process.env.NEXT_PUBLIC_SSO_CLIENT_ID || 'codevertex-website';
+// The organisation this site signs people in to. Without it auth-api fell back to the public
+// demo tenant, so every new Google sign-up became a demo student and got "Welcome to Codevertex
+// Demo" (20 November 2026). The academy and the admin area belong to Codevertex's own tenant.
+const SSO_TENANT = process.env.NEXT_PUBLIC_SSO_TENANT || 'codevertex';
 
 export interface TokenExchangeParams {
   code: string;
@@ -19,6 +23,7 @@ export function buildAuthorizeUrl(codeChallenge: string, state: string, redirect
   url.searchParams.set('state', state);
   url.searchParams.set('code_challenge', codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
+  if (SSO_TENANT) url.searchParams.set('tenant', SSO_TENANT);
   // Prefills the email field on the SSO login/register page — reduces the chance a
   // student signs up with a different email than the one their enrollment is under,
   // which would otherwise leave /student unable to find their StudentUser record.
