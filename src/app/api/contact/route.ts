@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/db';
+import { marketflow, enquirySource } from '@/lib/marketflow';
 import { checkSpam } from '@/lib/spam-guard';
 import { publishContactReceived } from '@/lib/events';
 import { normalisePhone } from '@/lib/phone-countries';
@@ -39,16 +39,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
     }
 
-    const submission = await prisma.contactSubmission.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        service: data.service || null,
+    // The enquiry is a lead in MarketFlow (the CRM owns leads); a person who wrote before gets
+    // this message on their existing lead.
+    const { lead } = await marketflow.captureLead({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      interest: enquiryTopicLabel(data.service) ?? data.service,
+      source: enquirySource(data.source),
+      metadata: {
+        form: data.source,
         message: data.message,
-        source: data.source,
+        ...(data.service ? { service: data.service } : {}),
       },
-      select: { id: true },
     });
 
     // notifications-api acknowledges the visitor by email and WhatsApp and emails the team.
@@ -63,9 +66,11 @@ export async function POST(req: NextRequest) {
       source: data.source,
     });
     if (sent) {
-      await prisma.contactSubmission.update({ where: { id: submission.id }, data: { noticeSentAt: new Date() } });
+      await marketflow
+        .patchLead(lead.id, { metadata: { notice_sent_at: new Date().toISOString() } })
+        .catch((e) => console.error('[contact] notice time not saved, lead', lead.id, e));
     } else {
-      console.error('[contact] acknowledgement not published, submission', submission.id.toString());
+      console.error('[contact] acknowledgement not published, lead', lead.id);
     }
 
     return NextResponse.json({ success: true });

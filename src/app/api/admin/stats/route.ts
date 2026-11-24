@@ -3,6 +3,12 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { requirePermission } from '@/lib/auth/rbac';
 import { digitikaPerm } from '@/lib/digitika-rbac-catalog';
+import { ENQUIRY_SOURCES, marketflow, OPEN_STATUSES } from '@/lib/marketflow';
+
+const noLeadStats = (err: unknown) => {
+  console.error('[admin/stats] lead counts', err);
+  return { total: 0, this_week: 0, by_status: {} as Record<string, number>, by_source: {} as Record<string, number> };
+};
 
 // Admin dashboard KPIs. Everything is aggregated in Postgres (counts, sums, a 6-month
 // series) so the payload and cost stay constant as enrollments grow; the browser never
@@ -24,8 +30,8 @@ export async function GET(req: NextRequest) {
   const [
     enrollmentsByStatus,
     totalStudents,
-    leadsByStatus,
-    totalContacts,
+    leadStats,
+    enquiryStats,
     overdueInstallments,
     upcomingInstallments,
     revenueRows,
@@ -34,8 +40,10 @@ export async function GET(req: NextRequest) {
   ] = await Promise.all([
     prisma.enrollment.groupBy({ by: ['paymentStatus'], _count: { _all: true } }),
     prisma.studentUser.count(),
-    prisma.lead.groupBy({ by: ['status'], _count: { _all: true } }),
-    prisma.contactSubmission.count(),
+    // Leads and enquiries are counted in MarketFlow, which owns them. An outage shows no counts
+    // instead of failing the whole dashboard.
+    marketflow.leadStats({ excludeSource: ENQUIRY_SOURCES }).catch(noLeadStats),
+    marketflow.leadStats({ source: ENQUIRY_SOURCES, status: OPEN_STATUSES }).catch(noLeadStats),
     // Overdue = unpaid and past due, whether or not the reminder cron has flipped its status yet.
     prisma.installmentSchedule.count({
       where: { status: { in: OPEN_INSTALLMENT_STATUSES }, dueDate: { lt: today } },
@@ -100,8 +108,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     enrollments: { total: totalEnrollments, pending, succeeded },
     students: { total: totalStudents },
-    leads: { total: countOf(leadsByStatus), new: countOf(leadsByStatus.filter((r) => r.status === 'new')) },
-    contacts: { total: totalContacts },
+    leads: { total: leadStats.total, new: leadStats.by_status.new ?? 0 },
+    contacts: { total: enquiryStats.total },
     installments: { overdue: overdueInstallments, upcomingWeek: upcomingInstallments },
     revenue: { collected: Number(revenueRows[0]?.collected ?? 0), currency: 'KES' },
     monthlyTrend: trendRows.map((r) => ({ month: r.month, enrollments: Number(r.enrollments), revenue: Number(r.revenue) })),

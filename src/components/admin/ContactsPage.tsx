@@ -44,8 +44,8 @@ export function ContactsPage() {
   async function confirmDelete() {
     if (!deleting) return;
     const res = await authedFetch(`/api/admin/contacts/${deleting.id}`, { method: 'DELETE' });
-    if (res.ok) toast.success('Submission deleted');
-    else toast.error('Could not delete the submission');
+    if (res.ok) toast.success('Message removed');
+    else toast.error('Could not remove the message');
     setDeleting(null);
     load();
   }
@@ -162,7 +162,7 @@ export function ContactsPage() {
         loading={loading}
         emptyMessage="No contact submissions yet."
       />
-      <ConfirmDialog open={deleting !== null} title={`Delete the message from ${deleting?.name ?? 'this contact'}?`} description="This can't be undone." confirmLabel="Delete" onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
+      <ConfirmDialog open={deleting !== null} title={`Remove the message from ${deleting?.name ?? 'this contact'}?`} description="It leaves this list and the lead is marked lost in MarketFlow, which keeps its history." confirmLabel="Remove" onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
     </div>
   );
 }

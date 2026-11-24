@@ -61,8 +61,8 @@ export function LeadsPage() {
   async function confirmDelete() {
     if (!deleting) return;
     const res = await authedFetch(`/api/admin/leads/${deleting.id}`, { method: 'DELETE' });
-    if (res.ok) toast.success('Lead deleted');
-    else toast.error('Could not delete the lead');
+    if (res.ok) toast.success('Lead marked lost');
+    else toast.error('Could not update the lead');
     setDeleting(null);
     load();
   }
@@ -155,7 +155,7 @@ export function LeadsPage() {
       </div>
       <DataTable columns={columns} data={data?.items ?? []} keyField="id" total={data?.total} page={data?.page} pages={data?.pages} onPageChange={setPage} loading={loading} emptyMessage="No leads yet." />
       {editing && <LeadFormModal lead={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} onSaved={load} />}
-      <ConfirmDialog open={deleting !== null} title={`Delete ${deleting?.name ?? 'this lead'}?`} description="This can't be undone." confirmLabel="Delete" onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
+      <ConfirmDialog open={deleting !== null} title={`Mark ${deleting?.name ?? 'this lead'} as lost?`} description="Leads live in MarketFlow, which keeps their history. The lead is marked lost." confirmLabel="Mark lost" onConfirm={confirmDelete} onCancel={() => setDeleting(null)} />
     </div>
   );
 }
