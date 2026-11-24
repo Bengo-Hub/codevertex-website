@@ -19,6 +19,29 @@ datasource db {
 // contacts (src/lib/marketflow.ts). Their old tables (leads, contact_submissions,
 // newsletter_subscribers) were moved there on 2026-11-24 and dropped.
 
+/// Attachment applications, job and internship enquiries, and businesses offering their services.
+/// They are not sales leads, so they never go to MarketFlow. erp-api owns recruitment but has no
+/// service-to-service create yet; until it does they are kept here (owner, 2026-11-24).
+model Application {
+  id           BigInt    @id @default(autoincrement())
+  /// attachment | job | service_offer
+  kind         String
+  name         String
+  email        String
+  phone        String?
+  service      String?
+  message      String
+  /// Which form sent it: attachment, contact, website.
+  form         String    @default("contact")
+  /// Where a restored row came from (contact_submissions:<id>), so a restore never doubles it.
+  legacyRef    String?   @unique @map("legacy_ref")
+  noticeSentAt DateTime? @map("notice_sent_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([kind, createdAt(sort: Desc)])
+  @@map("applications")
+}
+
 // ---------------------------------------------------------------------------
 // Parent / guardian access: one-time codes that let a parent open the
 // no-login parent portal with a Student ID. The code itself is never stored,

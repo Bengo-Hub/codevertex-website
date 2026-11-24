@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { marketflow, enquirySource } from '@/lib/marketflow';
+import { prisma } from '@/lib/db';
+import { classifyEnquiry } from '@/config/enquiry-classification';
 import { checkSpam } from '@/lib/spam-guard';
 import { publishContactReceived } from '@/lib/events';
 import { normalisePhone } from '@/lib/phone-countries';
@@ -39,20 +41,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
     }
 
-    // The enquiry is a lead in MarketFlow (the CRM owns leads); a person who wrote before gets
-    // this message on their existing lead.
-    const { lead } = await marketflow.captureLead({
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      interest: enquiryTopicLabel(data.service) ?? data.service,
-      source: enquirySource(data.source),
-      metadata: {
-        form: data.source,
-        message: data.message,
-        ...(data.service ? { service: data.service } : {}),
-      },
-    });
+    // Attachment applications, job enquiries and businesses offering services are not sales leads
+    // (owner, 2026-11-24): they go to the applications store, never to MarketFlow. A real enquiry
+    // is a lead in MarketFlow (the CRM owns leads); a person who wrote before keeps one lead.
+    const kind = classifyEnquiry({ form: data.source, service: data.service, message: data.message });
+    let markSent: () => Promise<unknown>;
+    if (kind === 'lead') {
+      const { lead } = await marketflow.captureLead({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        interest: enquiryTopicLabel(data.service) ?? data.service,
+        source: enquirySource(data.source),
+        metadata: {
+          form: data.source,
+          message: data.message,
+          ...(data.service ? { service: data.service } : {}),
+        },
+      });
+      markSent = () => marketflow.patchLead(lead.id, { metadata: { notice_sent_at: new Date().toISOString() } });
+    } else {
+      const app = await prisma.application.create({
+        data: { kind, name: data.name, email: data.email, phone: data.phone, service: data.service || null, message: data.message, form: data.source },
+        select: { id: true },
+      });
+      markSent = () => prisma.application.update({ where: { id: app.id }, data: { noticeSentAt: new Date() } });
+    }
+    // A business pitching its services gets no acknowledgement.
+    if (kind === 'service_offer') return NextResponse.json({ success: true });
 
     // notifications-api acknowledges the visitor by email and WhatsApp and emails the team.
     // The send time is recorded so an unsent notice can be resent from /admin/contacts.
@@ -66,11 +82,9 @@ export async function POST(req: NextRequest) {
       source: data.source,
     });
     if (sent) {
-      await marketflow
-        .patchLead(lead.id, { metadata: { notice_sent_at: new Date().toISOString() } })
-        .catch((e) => console.error('[contact] notice time not saved, lead', lead.id, e));
+      await markSent().catch((e) => console.error('[contact] notice time not saved', e));
     } else {
-      console.error('[contact] acknowledgement not published, lead', lead.id);
+      console.error('[contact] acknowledgement not published', kind);
     }
 
     return NextResponse.json({ success: true });

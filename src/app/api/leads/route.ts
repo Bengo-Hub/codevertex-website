@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkSpam } from '@/lib/spam-guard';
 import { marketflow } from '@/lib/marketflow';
+import { prisma } from '@/lib/db';
+import { classifyEnquiry } from '@/config/enquiry-classification';
 
 const schema = z.object({
   name: z.string().trim().max(120).optional(),
@@ -24,6 +26,17 @@ export async function POST(req: NextRequest) {
     const spamCheck = checkSpam({ name: data.name, email: data.email, message: data.notes });
     if (spamCheck.blocked) {
       return NextResponse.json({ error: 'Submission blocked' }, { status: 422 });
+    }
+
+    // Someone asking for attachment or a job, or pitching their own services, is not a lead.
+    const kind = classifyEnquiry({ service: data.topic, message: [data.topic, data.notes].filter(Boolean).join(' ') });
+    if (kind !== 'lead') {
+      if (kind !== 'service_offer' && data.email) {
+        await prisma.application.create({
+          data: { kind, name: data.name || data.email, email: data.email, phone: data.phone ?? null, service: data.topic ?? null, message: data.notes || data.topic || '', form: data.source },
+        });
+      }
+      return NextResponse.json({ success: true });
     }
 
     await marketflow.captureLead({

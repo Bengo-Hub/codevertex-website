@@ -23,6 +23,8 @@ interface Contact {
 
 interface PageData { total: number; page: number; pages: number; items: Contact[] }
 
+const KIND_LABEL: Record<string, string> = { attachment: 'Attachment', job: 'Job enquiry', service_offer: 'Service offer' };
+
 export function ContactsPage() {
   const [data, setData] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,20 +32,28 @@ export function ContactsPage() {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
+  // Enquiries are sales leads in MarketFlow; applications (attachment, jobs, service pitches) are
+  // kept here and are never leads.
+  const [view, setView] = useState<'enquiries' | 'applications'>('enquiries');
+  const base = view === 'enquiries' ? '/api/admin/contacts' : '/api/admin/applications';
 
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), ...(search ? { search } : {}) });
-    const res = await authedFetch(`/api/admin/contacts?${params}`);
-    setData(res.ok ? await res.json() : null);
+    const res = await authedFetch(`${base}?${params}`);
+    const body = res.ok ? ((await res.json()) as PageData) : null;
+    if (body && view === 'applications') {
+      body.items = (body.items as (Contact & { kind?: string })[]).map((a) => ({ ...a, source: KIND_LABEL[a.kind ?? ''] ?? a.kind ?? '' }));
+    }
+    setData(body);
     setLoading(false);
-  }, [page, search]);
+  }, [page, search, base, view]);
 
   useEffect(() => { load(); }, [load]);
 
   async function confirmDelete() {
     if (!deleting) return;
-    const res = await authedFetch(`/api/admin/contacts/${deleting.id}`, { method: 'DELETE' });
+    const res = await authedFetch(`${base}/${deleting.id}`, { method: 'DELETE' });
     if (res.ok) toast.success('Message removed');
     else toast.error('Could not remove the message');
     setDeleting(null);
@@ -130,7 +140,7 @@ export function ContactsPage() {
           {row.phone && (
             <a href={waLink(row.phone)} target="_blank" rel="noreferrer" title="WhatsApp" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"><MessageCircle className="h-3.5 w-3.5" /></a>
           )}
-          {row.phone && (
+          {row.phone && view === 'enquiries' && (
             <button onClick={() => resend(row)} disabled={resending === row.id} title={row.noticeSentAt ? 'Send the acknowledgement again' : 'Send the acknowledgement'} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><RotateCw className={`h-3.5 w-3.5 ${resending === row.id ? 'animate-spin' : ''}`} /></button>
           )}
           <button onClick={() => setDeleting(row)} title="Delete" className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -141,7 +151,23 @@ export function ContactsPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <AdminPageHeader title="Contact Submissions" description={`${data?.total ?? 0} submissions`} />
+      <AdminPageHeader
+        title="Contact Submissions"
+        description={view === 'enquiries' ? `${data?.total ?? 0} enquiries (sales leads in MarketFlow)` : `${data?.total ?? 0} applications and job enquiries (not leads)`}
+      />
+      <div className="mb-4 flex gap-2" role="tablist">
+        {(['enquiries', 'applications'] as const).map((v) => (
+          <button
+            key={v}
+            role="tab"
+            aria-selected={view === v}
+            onClick={() => { setView(v); setPage(1); }}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${view === v ? 'bg-primary text-primary-foreground' : 'border border-border text-foreground hover:bg-muted'}`}
+          >
+            {v === 'enquiries' ? 'Enquiries' : 'Applications'}
+          </button>
+        ))}
+      </div>
       <div className="relative mb-5">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <input
