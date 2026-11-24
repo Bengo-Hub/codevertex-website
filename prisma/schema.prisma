@@ -15,42 +15,9 @@ datasource db {
   provider = "postgresql"
 }
 
-model ContactSubmission {
-  id        BigInt   @id @default(autoincrement())
-  name      String
-  email     String
-  phone     String?
-  service   String?
-  message   String
-  source    String   @default("website")
-  /// When the acknowledgement event reached NATS (null: not sent yet, resend from admin).
-  noticeSentAt DateTime? @map("notice_sent_at")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([createdAt(sort: Desc)])
-  @@map("contact_submissions")
-}
-
-model Lead {
-  id            BigInt   @id @default(autoincrement())
-  name          String?
-  email         String?
-  phone         String?
-  topic         String?
-  preferredTime String?  @map("preferred_time")
-  source        String   @default("chatbot")
-  notes         String?
-  status        String   @default("new")
-  // Rule-based lead score (0-100) computed at creation from field completeness
-  // and source — see scoreLead() in src/lib/lead-scoring.ts. Not AI-based;
-  // that would live in the AI service, not here.
-  score         Int      @default(0)
-  createdAt     DateTime @default(now()) @map("created_at")
-
-  @@index([status])
-  @@index([score(sort: Desc)])
-  @@map("leads")
-}
+// Leads, contact enquiries and newsletter signups live in MarketFlow, which owns leads and
+// contacts (src/lib/marketflow.ts). Their old tables (leads, contact_submissions,
+// newsletter_subscribers) were moved there on 2026-11-24 and dropped.
 
 // ---------------------------------------------------------------------------
 // Parent / guardian access: one-time codes that let a parent open the
@@ -499,22 +466,6 @@ model BlogPost {
   @@index([publishedAt(sort: Desc)])
   @@index([slug])
   @@map("blog_posts")
-}
-
-// ---------------------------------------------------------------------------
-// Newsletter — footer/blog signup capture only. No send integration wired
-// yet (that would go through Notifications API — a cross-service call, so
-// deliberately left out per "polish first, integrations need sign-off").
-// ---------------------------------------------------------------------------
-model NewsletterSubscriber {
-  id            BigInt    @id @default(autoincrement())
-  email         String    @unique
-  source        String    @default("footer") // footer | blog | other
-  subscribedAt  DateTime  @default(now()) @map("subscribed_at")
-  unsubscribedAt DateTime? @map("unsubscribed_at")
-
-  @@index([email])
-  @@map("newsletter_subscribers")
 }
 
 // ---------------------------------------------------------------------------
