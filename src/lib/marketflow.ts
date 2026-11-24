@@ -91,6 +91,10 @@ export interface LeadInput {
   interest?: string | null;
   source: string;
   metadata?: Record<string, unknown>;
+  /** UTM tags of the visit that sent the enquiry (lead columns in MarketFlow). */
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
 }
 
 /** First word as the first name, the rest as the last name. */
@@ -128,6 +132,9 @@ export const marketflow = {
       interest: l.interest || undefined,
       ...splitName(l.name),
       metadata: l.metadata ?? {},
+      utm_source: l.utm_source || undefined,
+      utm_medium: l.utm_medium || undefined,
+      utm_campaign: l.utm_campaign || undefined,
     }),
   /** Changes the fields given; metadata is merged key by key (null removes a key). */
   patchLead: (id: string, patch: Record<string, unknown>) =>

@@ -7,6 +7,7 @@ import { checkSpam } from '@/lib/spam-guard';
 import { publishContactReceived } from '@/lib/events';
 import { normalisePhone } from '@/lib/phone-countries';
 import { enquiryTopicLabel } from '@/config/services';
+import { ATTRIBUTION_KEYS } from '@/lib/attribution';
 
 // Phone is required: the acknowledgement goes out on WhatsApp as well as email, and the team
 // calls back on it. Numbers are stored in international form (+254712345678).
@@ -29,7 +30,22 @@ const schema = z.object({
   message: z.string().trim().min(10).max(5000),
   /** Which form sent it: the contact page or the attachment application. */
   source: z.enum(['contact', 'attachment']).default('contact'),
+  /** Ad click ids and UTM tags the visitor landed with (src/lib/attribution.ts). */
+  attribution: z
+    .object(Object.fromEntries(ATTRIBUTION_KEYS.map((k) => [k, z.string().trim().max(256).optional()])))
+    .partial()
+    .optional(),
 });
+
+/** Click ids and the extra UTM tags go in lead metadata, as MarketFlow's own pages store them. */
+function clickIds(a?: Partial<Record<string, string | undefined>>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const k of ['gclid', 'gbraid', 'wbraid', 'fbclid', 'ttclid', 'utm_content', 'utm_term']) {
+    const v = a?.[k]?.trim();
+    if (v) out[k] = v;
+  }
+  return out;
+}
 
 /** The acknowledgement channels the site keeps for a sales lead (owner, 2026-11-24). */
 function leadAckChannels(): Array<'email' | 'whatsapp'> {
@@ -66,7 +82,12 @@ export async function POST(req: NextRequest) {
           form: data.source,
           message: data.message,
           ...(data.service ? { service: data.service } : {}),
+          // Click ids (gclid and the rest) are what MarketFlow reports back to the ad platforms.
+          ...clickIds(data.attribution),
         },
+        utm_source: data.attribution?.utm_source,
+        utm_medium: data.attribution?.utm_medium,
+        utm_campaign: data.attribution?.utm_campaign,
       });
       markSent = () => marketflow.patchLead(lead.id, { metadata: { notice_sent_at: new Date().toISOString() } });
     } else {

@@ -8,6 +8,8 @@ import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner';
 import { VeraWidget } from '@/components/layout/VeraWidget';
 import { JsonLd, organizationJsonLd } from '@/lib/json-ld';
 import { GOOGLE_TAG_ID } from '@/config/analytics';
+import { Suspense } from 'react';
+import { AttributionCapture } from '@/components/layout/AttributionCapture';
 
 const display = Bricolage_Grotesque({
   variable: '--font-display',
@@ -82,6 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CookieConsentBanner />
         </ThemeProvider>
         <VeraWidget />
+        <Suspense fallback={null}>
+          <AttributionCapture />
+        </Suspense>
       </body>
     </html>
   );

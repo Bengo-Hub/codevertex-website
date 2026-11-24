@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { getAttribution, trackLead } from '@/lib/attribution';
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ENQUIRY_GROUPS, ENQUIRY_TOPICS, INTEGRATION_TOPICS } from '@/config/services';
@@ -76,9 +77,11 @@ export function ContactForm({ initialService }: { initialService?: string }) {
           service: data.service || undefined,
           message: data.message,
           source: 'contact',
+          attribution: getAttribution(),
         }),
       });
       if (res.ok) {
+        trackLead({ form: 'contact', service: data.service });
         setSentTo(data.name.split(' ')[0]);
         reset({ countryCode: data.countryCode, service: '' });
         return;
