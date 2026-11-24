@@ -7,6 +7,7 @@ import { SiteShell } from '@/components/layout/SiteShell';
 import { CookieConsentBanner } from '@/components/layout/CookieConsentBanner';
 import { VeraWidget } from '@/components/layout/VeraWidget';
 import { JsonLd, organizationJsonLd } from '@/lib/json-ld';
+import { GOOGLE_TAG_ID } from '@/config/analytics';
 
 const display = Bricolage_Grotesque({
   variable: '--font-display',
@@ -61,6 +62,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Google tag first in <head>, as Google Ads asks (owner, 2026-11-24). */}
+        {GOOGLE_TAG_ID && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtm.js?id=${GOOGLE_TAG_ID}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());",
+              }}
+            />
+          </>
+        )}
         <JsonLd data={organizationJsonLd()} />
       </head>
       <body className={`${display.variable} ${body.variable} font-sans min-h-screen bg-background antialiased`}>
