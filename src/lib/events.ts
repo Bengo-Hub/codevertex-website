@@ -141,6 +141,10 @@ export interface DigitikaContactEvent {
   /** Readable topic name for the reply and the team alert. */
   serviceLabel?: string;
   source?: 'contact' | 'attachment';
+  /** Channels the acknowledgement keeps (omitted: email and WhatsApp). */
+  channels?: Array<'email' | 'whatsapp'>;
+  /** false drops the team email alert (MarketFlow alerts the team for sales leads). */
+  teamAlert?: boolean;
 }
 
 export interface DigitikaCertificateEvent extends NoticePeople {

@@ -31,6 +31,15 @@ const schema = z.object({
   source: z.enum(['contact', 'attachment']).default('contact'),
 });
 
+/** The acknowledgement channels the site keeps for a sales lead (owner, 2026-11-24). */
+function leadAckChannels(): Array<'email' | 'whatsapp'> {
+  const raw = process.env.CONTACT_LEAD_ACK_CHANNELS ?? 'whatsapp';
+  return raw
+    .split(',')
+    .map((c) => c.trim().toLowerCase())
+    .filter((c): c is 'email' | 'whatsapp' => c === 'email' || c === 'whatsapp');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -80,6 +89,10 @@ export async function POST(req: NextRequest) {
       service: data.service,
       serviceLabel: enquiryTopicLabel(data.service),
       source: data.source,
+      // MarketFlow already emails a sales lead (thank-you with the booking link) and the team, so
+      // the site keeps only the channels in CONTACT_LEAD_ACK_CHANNELS (default "whatsapp"; set it
+      // empty once MarketFlow's WhatsApp hello is approved). Applications keep both and the alert.
+      ...(kind === 'lead' ? { channels: leadAckChannels(), teamAlert: false } : {}),
     });
     if (sent) {
       await markSent().catch((e) => console.error('[contact] notice time not saved', e));
